@@ -272,7 +272,7 @@
 
       #archive-search {
         width: 100%;
-        padding: 12px 16px 12px 42px;
+        padding: 12px 16px;
         background: transparent;
         border: 2px solid rgba(150, 150, 150, 0.4);
         border-radius: 12px;
@@ -293,13 +293,27 @@
         background: rgba(33, 16, 46, 0.6);
       }
 
-      .search-magnifying-glass {
+      .search-magnifying-glass-column {
         position: absolute;
-        left: 14px;
-        font-size: 1rem;
+        left: calc(
+          -1 * (
+            (
+              (100vw - min(100vw - 24px, 900px)) / 2 + 58px
+            ) / 2
+          ) - 29px
+        );
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
         color: var(--gold, #d4af37);
-        pointer-events: none;
+        font-size: 1.1rem;
         line-height: 1;
+        pointer-events: none;
+        z-index: 0 !important;
+        box-sizing: border-box;
       }
 
       #search-dropdown {
@@ -555,6 +569,18 @@
           margin-left: 42px;
         }
 
+        .search-magnifying-glass-column {
+          left: calc(
+            -1 * (
+              (
+                (100vw - min(100vw - 24px, 900px)) / 2 + 42px
+              ) / 2
+            ) - 21px
+          );
+          width: 42px;
+          font-size: 1rem;
+        }
+
         #song-list .song {
           grid-template-columns: minmax(0, 1fr) 54px;
           gap: 8px;
@@ -750,8 +776,9 @@
     const wrapper = document.createElement("div");
     wrapper.id = "archive-search-wrapper";
 
+    // Magnifying glass placed in the outer left number column
     const icon = document.createElement("span");
-    icon.className = "search-magnifying-glass";
+    icon.className = "search-magnifying-glass-column";
     icon.textContent = "🔎";
 
     const input = document.createElement("input");
