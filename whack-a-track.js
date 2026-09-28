@@ -4,14 +4,20 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 660;
+  const MOLE_VISIBLE_MS = 460;
   const MOLE_INTERVAL_MS = 1400;
-
-  const REMOVED_TRACKS_KEY = "rizneyWhackedTracks";
 
   const youtube = () => window.rizneyPlayer || window.player || null;
   const $ = (selector, root = document) => root.querySelector(selector);
   const controls = () => $(".controls");
+
+  /*
+   * ROADWORK
+   *
+   * These songs are only closed for the current visit.
+   * Refreshing the page clears this Set automatically.
+   */
+  const whackedSongs = new Set();
 
   let game;
   let active = false;
@@ -69,6 +75,38 @@
       #reading,
       #whack-a-track-game {
         scroll-margin-top: calc(var(--player-dock-height, 0px) + 8px);
+      }
+
+      /*
+       * ROADWORK ROW
+       */
+
+      .rizney-roadwork {
+        position: relative !important;
+        opacity: .72;
+      }
+
+      .rizney-roadwork::after {
+        content: "🚧 WHACKED!";
+        display: block;
+        margin: 8px 0 4px;
+        padding: 7px 10px;
+        text-align: center;
+        font-weight: 800;
+        letter-spacing: .08em;
+        color: #f5d76e;
+        background: #120b18;
+        border: 1px solid #d4af37;
+        border-radius: 8px;
+      }
+
+      .rizney-roadwork button {
+        cursor: not-allowed !important;
+      }
+
+      .rizney-roadwork .rizney-roadwork-play {
+        opacity: .45;
+        pointer-events: none;
       }
 
       @media (max-width: 640px) {
@@ -141,7 +179,7 @@
   };
 
   /* ---------------------------------------------------------
-     LOCAL STORAGE
+     CURRENT SONG
      --------------------------------------------------------- */
 
   function getCurrentSongId() {
@@ -164,72 +202,119 @@
     }
   }
 
-  function getWhackedTracks() {
-    try {
-      const saved = localStorage.getItem(REMOVED_TRACKS_KEY);
+  /*
+   * The archive displays songs as "♫ Song 1", "♫ Song 2", etc.
+   * We use the Now Playing display to identify the current row.
+   */
+  function getCurrentSongNumber() {
+    const nowPlaying = $("#now-playing");
 
-      if (!saved) {
-        return [];
-      }
-
-      const parsed = JSON.parse(saved);
-
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-  function saveWhackedTrack() {
-    const videoId = getCurrentSongId();
-
-    if (!videoId) {
+    if (!nowPlaying) {
       return null;
     }
 
-    try {
-      const tracks = getWhackedTracks();
+    const match = nowPlaying.textContent.match(
+      /Song\s+(\d+)/i
+    );
 
-      if (!tracks.includes(videoId)) {
-        tracks.push(videoId);
-      }
-
-      localStorage.setItem(
-        REMOVED_TRACKS_KEY,
-        JSON.stringify(tracks)
-      );
-
-      return videoId;
-    } catch (error) {
+    if (!match) {
       return null;
     }
-  }
 
-  function isTrackRemembered(videoId) {
-    if (!videoId) {
-      return false;
-    }
-
-    const tracks = getWhackedTracks();
-
-    return tracks.includes(videoId);
+    return Number(match[1]);
   }
 
   /* ---------------------------------------------------------
-     BRICK #3 — CHECK WHETHER CURRENT SONG WAS SAVED
+     ROADWORK
      --------------------------------------------------------- */
 
-  function checkCurrentSong() {
-    const videoId = getCurrentSongId();
-
-    if (!videoId) {
+  function findSongRow(songNumber) {
+    if (!songNumber) {
       return null;
     }
 
-    return {
-      videoId,
-      remembered: isTrackRemembered(videoId)
-    };
+    const wantedText = `Song ${songNumber}`;
+
+    /*
+     * Look through elements that contain the song title.
+     * We deliberately avoid touching the player, toolbar,
+     * cards, or other parts of the page.
+     */
+    const list = $("#song-list");
+
+    if (!list) {
+      return null;
+    }
+
+    const candidates = [
+      ...list.querySelectorAll("*")
+    ];
+
+    for (const element of candidates) {
+      const text = element.textContent.trim();
+
+      if (
+        text.includes(wantedText) &&
+        text.length < 200
+      ) {
+        /*
+         * We want the smallest useful container that contains
+         * the song title and its Play button.
+         */
+        const hasPlayButton = [
+          ...element.querySelectorAll("button")
+        ].some(button =>
+          /play/i.test(button.textContent)
+        );
+
+        if (hasPlayButton) {
+          return element;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  function closeRoad(songNumber, songId) {
+    if (!songNumber && !songId) {
+      return false;
+    }
+
+    const key = songId || `song-${songNumber}`;
+
+    whackedSongs.add(key);
+
+    const row = findSongRow(songNumber);
+
+    if (!row) {
+      return false;
+    }
+
+    row.classList.add("rizney-roadwork");
+    row.dataset.rizneyRoadwork = "true";
+
+    /*
+     * Disable the Play button inside this row.
+     */
+    const buttons = [
+      ...row.querySelectorAll("button")
+    ];
+
+    buttons.forEach(button => {
+      if (/play/i.test(button.textContent)) {
+        button.disabled = true;
+        button.classList.add(
+          "rizney-roadwork-play"
+        );
+        button.setAttribute(
+          "aria-label",
+          "Song closed for roadwork"
+        );
+      }
+    });
+
+    return true;
   }
 
   /* ---------------------------------------------------------
@@ -242,7 +327,10 @@
     const panel = document.createElement("section");
 
     panel.id = "whack-a-track-game";
-    panel.setAttribute("aria-label", "Whack-a-Track");
+    panel.setAttribute(
+      "aria-label",
+      "Whack-a-Track"
+    );
 
     panel.innerHTML = `
       <h2>Whack-a-Track</h2>
@@ -294,7 +382,8 @@
       background: "#120b18",
       border: "2px solid #d4af37",
       borderRadius: "12px",
-      boxShadow: "0 0 24px rgba(212,175,55,.35)",
+      boxShadow:
+        "0 0 24px rgba(212,175,55,.35)",
       scrollMarginTop:
         "calc(var(--player-dock-height, 0px) + 8px)"
     });
@@ -308,9 +397,12 @@
       minHeight: "1.4em"
     });
 
-    Object.assign($("#wat-time", panel).parentElement.style, {
-      margin: "0 0 8px"
-    });
+    Object.assign(
+      $("#wat-time", panel).parentElement.style,
+      {
+        margin: "0 0 8px"
+      }
+    );
 
     Object.assign($("#wat-health", panel).style, {
       display: "block",
@@ -324,7 +416,8 @@
 
     Object.assign(board.style, {
       display: "grid",
-      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      gridTemplateColumns:
+        "repeat(3, minmax(0, 1fr))",
       gap: "10px",
       margin: "18px auto"
     });
@@ -345,7 +438,10 @@
       });
 
       hole.addEventListener("click", () => {
-        if (!active || hole.dataset.active !== "true") {
+        if (
+          !active ||
+          hole.dataset.active !== "true"
+        ) {
           return;
         }
 
@@ -354,7 +450,8 @@
 
         trackHealth--;
 
-        $("#wat-health", panel).value = trackHealth;
+        $("#wat-health", panel).value =
+          trackHealth;
 
         if (trackHealth <= 0) {
           finish(true);
@@ -374,8 +471,13 @@
       () => window.location.reload()
     );
 
-    ($(".player-dock") || $("main") || document.body)
-      .insertAdjacentElement("afterend", panel);
+    ($(".player-dock") ||
+      $("main") ||
+      document.body)
+      .insertAdjacentElement(
+        "afterend",
+        panel
+      );
 
     panel.hidden = true;
 
@@ -408,11 +510,17 @@
     if (!active) return;
 
     const holes = [
-      ...game.board.querySelectorAll(".wat-hole")
+      ...game.board.querySelectorAll(
+        ".wat-hole"
+      )
     ];
 
     const hole =
-      holes[Math.floor(Math.random() * holes.length)];
+      holes[
+        Math.floor(
+          Math.random() * holes.length
+        )
+      ];
 
     hideMoles();
 
@@ -475,26 +583,26 @@
       return;
     }
 
-    const savedId = saveWhackedTrack();
+    const songId = getCurrentSongId();
+    const songNumber =
+      getCurrentSongNumber();
 
-    if (savedId) {
-      const remembered = isTrackRemembered(savedId);
+    /*
+     * CLOSE THE ROAD.
+     */
+    const roadClosed = closeRoad(
+      songNumber,
+      songId
+    );
 
-      if (remembered) {
-        game.status.innerHTML =
-          `💥 TRACK WHACKED!<br>` +
-          `<small>SAVED: ${savedId}</small><br>` +
-          `<small>REMEMBERED: YES</small>`;
-      } else {
-        game.status.innerHTML =
-          `💥 TRACK WHACKED!<br>` +
-          `<small>SAVED: ${savedId}</small><br>` +
-          `<small>REMEMBERED: NO</small>`;
-      }
+    if (roadClosed) {
+      game.status.innerHTML =
+        `💥 TRACK WHACKED!<br>` +
+        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
     } else {
       game.status.innerHTML =
         `💥 TRACK WHACKED!<br>` +
-        `<small>COULD NOT GET SONG ID</small>`;
+        `<small>Song saved, but the row could not be located yet.</small>`;
     }
   }
 
@@ -520,30 +628,16 @@
     clearTimeout(hideTimer);
     clearInterval(gameTimer);
 
-    $("#wat-refresh", game.panel).hidden = true;
+    $("#wat-refresh", game.panel).hidden =
+      true;
 
     game.panel.hidden = false;
-
-    const songCheck = checkCurrentSong();
-
-    if (songCheck?.remembered) {
-      game.status.innerHTML =
-        `🧠 THIS TRACK IS ALREADY REMEMBERED!<br>` +
-        `<small>${songCheck.videoId}</small>`;
-    } else if (songCheck?.videoId) {
-      game.status.innerHTML =
-        `🎵 NEW TRACK<br>` +
-        `<small>${songCheck.videoId}</small>`;
-    } else {
-      game.status.textContent =
-        "Could not identify the current track.";
-    }
 
     if (!playing()) {
       active = false;
 
-      game.status.innerHTML +=
-        `<br><small>Play a track to start the game.</small>`;
+      game.status.textContent =
+        "Play a track to start the game, then pause it to remove from playlist";
 
       game.panel.scrollIntoView({
         behavior: "smooth",
@@ -552,6 +646,12 @@
 
       return;
     }
+
+    const songNumber =
+      getCurrentSongNumber();
+
+    const songId =
+      getCurrentSongId();
 
     trackHealth = TRACK_HEALTH;
     active = true;
@@ -562,13 +662,13 @@
     hideMoles();
 
     game.status.innerHTML =
-      songCheck?.remembered
-        ? `🧠 THIS TRACK IS ALREADY REMEMBERED!<br>` +
-          `<small>${songCheck.videoId}</small><br>` +
-          `<small>Game can still be played for this test.</small>`
-        : `🎵 NEW TRACK<br>` +
-          `<small>${songCheck?.videoId || "UNKNOWN"}</small><br>` +
-          `<small>Whack every mouse before the clock runs out!</small>`;
+      `🎵 ROAD OPEN<br>` +
+      `<small>Song ${
+        songNumber || "?"
+      } · ${
+        songId || "unknown"
+      }</small><br>` +
+      `<small>Whack every mouse before the clock runs out!</small>`;
 
     startClock();
     spawnMole();
@@ -586,12 +686,14 @@
 
     if (
       !button ||
-      button.dataset.whackGameBound === "true"
+      button.dataset.whackGameBound ===
+        "true"
     ) {
       return;
     }
 
-    button.dataset.whackGameBound = "true";
+    button.dataset.whackGameBound =
+      "true";
 
     Object.assign(button.style, {
       cursor: "pointer"
@@ -603,7 +705,9 @@
     );
   }
 
-  if (document.readyState === "loading") {
+  if (
+    document.readyState === "loading"
+  ) {
     document.addEventListener(
       "DOMContentLoaded",
       init,
