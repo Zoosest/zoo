@@ -1,5 +1,8 @@
 (() => {
 "use strict";
+/* =========================================================
+WHACK-A-TRACK
+========================================================= */
 const TRACK_HEALTH = 24;
 const GAME_DURATION = 80;
 const MOLE_VISIBLE_MS = 660;
@@ -101,7 +104,8 @@ style.textContent = `
 
 
   /* =====================================================
-     PURPLE BOARD + TRANSPARENT HOLES PNG
+     PURPLE BOARD
+     + TRANSPARENT holes.png OVERLAY
      ===================================================== */
 
   #whack-a-track-game .wat-board {
@@ -133,7 +137,7 @@ style.textContent = `
 
 
   /* =====================================================
-     INVISIBLE CLICKABLE BUTTONS
+     INVISIBLE HIT BUTTONS
      ===================================================== */
 
   #whack-a-track-game .wat-hole {
@@ -161,11 +165,9 @@ style.textContent = `
     z-index: 5;
   }
 
-
   #whack-a-track-game .wat-hole:hover {
     background: transparent;
   }
-
 
   #whack-a-track-game .wat-hole:focus {
     outline: none;
@@ -270,7 +272,6 @@ style.textContent = `
     margin-top: 12px;
   }
 
-
   #whack-a-track-game .wat-start,
   #whack-a-track-game .wat-end {
     border: 1px solid #d4af37;
@@ -286,7 +287,6 @@ style.textContent = `
 
     cursor: pointer;
   }
-
 
   #whack-a-track-game .wat-start:hover,
   #whack-a-track-game .wat-end:hover {
@@ -323,11 +323,9 @@ style.textContent = `
     font-weight: bold;
   }
 
-
   .wat-whacked-row {
     opacity: .72;
   }
-
 
   .wat-whacked-row .play {
     opacity: .45;
@@ -487,6 +485,40 @@ markWhackedRows();
 
 }
 /* =========================================================
+CONNECT TOP WHACK-A-TRACK BUTTON
+========================================================= */
+function connectToolbarButton() {
+const button =
+  document.getElementById(
+    "whack-track"
+  );
+
+if (!button) {
+  return;
+}
+
+button.addEventListener(
+  "click",
+  () => {
+
+    if (!gameEl) {
+      createGame();
+    }
+
+    if (gameEl) {
+
+      gameEl.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
+      });
+
+    }
+
+  }
+);
+
+}
+/* =========================================================
 BUILD SIX INVISIBLE HIT AREAS
 ========================================================= */
 function buildHoles() {
@@ -526,11 +558,6 @@ positions.forEach(
 
     hole.style.top =
       `calc(${position.top}% - 38px)`;
-
-    /*
-       The button is completely invisible.
-       holes.png supplies the visible hole.
-    */
 
     hole.innerHTML =
       "";
@@ -580,8 +607,7 @@ if (!holes.length) {
 
 const randomIndex =
   Math.floor(
-    Math.random() *
-    holes.length
+    Math.random() * holes.length
   );
 
 const hole =
@@ -614,9 +640,8 @@ hole.appendChild(
 activeDuck =
   duck;
 
-/*
-   Simple squeeze/pop.
-*/
+
+/* Simple squeeze/pop */
 
 duck.animate(
   [
@@ -642,13 +667,16 @@ duck.animate(
   }
 );
 
+
 setTimeout(() => {
 
   if (
     gameActive &&
     hole === activeHole
   ) {
+
     clearActiveHole();
+
   }
 
 }, MOLE_VISIBLE_MS);
@@ -659,8 +687,10 @@ CLEAR DUCK
 ========================================================= */
 function clearActiveHole() {
 if (activeHole) {
+
   activeHole.innerHTML =
     "";
+
 }
 
 activeHole =
@@ -681,6 +711,7 @@ if (
   return;
 }
 
+
 if (activeDuck) {
 
   activeDuck.src =
@@ -688,6 +719,7 @@ if (activeDuck) {
 
   activeDuck.className =
     "wat-duck-hit";
+
 }
 
 
@@ -713,7 +745,11 @@ hole.appendChild(
 if (
   navigator.vibrate
 ) {
-  navigator.vibrate(100);
+
+  navigator.vibrate(
+    100
+  );
+
 }
 
 
@@ -728,7 +764,11 @@ if (health <= 0) {
   if (
     navigator.vibrate
   ) {
-    navigator.vibrate(180);
+
+    navigator.vibrate(
+      180
+    );
+
   }
 
   finishGame(true);
@@ -742,7 +782,9 @@ setTimeout(() => {
   if (
     hole === activeHole
   ) {
+
     clearActiveHole();
+
   }
 
 }, 220);
@@ -758,7 +800,7 @@ if (gameActive) {
 
 
 /*
-   currentIndex is supplied by index.html.
+   currentIndex comes from index.html.
 
    -1 = intro
     0+ = actual songs
@@ -843,6 +885,7 @@ timer =
     timerEl.textContent =
       timeLeft;
 
+
     if (
       timeLeft <= 0
     ) {
@@ -862,11 +905,14 @@ if (!gameActive) {
   return;
 }
 
+
 gameActive =
   false;
 
+
 clearInterval(timer);
 clearInterval(moleTimer);
+
 
 timer =
   null;
@@ -874,10 +920,13 @@ timer =
 moleTimer =
   null;
 
+
 clearActiveHole();
+
 
 statusEl.textContent =
   "Game ended.";
+
 
 gameTrackIndex =
   null;
@@ -890,14 +939,17 @@ function finishGame(defeated) {
 gameActive =
   false;
 
+
 clearInterval(timer);
 clearInterval(moleTimer);
+
 
 timer =
   null;
 
 moleTimer =
   null;
+
 
 clearActiveHole();
 
@@ -922,6 +974,7 @@ if (defeated) {
     saveWhackedTracks(
       tracks
     );
+
   }
 
 
@@ -948,6 +1001,7 @@ if (defeated) {
 
   statusEl.textContent =
     "Time's up! The track survived.";
+
 }
 
 
@@ -961,6 +1015,7 @@ MARK WHACKED SONGS
 function markWhackedRows() {
 const whacked =
   getWhackedTracks();
+
 
 const rows =
   document.querySelectorAll(
@@ -1096,17 +1151,23 @@ true
 /* =========================================================
 INITIALIZE
 ========================================================= */
+function initialize() {
+createGame();
+
+connectToolbarButton();
+
+}
 if (
 document.readyState ===
 "loading"
 ) {
 document.addEventListener(
   "DOMContentLoaded",
-  createGame
+  initialize
 );
 
 } else {
-createGame();
+initialize();
 
 }
 })();
