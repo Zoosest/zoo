@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 666;
+  const MOLE_VISIBLE_MS = 660;
   const MOLE_INTERVAL_MS = 1400;
 
   const REMOVED_TRACKS_KEY =
@@ -632,14 +632,14 @@
           trackHealth--;
 
           /*
-           * LITTLE PHYSICAL FEEDBACK.
+           * STRONGER LITTLE PHYSICAL FEEDBACK.
            */
           if (
             trackHealth <= 0
           ) {
-            vibrate(80);
+            vibrate(180);
           } else {
-            vibrate(40);
+            vibrate(100);
           }
 
           $("#wat-health", panel)
