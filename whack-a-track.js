@@ -1,8 +1,5 @@
 (() => {
 "use strict";
-/* =========================================================
-WHACK-A-TRACK
-========================================================= */
 const TRACK_HEALTH = 24;
 const GAME_DURATION = 80;
 const MOLE_VISIBLE_MS = 660;
@@ -12,9 +9,6 @@ const DUCK_HIT_IMAGE = "./assets/duck-hit.png";
 const WHACK_IMAGE = "./assets/whack.png";
 const REMOVED_TRACKS_KEY =
 "rizneyWhackedTracks";
-/* =========================================================
-STATE
-========================================================= */
 let gameActive = false;
 let gameTrackIndex = null;
 let health = TRACK_HEALTH;
@@ -29,7 +23,7 @@ let healthEl = null;
 let timerEl = null;
 let statusEl = null;
 /* =========================================================
-HELPERS
+STORAGE
 ========================================================= */
 function getWhackedTracks() {
 try {
@@ -107,12 +101,7 @@ style.textContent = `
 
 
   /* =====================================================
-     GAME BOARD
-
-     holes.png is now the visible artwork.
-
-     The HTML buttons underneath remain invisible
-     hit areas.
+     PURPLE BOARD + TRANSPARENT HOLES PNG
      ===================================================== */
 
   #whack-a-track-game .wat-board {
@@ -120,6 +109,7 @@ style.textContent = `
 
     width: 100%;
     max-width: 500px;
+
     aspect-ratio: 500 / 220;
 
     margin: 12px auto;
@@ -130,7 +120,9 @@ style.textContent = `
       url("./assets/holes.png");
 
     background-repeat: no-repeat;
+
     background-position: center;
+
     background-size: 100% 100%;
 
     border: 2px solid #d4af37;
@@ -141,7 +133,7 @@ style.textContent = `
 
 
   /* =====================================================
-     INVISIBLE HIT BUTTONS
+     INVISIBLE CLICKABLE BUTTONS
      ===================================================== */
 
   #whack-a-track-game .wat-hole {
@@ -154,7 +146,9 @@ style.textContent = `
     margin: 0;
 
     background: transparent;
+
     border: 0;
+
     border-radius: 50%;
 
     appearance: none;
@@ -167,9 +161,11 @@ style.textContent = `
     z-index: 5;
   }
 
+
   #whack-a-track-game .wat-hole:hover {
     background: transparent;
   }
+
 
   #whack-a-track-game .wat-hole:focus {
     outline: none;
@@ -274,6 +270,7 @@ style.textContent = `
     margin-top: 12px;
   }
 
+
   #whack-a-track-game .wat-start,
   #whack-a-track-game .wat-end {
     border: 1px solid #d4af37;
@@ -290,6 +287,7 @@ style.textContent = `
     cursor: pointer;
   }
 
+
   #whack-a-track-game .wat-start:hover,
   #whack-a-track-game .wat-end:hover {
     background: #7e35bc;
@@ -302,8 +300,11 @@ style.textContent = `
 
   #whack-a-track-game .wat-status {
     min-height: 22px;
+
     margin-top: 10px;
+
     color: #b9a8c5;
+
     font-size: .8rem;
   }
 
@@ -314,14 +315,19 @@ style.textContent = `
 
   .wat-road-closed {
     display: inline-block;
+
     margin-left: 8px;
+
     color: #f5d76e;
+
     font-weight: bold;
   }
+
 
   .wat-whacked-row {
     opacity: .72;
   }
+
 
   .wat-whacked-row .play {
     opacity: .45;
@@ -354,6 +360,7 @@ style.textContent = `
       width: 76px;
       height: 76px;
     }
+
   }
 
 `;
@@ -480,17 +487,13 @@ markWhackedRows();
 
 }
 /* =========================================================
-BUILD HOLES
+BUILD SIX INVISIBLE HIT AREAS
 ========================================================= */
 function buildHoles() {
 boardEl.innerHTML = "";
 
-/*
-   Six fixed invisible hit areas.
-   3 columns x 2 rows.
-*/
-
 const positions = [
+
   { left: 21, top: 17 },
   { left: 50, top: 17 },
   { left: 79, top: 17 },
@@ -498,6 +501,7 @@ const positions = [
   { left: 21, top: 55 },
   { left: 50, top: 55 },
   { left: 79, top: 55 }
+
 ];
 
 positions.forEach(
@@ -508,18 +512,14 @@ positions.forEach(
         "button"
       );
 
-    hole.type = "button";
+    hole.type =
+      "button";
 
     hole.className =
       "wat-hole";
 
     hole.dataset.index =
       index;
-
-    /*
-       Center the 76px hitbox
-       on each hole position.
-    */
 
     hole.style.left =
       `calc(${position.left}% - 38px)`;
@@ -528,10 +528,12 @@ positions.forEach(
       `calc(${position.top}% - 38px)`;
 
     /*
-       No visible icon.
+       The button is completely invisible.
+       holes.png supplies the visible hole.
     */
 
-    hole.innerHTML = "";
+    hole.innerHTML =
+      "";
 
     hole.onclick = () => {
 
@@ -548,7 +550,9 @@ positions.forEach(
       hitDuck(hole);
     };
 
-    boardEl.appendChild(hole);
+    boardEl.appendChild(
+      hole
+    );
   }
 );
 
@@ -576,7 +580,8 @@ if (!holes.length) {
 
 const randomIndex =
   Math.floor(
-    Math.random() * holes.length
+    Math.random() *
+    holes.length
   );
 
 const hole =
@@ -610,7 +615,7 @@ activeDuck =
   duck;
 
 /*
-   Simple squeeze/pop animation.
+   Simple squeeze/pop.
 */
 
 duck.animate(
@@ -619,14 +624,17 @@ duck.animate(
       transform:
         "translateX(-50%) scaleY(.35)"
     },
+
     {
       transform:
         "translateX(-50%) scaleY(1.02)"
     },
+
     {
       transform:
         "translateX(-50%) scaleY(.94)"
     }
+
   ],
   {
     duration: 180,
@@ -651,11 +659,15 @@ CLEAR DUCK
 ========================================================= */
 function clearActiveHole() {
 if (activeHole) {
-  activeHole.innerHTML = "";
+  activeHole.innerHTML =
+    "";
 }
 
-activeHole = null;
-activeDuck = null;
+activeHole =
+  null;
+
+activeDuck =
+  null;
 
 }
 /* =========================================================
@@ -669,10 +681,6 @@ if (
   return;
 }
 
-/*
-   Change duck to hit image.
-*/
-
 if (activeDuck) {
 
   activeDuck.src =
@@ -682,9 +690,6 @@ if (activeDuck) {
     "wat-duck-hit";
 }
 
-/*
-   Show WHACK image.
-*/
 
 const whack =
   document.createElement(
@@ -704,9 +709,6 @@ hole.appendChild(
   whack
 );
 
-/*
-   Vibration.
-*/
 
 if (
   navigator.vibrate
@@ -714,14 +716,12 @@ if (
   navigator.vibrate(100);
 }
 
+
 health--;
 
 healthEl.textContent =
   health;
 
-/*
-   Track defeated.
-*/
 
 if (health <= 0) {
 
@@ -736,9 +736,6 @@ if (health <= 0) {
   return;
 }
 
-/*
-   Remove hit animation.
-*/
 
 setTimeout(() => {
 
@@ -759,9 +756,12 @@ if (gameActive) {
   return;
 }
 
+
 /*
-   currentIndex comes from index.html.
-   -1 means the intro.
+   currentIndex is supplied by index.html.
+
+   -1 = intro
+    0+ = actual songs
 */
 
 if (
@@ -776,6 +776,7 @@ if (
   return;
 }
 
+
 if (
   isTrackWhacked(
     currentIndex
@@ -788,6 +789,7 @@ if (
   return;
 }
 
+
 gameTrackIndex =
   currentIndex;
 
@@ -797,30 +799,37 @@ health =
 timeLeft =
   GAME_DURATION;
 
+
 healthEl.textContent =
   health;
 
 timerEl.textContent =
   timeLeft;
 
+
 gameActive =
   true;
 
+
 statusEl.textContent =
   "Whack every duck before the clock runs out!";
+
 
 gameEl.scrollIntoView({
   behavior: "smooth",
   block: "center"
 });
 
+
 spawnMole();
+
 
 moleTimer =
   setInterval(
     spawnMole,
     MOLE_INTERVAL_MS
   );
+
 
 timer =
   setInterval(() => {
@@ -859,8 +868,11 @@ gameActive =
 clearInterval(timer);
 clearInterval(moleTimer);
 
-timer = null;
-moleTimer = null;
+timer =
+  null;
+
+moleTimer =
+  null;
 
 clearActiveHole();
 
@@ -881,15 +893,20 @@ gameActive =
 clearInterval(timer);
 clearInterval(moleTimer);
 
-timer = null;
-moleTimer = null;
+timer =
+  null;
+
+moleTimer =
+  null;
 
 clearActiveHole();
+
 
 if (defeated) {
 
   const tracks =
     getWhackedTracks();
+
 
   if (
     gameTrackIndex !== null &&
@@ -907,15 +924,13 @@ if (defeated) {
     );
   }
 
+
   statusEl.textContent =
     "🚧 TRACK WHACKED! Road closed!";
 
+
   markWhackedRows();
 
-  /*
-     Stop the currently playing
-     YouTube track.
-  */
 
   if (
     window.rizneyPlayer &&
@@ -925,13 +940,16 @@ if (defeated) {
   ) {
 
     window.rizneyPlayer.stopVideo();
+
   }
+
 
 } else {
 
   statusEl.textContent =
     "Time's up! The track survived.";
 }
+
 
 gameTrackIndex =
   null;
@@ -949,6 +967,7 @@ const rows =
     "#song-list .song"
   );
 
+
 rows.forEach(
   (row, index) => {
 
@@ -956,6 +975,7 @@ rows.forEach(
       row.querySelector(
         ".play"
       );
+
 
     if (
       whacked.includes(index)
@@ -965,6 +985,7 @@ rows.forEach(
         "wat-whacked-row"
       );
 
+
       if (button) {
 
         button.disabled =
@@ -972,12 +993,15 @@ rows.forEach(
 
         button.textContent =
           "🚧 WHACKED!";
+
       }
+
 
       let label =
         row.querySelector(
           ".wat-road-closed"
         );
+
 
       if (!label) {
 
@@ -992,24 +1016,31 @@ rows.forEach(
         label.textContent =
           "ROAD CLOSED";
 
+
         const title =
           row.querySelector(
             ".song-title"
           );
 
+
         if (title) {
+
           title.appendChild(
             label
           );
+
         }
+
       }
+
     }
+
   }
 );
 
 }
 /* =========================================================
-PROTECT WHACKED PLAY BUTTONS
+PROTECT WHACKED TRACKS
 ========================================================= */
 document.addEventListener(
 "click",
@@ -1019,18 +1050,22 @@ event => {
       "#song-list .play"
     );
 
+
   if (!button) {
     return;
   }
+
 
   const row =
     button.closest(
       ".song"
     );
 
+
   if (!row) {
     return;
   }
+
 
   const rows =
     Array.from(
@@ -1039,16 +1074,21 @@ event => {
       )
     );
 
+
   const index =
     rows.indexOf(row);
+
 
   if (
     isTrackWhacked(index)
   ) {
 
     event.preventDefault();
+
     event.stopImmediatePropagation();
+
   }
+
 },
 true
 
