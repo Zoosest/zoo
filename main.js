@@ -13,11 +13,11 @@
 
   /*
     Song information is kept in chronological order.
-    Each entry is:
-    [song title, keyword, animal icon filename]
+    The first entry [index 0] is your intro track, followed by your animal-icon songs.
   */
 
   const SONG_INFO = [
+    ["mega MIX'N'MOJO", "Intro", "skull.png"], // <--- Intro placeholder (adjust title/icon if needed)
     ["Unfinished Business", "Transformation", "skull.png"],
     ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
@@ -159,7 +159,7 @@
     ["Arkhétypes", "Memory", "seahorse.png"],
     ["I See Dead People", "Passage", "headless-horseman.png"],
     ["Suffering Sycophants", "Emergence", "cicada.png"],
-    ["\"That's Life\"", "Impermanence", "fly.png"],
+    ["\"That's Life\"", "Imimpermanence", "fly.png"],
     ["Johatsu (蒸发) Skumm Bar", "Mystery", "eel.png"],
     ["Pimps Dont Cry", "Independence", "minx.png"],
     ["EVA?", "Gentleness", "koala.png"],
@@ -918,7 +918,8 @@
     const rows = songRows();
 
     rows.forEach((row, index) => {
-      const info = SONG_INFO[index];
+      // Offset by 1 because index 0 in SONG_INFO is the intro track
+      const info = SONG_INFO[index + 1];
 
       if (!info) return;
 
@@ -957,7 +958,8 @@
         return;
       }
 
-      const info = SONG_INFO[index];
+      // Offset by 1 because index 0 in SONG_INFO is the intro track
+      const info = SONG_INFO[index + 1];
 
       if (!info) return;
 
@@ -1008,7 +1010,8 @@
       return -1;
     }
 
-    return songNumber - 1;
+    // Offset by 1 to account for the intro track at index 0
+    return songNumber;
   }
 
 
