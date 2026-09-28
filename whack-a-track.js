@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 460;
+  const MOLE_VISIBLE_MS = 490;
   const MOLE_INTERVAL_MS = 1400;
 
   /* Tracks defeated by Whack-A-Track are remembered here. */
