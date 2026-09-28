@@ -947,16 +947,16 @@
 
 
     /*
-       INTRO SKIP GUARD
+       INTRO TRANSITION PROTECTION
 
-       If the user manually presses NEXT while the intro
-       is playing, YouTube can sometimes send the intro's
-       old ENDED event after Song #1 has already started.
+       When NEXT is manually pressed during the intro,
+       the YouTube player can send a stale ENDED event
+       from the intro while Song #1 is being loaded.
 
-       This flag tells that one old event to be ignored.
+       This flag belongs ONLY to that one transition.
     */
 
-    let ignoreIntroEnded = false;
+    let introTransitionPending = false;
 
 
     /* =========================================================
@@ -1029,10 +1029,10 @@
 
       /*
          We are deliberately choosing the intro,
-         so any old intro-skip protection is cleared.
+         so any old intro transition protection is cleared.
       */
 
-      ignoreIntroEnded = false;
+      introTransitionPending = false;
 
       nowPlaying.textContent =
         "Now playing: MEGA MIX'N'MOJO Intro";
@@ -1099,6 +1099,12 @@
       ) {
         return;
       }
+
+      /*
+         A Music Reading selection is not an intro transition.
+      */
+
+      introTransitionPending = false;
 
       cardPosition = position;
 
@@ -1277,11 +1283,29 @@
             onStateChange: e => {
 
               /*
-                 If the user manually pressed NEXT
-                 while the intro was playing, there can
-                 be one stale ENDED event from that intro.
+                 When Song #1 actually begins playing,
+                 the special intro transition is finished.
 
-                 Consume only that one event.
+                 This prevents the protection from hanging
+                 around and interfering with Song #1 later.
+              */
+
+              if (
+                e.data ===
+                YT.PlayerState.PLAYING
+              ) {
+
+                introTransitionPending = false;
+              }
+
+
+              /*
+                 If the user manually pressed NEXT
+                 while the intro was playing, YouTube can
+                 send one stale ENDED event from that intro.
+
+                 Only consume it when we are still marked as
+                 being in the special intro transition.
               */
 
               if (
@@ -1289,9 +1313,9 @@
                 YT.PlayerState.ENDED
               ) {
 
-                if (ignoreIntroEnded) {
+                if (introTransitionPending) {
 
-                  ignoreIntroEnded = false;
+                  introTransitionPending = false;
 
                   return;
                 }
@@ -1351,6 +1375,8 @@
         cardPlaylist = null;
         cardPosition = 0;
 
+        introTransitionPending = false;
+
         play(index);
       };
 
@@ -1367,6 +1393,8 @@
 
       cardPlaylist = null;
       cardPosition = 0;
+
+      introTransitionPending = false;
 
       /*
          Random only uses ids,
@@ -1396,7 +1424,8 @@
       */
 
       if (currentIndex === -1) {
-        ignoreIntroEnded = true;
+
+        introTransitionPending = true;
       }
 
       next();
@@ -1413,6 +1442,8 @@
          Cards only choose from the real playlist.
          The intro is excluded.
       */
+
+      introTransitionPending = false;
 
       cardPlaylist =
         [...ids.keys()]
