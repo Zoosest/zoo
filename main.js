@@ -255,6 +255,92 @@
 
     style.textContent = `
 
+      #archive-search-container {
+        position: relative;
+        width: min(100% - 48px, 600px);
+        margin: 0 auto 20px auto;
+        box-sizing: border-box;
+      }
+
+      #archive-search {
+        width: 100%;
+        padding: 12px 16px;
+        background: transparent;
+        border: 2px solid rgba(150, 150, 150, 0.4);
+        border-radius: 12px;
+        color: var(--bright-purple, #e0aaff);
+        font-family: inherit;
+        font-size: .95rem;
+        outline: none;
+        box-sizing: border-box;
+        transition: border-color 0.2s ease, background 0.2s ease;
+      }
+
+      #archive-search::placeholder {
+        color: rgba(224, 170, 255, 0.5);
+      }
+
+      #archive-search:focus {
+        border-color: var(--bright-gold, #f5d76e);
+        background: rgba(33, 16, 46, 0.6);
+      }
+
+      #search-dropdown {
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        width: 100%;
+        max-height: 280px;
+        overflow-y: auto;
+        background: linear-gradient(145deg, #21102e, #090509);
+        border: 2px solid var(--gold, #d4af37);
+        border-radius: 12px;
+        z-index: 100;
+        display: none;
+        box-sizing: border-box;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+      }
+
+      #search-dropdown.active {
+        display: block;
+      }
+
+      .search-result-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 10px 14px;
+        border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+        color: var(--bright-purple, #e0aaff);
+        text-decoration: none;
+        font-size: .88rem;
+        transition: background 0.15s ease;
+      }
+
+      .search-result-item:last-child {
+        border-bottom: none;
+      }
+
+      .search-result-item:hover {
+        background: rgba(212, 175, 55, 0.12);
+        color: var(--bright-gold, #f5d76e);
+      }
+
+      .search-result-text {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 10px;
+      }
+
+      .search-result-meta {
+        font-family: Georgia, "Times New Roman", serif;
+        font-style: italic;
+        font-size: .75rem;
+        opacity: 0.7;
+        white-space: nowrap;
+      }
+
       #song-list .song {
         position: relative;
         display: grid;
@@ -550,11 +636,6 @@
 
 
   function iconFilename(filename) {
-    /*
-      Handles the two filename spellings that have appeared
-      in the project without breaking the icon.
-    */
-
     if (filename === "cidada.png") {
       return "cicada.png";
     }
@@ -634,6 +715,105 @@
 
 
   /* =========================================================
+     SEARCH BAR CREATION & LOGIC
+     ========================================================= */
+
+  function setupSearch() {
+    const songListContainer = document.getElementById("song-list");
+    if (!songListContainer || document.getElementById("archive-search-container")) return;
+
+    const container = document.createElement("div");
+    container.id = "archive-search-container";
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.id = "archive-search";
+    input.placeholder = "Search songs, keywords, or animals...";
+    input.setAttribute("autocomplete", "off");
+
+    const dropdown = document.createElement("div");
+    dropdown.id = "search-dropdown";
+
+    container.appendChild(input);
+    container.appendChild(dropdown);
+
+    songListContainer.parentNode.insertBefore(container, songListContainer);
+
+    input.addEventListener("input", () => {
+      const query = input.value.toLowerCase().trim();
+      dropdown.innerHTML = "";
+
+      if (query.length === 0) {
+        dropdown.classList.remove("active");
+        return;
+      }
+
+      const matches = [];
+      SONG_INFO.forEach((info, index) => {
+        const title = info[0].toLowerCase();
+        const keyword = info[1].toLowerCase();
+        const animal = iconLabel(iconFilename(info[2])).toLowerCase();
+
+        if (title.includes(query) || keyword.includes(query) || animal.includes(query)) {
+          matches.push({ index, title: info[0], keyword: info[1], animal: iconLabel(iconFilename(info[2])) });
+        }
+      });
+
+      if (matches.length === 0) {
+        const noResult = document.createElement("div");
+        noResult.className = "search-result-item";
+        noResult.style.justifyContent = "center";
+        noResult.style.fontStyle = "italic";
+        noResult.textContent = "No matching songs found";
+        dropdown.appendChild(noResult);
+        dropdown.classList.add("active");
+        return;
+      }
+
+      matches.slice(0, 15).forEach(match => {
+        const item = document.createElement("a");
+        item.className = "search-result-item";
+        item.href = "#";
+
+        const textSpan = document.createElement("span");
+        textSpan.className = "search-result-text";
+        textSpan.textContent = `♫ ${match.title}`;
+
+        const metaSpan = document.createElement("span");
+        metaSpan.className = "search-result-meta";
+        metaSpan.textContent = `${match.animal} • ${match.keyword}`;
+
+        item.appendChild(textSpan);
+        item.appendChild(metaSpan);
+
+        item.addEventListener("click", event => {
+          event.preventDefault();
+          dropdown.classList.remove("active");
+          input.value = "";
+
+          const rows = songRows();
+          const targetRow = rows[match.index];
+          if (targetRow) {
+            targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+            playSongFromRow(targetRow);
+          }
+        });
+
+        dropdown.appendChild(item);
+      });
+
+      dropdown.classList.add("active");
+    });
+
+    document.addEventListener("click", event => {
+      if (!container.contains(event.target)) {
+        dropdown.classList.remove("active");
+      }
+    });
+  }
+
+
+  /* =========================================================
      SONG NUMBERS
      ========================================================= */
 
@@ -688,12 +868,6 @@
         row.querySelector(".song-title");
 
       if (!titleElement) return;
-
-      /*
-        Clear the old:
-        "♫ Song 1"
-        "YouTube video • chronological position 1"
-      */
 
       titleElement.innerHTML = "";
 
@@ -1120,6 +1294,7 @@
 
   function init() {
     addStyles();
+    setupSearch(); // <-- Search bar hook integrated here!
 
     updateSongRows();
 
