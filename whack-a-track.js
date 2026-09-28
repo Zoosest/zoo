@@ -158,10 +158,8 @@
 
       #whack-a-track-game .wat-duck {
         display: block;
-        width: 82%;
-        max-width: 110px;
-        height: auto;
-        margin: 0 auto;
+        width: 100%;
+        height: 100%;
         object-fit: contain;
         pointer-events: none;
         user-select: none;
@@ -389,7 +387,7 @@
       playButton.setAttribute(
         "aria-label",
         "Song closed for roadwork"
-      );
+      ); 
     } 
 
     return true;
@@ -768,7 +766,8 @@
 
     /*
      * BRICK #1:
-     * The old 🐭 is now duck.png.
+     * Replace the old mouse emoji
+     * with the duck image.
      */
     hole.innerHTML = `
       <img
