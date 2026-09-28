@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 460;
+  const MOLE_VISIBLE_MS = 660;
   const MOLE_INTERVAL_MS = 1400;
 
   const REMOVED_TRACKS_KEY =
