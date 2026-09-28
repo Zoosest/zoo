@@ -697,48 +697,85 @@
 
 
   function fallback() {
-    const span = document.createElement("span");
+    const span =
+      document.createElement("span");
 
-    span.textContent = FALLBACK_ICON;
+    span.textContent =
+      FALLBACK_ICON;
 
-    span.style.display = "flex";
-    span.style.alignItems = "center";
-    span.style.justifyContent = "center";
-    span.style.fontSize = "2rem";
-    span.style.lineHeight = "1";
+    span.style.display =
+      "flex";
+
+    span.style.alignItems =
+      "center";
+
+    span.style.justifyContent =
+      "center";
+
+    span.style.fontSize =
+      "2rem";
+
+    span.style.lineHeight =
+      "1";
 
     return span;
   }
 
 
   function makeImage(filename) {
-    const button = document.createElement("button");
+    const button =
+      document.createElement("button");
 
-    button.type = "button";
-    button.className = "animal-button";
+    button.type =
+      "button";
 
-    const actualFilename = iconFilename(filename);
-    const label = iconLabel(actualFilename);
+    button.className =
+      "animal-button";
 
-    button.title = label;
-    button.setAttribute("aria-label", label);
+    const actualFilename =
+      iconFilename(filename);
 
-    const img = document.createElement("img");
+    const label =
+      iconLabel(actualFilename);
 
-    img.className = "animal-icon";
-    img.alt = label;
-    img.loading = "lazy";
-    img.decoding = "async";
+    button.title =
+      label;
+
+    button.setAttribute(
+      "aria-label",
+      label
+    );
+
+    const img =
+      document.createElement("img");
+
+    img.className =
+      "animal-icon";
+
+    img.alt =
+      label;
+
+    img.loading =
+      "lazy";
+
+    img.decoding =
+      "async";
 
     img.src =
       RAW_PREFIX +
-      encodeURIComponent(actualFilename);
+      encodeURIComponent(
+        actualFilename
+      );
 
     img.onerror = () => {
-      img.replaceWith(fallback());
+      img.replaceWith(
+        fallback()
+      );
     };
 
-    button.appendChild(img);
+    button.appendChild(
+      img
+    );
 
     return button;
   }
@@ -746,7 +783,9 @@
 
   function songRows() {
     return Array.from(
-      document.querySelectorAll("#song-list .song")
+      document.querySelectorAll(
+        "#song-list .song"
+      )
     );
   }
 
@@ -754,7 +793,8 @@
   function playSongFromRow(row) {
     if (!row) return;
 
-    const playButton = row.querySelector(".play");
+    const playButton =
+      row.querySelector(".play");
 
     if (playButton) {
       playButton.click();
@@ -767,121 +807,305 @@
      ========================================================= */
 
   function setupSearch() {
-    const songListContainer = document.getElementById("song-list");
-    if (!songListContainer || document.getElementById("archive-search-container")) return;
+    const songListContainer =
+      document.getElementById(
+        "song-list"
+      );
 
-    const container = document.createElement("div");
-    container.id = "archive-search-container";
+    if (
+      !songListContainer ||
+      document.getElementById(
+        "archive-search-container"
+      )
+    ) {
+      return;
+    }
 
-    const wrapper = document.createElement("div");
-    wrapper.id = "archive-search-wrapper";
+    const container =
+      document.createElement(
+        "div"
+      );
 
-    const icon = document.createElement("span");
-    icon.className = "search-magnifying-glass-column";
-    icon.textContent = "🔎";
+    container.id =
+      "archive-search-container";
 
-    const input = document.createElement("input");
-    input.type = "text";
-    input.id = "archive-search";
-    input.placeholder = "Search songs, keywords, or animals...";
-    input.setAttribute("autocomplete", "off");
+    const wrapper =
+      document.createElement(
+        "div"
+      );
 
-    const dropdown = document.createElement("div");
-    dropdown.id = "search-dropdown";
+    wrapper.id =
+      "archive-search-wrapper";
 
-    wrapper.appendChild(icon);
-    wrapper.appendChild(input);
-    container.appendChild(wrapper);
-    container.appendChild(dropdown);
+    const icon =
+      document.createElement(
+        "span"
+      );
 
-    songListContainer.parentNode.insertBefore(container, songListContainer);
+    icon.className =
+      "search-magnifying-glass-column";
 
-    input.addEventListener("input", () => {
-      const query = input.value.toLowerCase().trim();
-      dropdown.innerHTML = "";
+    icon.textContent =
+      "🔎";
 
-      if (query.length === 0) {
-        dropdown.classList.remove("active");
-        return;
-      }
+    const input =
+      document.createElement(
+        "input"
+      );
 
-      const matches = [];
-      SONG_INFO.forEach((info, index) => {
-        const title = info[0].toLowerCase();
-        const keyword = info[1].toLowerCase();
-        const animal = iconLabel(iconFilename(info[2])).toLowerCase();
+    input.type =
+      "text";
+
+    input.id =
+      "archive-search";
+
+    input.placeholder =
+      "Search songs, keywords, or animals...";
+
+    input.setAttribute(
+      "autocomplete",
+      "off"
+    );
+
+    const dropdown =
+      document.createElement(
+        "div"
+      );
+
+    dropdown.id =
+      "search-dropdown";
+
+    wrapper.appendChild(
+      icon
+    );
+
+    wrapper.appendChild(
+      input
+    );
+
+    container.appendChild(
+      wrapper
+    );
+
+    container.appendChild(
+      dropdown
+    );
+
+    songListContainer.parentNode.insertBefore(
+      container,
+      songListContainer
+    );
+
+    input.addEventListener(
+      "input",
+      () => {
+        const query =
+          input.value
+            .toLowerCase()
+            .trim();
+
+        dropdown.innerHTML =
+          "";
 
         if (
-          title.includes(query) ||
-          keyword.includes(query) ||
-          animal.includes(query)
+          query.length === 0
         ) {
-          matches.push({
-            index,
-            title: info[0],
-            keyword: info[1],
-            animal: iconLabel(iconFilename(info[2]))
-          });
+          dropdown.classList.remove(
+            "active"
+          );
+
+          return;
         }
-      });
 
-      if (matches.length === 0) {
-        const noResult = document.createElement("div");
-        noResult.className = "search-result-item";
-        noResult.style.justifyContent = "center";
-        noResult.style.fontStyle = "italic";
-        noResult.textContent = "No matching songs found";
-        dropdown.appendChild(noResult);
-        dropdown.classList.add("active");
-        return;
-      }
+        const matches =
+          [];
 
-      matches.slice(0, 15).forEach(match => {
-        const item = document.createElement("a");
-        item.className = "search-result-item";
-        item.href = "#";
+        SONG_INFO.forEach(
+          (
+            info,
+            index
+          ) => {
+            const title =
+              info[0].toLowerCase();
 
-        const textSpan = document.createElement("span");
-        textSpan.className = "search-result-text";
-        textSpan.textContent = `♫ ${match.title}`;
+            const keyword =
+              info[1].toLowerCase();
 
-        const metaSpan = document.createElement("span");
-        metaSpan.className = "search-result-meta";
-        metaSpan.textContent =
-          `${match.animal} • ${match.keyword}`;
+            const animal =
+              iconLabel(
+                iconFilename(
+                  info[2]
+                )
+              ).toLowerCase();
 
-        item.appendChild(textSpan);
-        item.appendChild(metaSpan);
-
-        item.addEventListener("click", event => {
-          event.preventDefault();
-          dropdown.classList.remove("active");
-          input.value = "";
-
-          const rows = songRows();
-          const targetRow = rows[match.index - 1];
-
-          if (targetRow) {
-            targetRow.scrollIntoView({
-              behavior: "smooth",
-              block: "center"
-            });
-
-            playSongFromRow(targetRow);
+            if (
+              title.includes(
+                query
+              ) ||
+              keyword.includes(
+                query
+              ) ||
+              animal.includes(
+                query
+              )
+            ) {
+              matches.push({
+                index,
+                title:
+                  info[0],
+                keyword:
+                  info[1],
+                animal:
+                  iconLabel(
+                    iconFilename(
+                      info[2]
+                    )
+                  )
+              });
+            }
           }
-        });
+        );
 
-        dropdown.appendChild(item);
-      });
+        if (
+          matches.length === 0
+        ) {
+          const noResult =
+            document.createElement(
+              "div"
+            );
 
-      dropdown.classList.add("active");
-    });
+          noResult.className =
+            "search-result-item";
 
-    document.addEventListener("click", event => {
-      if (!container.contains(event.target)) {
-        dropdown.classList.remove("active");
+          noResult.style.justifyContent =
+            "center";
+
+          noResult.style.fontStyle =
+            "italic";
+
+          noResult.textContent =
+            "No matching songs found";
+
+          dropdown.appendChild(
+            noResult
+          );
+
+          dropdown.classList.add(
+            "active"
+          );
+
+          return;
+        }
+
+        matches
+          .slice(
+            0,
+            15
+          )
+          .forEach(
+            match => {
+              const item =
+                document.createElement(
+                  "a"
+                );
+
+              item.className =
+                "search-result-item";
+
+              item.href =
+                "#";
+
+              const textSpan =
+                document.createElement(
+                  "span"
+                );
+
+              textSpan.className =
+                "search-result-text";
+
+              textSpan.textContent =
+                `♫ ${match.title}`;
+
+              const metaSpan =
+                document.createElement(
+                  "span"
+                );
+
+              metaSpan.className =
+                "search-result-meta";
+
+              metaSpan.textContent =
+                `${match.animal} • ${match.keyword}`;
+
+              item.appendChild(
+                textSpan
+              );
+
+              item.appendChild(
+                metaSpan
+              );
+
+              item.addEventListener(
+                "click",
+                event => {
+                  event.preventDefault();
+
+                  dropdown.classList.remove(
+                    "active"
+                  );
+
+                  input.value =
+                    "";
+
+                  const rows =
+                    songRows();
+
+                  const targetRow =
+                    rows[
+                      match.index - 1
+                    ];
+
+                  if (targetRow) {
+                    targetRow.scrollIntoView({
+                      behavior:
+                        "smooth",
+                      block:
+                        "center"
+                    });
+
+                    playSongFromRow(
+                      targetRow
+                    );
+                  }
+                }
+              );
+
+              dropdown.appendChild(
+                item
+              );
+            }
+          );
+
+        dropdown.classList.add(
+          "active"
+        );
       }
-    });
+    );
+
+    document.addEventListener(
+      "click",
+      event => {
+        if (
+          !container.contains(
+            event.target
+          )
+        ) {
+          dropdown.classList.remove(
+            "active"
+          );
+        }
+      }
+    );
   }
 
 
@@ -889,21 +1113,35 @@
      SONG NUMBERS
      ========================================================= */
 
-  function makeSongNumber(row, index) {
+  function makeSongNumber(
+    row,
+    index
+  ) {
     const oldNumber =
-      row.querySelector(".song-number");
+      row.querySelector(
+        ".song-number"
+      );
 
     if (!oldNumber) return;
 
-    if (oldNumber.tagName === "A") {
+    if (
+      oldNumber.tagName ===
+      "A"
+    ) {
       return;
     }
 
     const numberLink =
-      document.createElement("a");
+      document.createElement(
+        "a"
+      );
 
-    numberLink.className = "song-number";
-    numberLink.href = "#";
+    numberLink.className =
+      "song-number";
+
+    numberLink.href =
+      "#";
+
     numberLink.textContent =
       oldNumber.textContent.trim();
 
@@ -916,11 +1154,16 @@
       "click",
       event => {
         event.preventDefault();
-        playSongFromRow(row);
+
+        playSongFromRow(
+          row
+        );
       }
     );
 
-    oldNumber.replaceWith(numberLink);
+    oldNumber.replaceWith(
+      numberLink
+    );
   }
 
 
@@ -929,33 +1172,53 @@
      ========================================================= */
 
   function updateSongRows() {
-    const rows = songRows();
+    const rows =
+      songRows();
 
-    rows.forEach((row, index) => {
-      const info = SONG_INFO[index + 1];
+    rows.forEach(
+      (
+        row,
+        index
+      ) => {
+        const info =
+          SONG_INFO[
+            index + 1
+          ];
 
-      if (!info) return;
+        if (!info) return;
 
-      const titleElement =
-        row.querySelector(".song-title");
+        const titleElement =
+          row.querySelector(
+            ".song-title"
+          );
 
-      if (!titleElement) return;
+        if (!titleElement) return;
 
-      titleElement.innerHTML = "";
+        titleElement.innerHTML =
+          "";
 
-      const titleText =
-        document.createTextNode(
-          `♫ ${info[0]}`
+        const titleText =
+          document.createTextNode(
+            `♫ ${info[0]}`
+          );
+
+        const keyword =
+          document.createElement(
+            "small"
+          );
+
+        keyword.textContent =
+          info[1];
+
+        titleElement.appendChild(
+          titleText
         );
 
-      const keyword =
-        document.createElement("small");
-
-      keyword.textContent = info[1];
-
-      titleElement.appendChild(titleText);
-      titleElement.appendChild(keyword);
-    });
+        titleElement.appendChild(
+          keyword
+        );
+      }
+    );
   }
 
 
@@ -964,46 +1227,99 @@
      ========================================================= */
 
   function putIcons() {
-    const rows = songRows();
+    const rows =
+      songRows();
 
-    rows.forEach((row, index) => {
-      if (row.querySelector(".animal-button")) {
-        return;
-      }
+    rows.forEach(
+      (
+        row,
+        index
+      ) => {
 
-      /*
-       * ROADWORK IDENTIFIER
-       *
-       * The actual playlist is generated by index.html.
-       * This gives every visible song row its exact song number
-       * so Whack-A-Track can find the correct road later.
-       */
-      row.dataset.songIndex = String(index + 1);
+        /*
+         * ROADWORK IDENTIFIERS
+         *
+         * These are invisible.
+         *
+         * data-song-index = visible song number
+         * data-video-id    = exact YouTube video ID
+         *
+         * The intro is SONG_INFO[0] but is not a song row,
+         * so the playlist ID is index + 1.
+         */
 
-      const info = SONG_INFO[index + 1];
+        row.dataset.songIndex =
+          String(index + 1);
 
-      if (!info) return;
-
-      const filename = info[2];
-
-      if (!filename) return;
-
-      const icon =
-        makeImage(filename);
-
-      row.appendChild(icon);
-
-      icon.addEventListener(
-        "click",
-        event => {
-          event.preventDefault();
-          event.stopPropagation();
-          playSongFromRow(row);
+        try {
+          if (
+            typeof ids !==
+              "undefined" &&
+            ids[index + 1]
+          ) {
+            row.dataset.videoId =
+              String(
+                ids[index + 1]
+              );
+          }
+        } catch (error) {
+          /*
+           * If the playlist IDs are not available yet,
+           * the later restore attempt will try again.
+           */
         }
-      );
 
-      makeSongNumber(row, index);
-    });
+        /*
+         * If the animal icon already exists,
+         * the identifiers above still get assigned.
+         */
+        if (
+          row.querySelector(
+            ".animal-button"
+          )
+        ) {
+          return;
+        }
+
+        const info =
+          SONG_INFO[
+            index + 1
+          ];
+
+        if (!info) return;
+
+        const filename =
+          info[2];
+
+        if (!filename) return;
+
+        const icon =
+          makeImage(
+            filename
+          );
+
+        row.appendChild(
+          icon
+        );
+
+        icon.addEventListener(
+          "click",
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+
+            playSongFromRow(
+              row
+            );
+          }
+        );
+
+        makeSongNumber(
+          row,
+          index
+        );
+      }
+    );
   }
 
 
@@ -1011,21 +1327,32 @@
      MUSIC READING CARDS
      ========================================================= */
 
-  function getCardSongIndex(card) {
-    const link = card.querySelector("a");
+  function getCardSongIndex(
+    card
+  ) {
+    const link =
+      card.querySelector(
+        "a"
+      );
 
     if (!link) return -1;
 
     const match =
-      link.textContent.match(/(\d+)/);
+      link.textContent.match(
+        /(\d+)/
+      );
 
     if (!match) return -1;
 
     const songNumber =
-      Number(match[1]);
+      Number(
+        match[1]
+      );
 
     if (
-      !Number.isInteger(songNumber) ||
+      !Number.isInteger(
+        songNumber
+      ) ||
       songNumber < 1
     ) {
       return -1;
@@ -1035,15 +1362,22 @@
   }
 
 
-  function playCard(card) {
+  function playCard(
+    card
+  ) {
     if (!card) return;
 
     const link =
-      card.querySelector("a");
+      card.querySelector(
+        "a"
+      );
 
     if (!link) return;
 
-    if (typeof link.onclick === "function") {
+    if (
+      typeof link.onclick ===
+      "function"
+    ) {
       link.onclick({
         preventDefault() {},
         stopPropagation() {}
@@ -1053,22 +1387,30 @@
     }
 
     const songIndex =
-      getCardSongIndex(card);
+      getCardSongIndex(
+        card
+      );
 
     if (
       songIndex >= 0 &&
-      typeof window.play === "function"
+      typeof window.play ===
+        "function"
     ) {
-      window.play(songIndex);
+      window.play(
+        songIndex
+      );
     }
   }
 
 
-  function makeCardClickable(card) {
+  function makeCardClickable(
+    card
+  ) {
     if (!card) return;
 
     if (
-      card.dataset.animalCardReady === "true"
+      card.dataset.animalCardReady ===
+      "true"
     ) {
       return;
     }
@@ -1078,7 +1420,10 @@
       event => {
         event.preventDefault();
         event.stopPropagation();
-        playCard(card);
+
+        playCard(
+          card
+        );
       }
     );
 
@@ -1086,12 +1431,17 @@
       "keydown",
       event => {
         if (
-          event.key === "Enter" ||
-          event.key === " "
+          event.key ===
+            "Enter" ||
+          event.key ===
+            " "
         ) {
           event.preventDefault();
           event.stopPropagation();
-          playCard(card);
+
+          playCard(
+            card
+          );
         }
       }
     );
@@ -1116,16 +1466,26 @@
   }
 
 
-  function addAnimalToCard(card) {
+  function addAnimalToCard(
+    card
+  ) {
     if (!card) return;
 
     const songIndex =
-      getCardSongIndex(card);
+      getCardSongIndex(
+        card
+      );
 
-    if (songIndex < 0) return;
+    if (
+      songIndex < 0
+    ) {
+      return;
+    }
 
     const info =
-      SONG_INFO[songIndex];
+      SONG_INFO[
+        songIndex
+      ];
 
     if (!info) return;
 
@@ -1135,43 +1495,61 @@
     if (!animalFile) return;
 
     const actualFilename =
-      iconFilename(animalFile);
+      iconFilename(
+        animalFile
+      );
 
     const animalName =
-      iconLabel(actualFilename);
+      iconLabel(
+        actualFilename
+      );
 
     if (
       card.querySelector(
         ".card-animal-icon"
       )
     ) {
-      makeCardClickable(card);
+      makeCardClickable(
+        card
+      );
+
       return;
     }
 
     const symbol =
-      card.querySelector(".symbol");
+      card.querySelector(
+        ".symbol"
+      );
 
     const strong =
-      card.querySelector("strong");
+      card.querySelector(
+        "strong"
+      );
 
     const link =
-      card.querySelector("a");
+      card.querySelector(
+        "a"
+      );
 
     if (symbol) {
-      symbol.style.display = "none";
+      symbol.style.display =
+        "none";
     }
 
     if (strong) {
-      strong.style.display = "none";
+      strong.style.display =
+        "none";
     }
 
     if (link) {
-      link.style.display = "none";
+      link.style.display =
+        "none";
     }
 
     const img =
-      document.createElement("img");
+      document.createElement(
+        "img"
+      );
 
     img.className =
       "card-animal-icon";
@@ -1195,14 +1573,20 @@
       "async";
 
     img.dataset.songIndex =
-      String(songIndex);
+      String(
+        songIndex
+      );
 
     img.onerror = () => {
-      img.replaceWith(fallback());
+      img.replaceWith(
+        fallback()
+      );
     };
 
     const name =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
 
     name.className =
       "card-animal-name";
@@ -1211,21 +1595,37 @@
       animalName;
 
     name.dataset.songIndex =
-      String(songIndex);
+      String(
+        songIndex
+      );
 
-    card.appendChild(img);
-    card.appendChild(name);
+    card.appendChild(
+      img
+    );
 
-    makeCardClickable(card);
+    card.appendChild(
+      name
+    );
+
+    makeCardClickable(
+      card
+    );
   }
 
 
-  let updatingCards = false;
+  let updatingCards =
+    false;
+
 
   function addCardIcons() {
-    if (updatingCards) return;
+    if (
+      updatingCards
+    ) {
+      return;
+    }
 
-    updatingCards = true;
+    updatingCards =
+      true;
 
     try {
       const cardElements =
@@ -1234,11 +1634,15 @@
         );
 
       cardElements.forEach(
-        card => addAnimalToCard(card)
+        card =>
+          addAnimalToCard(
+            card
+          )
       );
 
     } finally {
-      updatingCards = false;
+      updatingCards =
+        false;
     }
   }
 
@@ -1247,7 +1651,9 @@
      MUSIC READING POSITIONING
      ========================================================= */
 
-  let scrollScheduled = false;
+  let scrollScheduled =
+    false;
+
 
   function positionReading() {
     const reading =
@@ -1287,33 +1693,47 @@
     const targetY =
       readingDocumentTop -
       dockHeight -
-      (usableHeight -
-        readingHeight) /
+      (
+        usableHeight -
+        readingHeight
+      ) /
         2;
 
     window.scrollTo({
-      top: Math.max(
-        0,
-        targetY
-      ),
-      behavior: "smooth"
+      top:
+        Math.max(
+          0,
+          targetY
+        ),
+      behavior:
+        "smooth"
     });
   }
 
 
   function scheduleReadingScroll() {
-    if (scrollScheduled) return;
+    if (
+      scrollScheduled
+    ) {
+      return;
+    }
 
-    scrollScheduled = true;
+    scrollScheduled =
+      true;
 
-    requestAnimationFrame(() => {
-      scrollScheduled = false;
+    requestAnimationFrame(
+      () => {
+        scrollScheduled =
+          false;
 
-      requestAnimationFrame(() => {
-        addCardIcons();
-        positionReading();
-      });
-    });
+        requestAnimationFrame(
+          () => {
+            addCardIcons();
+            positionReading();
+          }
+        );
+      }
+    );
   }
 
 
@@ -1333,7 +1753,8 @@
       new MutationObserver(
         mutations => {
 
-          let newCards = false;
+          let newCards =
+            false;
 
           for (
             const mutation of mutations
@@ -1343,14 +1764,20 @@
                 "childList" &&
               mutation.addedNodes.length
             ) {
-              newCards = true;
+              newCards =
+                true;
+
               break;
             }
           }
 
-          if (!newCards) return;
+          if (!newCards) {
+            return;
+          }
 
-          if (!updatingCards) {
+          if (
+            !updatingCards
+          ) {
             addCardIcons();
             scheduleReadingScroll();
           }
@@ -1360,8 +1787,10 @@
     observer.observe(
       cards,
       {
-        childList: true,
-        subtree: true
+        childList:
+          true,
+        subtree:
+          true
       }
     );
 
@@ -1375,6 +1804,7 @@
 
   function init() {
     addStyles();
+
     setupSearch();
 
     updateSongRows();
@@ -1394,7 +1824,10 @@
     document.addEventListener(
       "DOMContentLoaded",
       init,
-      { once: true }
+      {
+        once:
+          true
+      }
     );
   } else {
     init();
