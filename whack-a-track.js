@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 660;
+  const MOLE_VISIBLE_MS = 666;
   const MOLE_INTERVAL_MS = 1400;
 
   const REMOVED_TRACKS_KEY =
@@ -19,67 +19,6 @@
   const controls = () =>
     $(".controls");
 
-  /*
-   * ROADWORK MEMORY
-   *
-   * Whacked songs are saved in localStorage.
-   * They survive a page refresh.
-   */
-
-  function getWhackedTracks() {
-    try {
-      const raw =
-        localStorage.getItem(
-          REMOVED_TRACKS_KEY
-        );
-
-      const parsed =
-        JSON.parse(raw || "[]");
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-
-  function saveWhackedTrack(songId) {
-    if (!songId) {
-      return false;
-    }
-
-    const tracks =
-      getWhackedTracks();
-
-    if (!tracks.includes(songId)) {
-      tracks.push(songId);
-
-      try {
-        localStorage.setItem(
-          REMOVED_TRACKS_KEY,
-          JSON.stringify(tracks)
-        );
-      } catch (error) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-
-  function isTrackRemembered(songId) {
-    if (!songId) {
-      return false;
-    }
-
-    return getWhackedTracks()
-      .includes(songId);
-  }
-
-
   let game;
   let active = false;
   let trackHealth = TRACK_HEALTH;
@@ -88,6 +27,28 @@
   let hideTimer;
   let gameTimer;
 
+
+  /* =========================================================
+     PHONE VIBRATION
+     ========================================================= */
+
+  function vibrate(duration) {
+    if (
+      typeof navigator !== "undefined" &&
+      typeof navigator.vibrate === "function"
+    ) {
+      try {
+        navigator.vibrate(duration);
+      } catch (error) {
+        /* Vibration is optional. */
+      }
+    }
+  }
+
+
+  /* =========================================================
+     TOOLBAR
+     ========================================================= */
 
   function setToolbarHidden(hidden) {
     controls()?.classList.toggle(
@@ -98,8 +59,7 @@
 
 
   function positionToolbar() {
-    const dock =
-      $(".player-dock");
+    const dock = $(".player-dock");
 
     if (dock) {
       document.documentElement.style.setProperty(
@@ -143,7 +103,7 @@
       }
 
       #song-list .song.rizney-roadwork::after {
-        content: "🚧 ROAD CLOSED FOR ROADWORK";
+        content: "🚧 WHACKED!";
         display: block;
         grid-column: 1 / -1;
         margin: 4px 0 4px;
@@ -201,8 +161,7 @@
     );
 
     if (window.ResizeObserver) {
-      const dock =
-        $(".player-dock");
+      const dock = $(".player-dock");
 
       if (dock) {
         new ResizeObserver(
@@ -215,9 +174,12 @@
   }
 
 
+  /* =========================================================
+     YOUTUBE
+     ========================================================= */
+
   const playing = () => {
-    const player =
-      youtube();
+    const player = youtube();
 
     return (
       player &&
@@ -235,8 +197,7 @@
      ========================================================= */
 
   function getCurrentSongId() {
-    const player =
-      youtube();
+    const player = youtube();
 
     if (
       !player ||
@@ -288,28 +249,107 @@
   }
 
 
+  function getSongIdForNumber(songNumber) {
+    if (
+      !songNumber ||
+      !Number.isInteger(songNumber)
+    ) {
+      return null;
+    }
+
+    try {
+      if (
+        typeof ids !== "undefined" &&
+        ids[songNumber]
+      ) {
+        return String(
+          ids[songNumber]
+        );
+      }
+    } catch (error) {
+      /* ids may not be available yet. */
+    }
+
+    return null;
+  }
+
+
   /* =========================================================
-     ROADWORK
+     PERSISTENT ROADWORK
      ========================================================= */
+
+  function getWhackedTracks() {
+    try {
+      const raw =
+        localStorage.getItem(
+          REMOVED_TRACKS_KEY
+        );
+
+      const parsed =
+        JSON.parse(
+          raw || "[]"
+        );
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+
+    } catch (error) {
+      return [];
+    }
+  }
+
+
+  function saveWhackedTrack(songId) {
+    if (!songId) {
+      return null;
+    }
+
+    try {
+      const tracks =
+        getWhackedTracks();
+
+      if (
+        !tracks.includes(songId)
+      ) {
+        tracks.push(songId);
+
+        localStorage.setItem(
+          REMOVED_TRACKS_KEY,
+          JSON.stringify(tracks)
+        );
+      }
+
+      return songId;
+
+    } catch (error) {
+      return null;
+    }
+  }
+
+
+  function isTrackRemembered(songId) {
+    if (!songId) {
+      return false;
+    }
+
+    return getWhackedTracks()
+      .includes(songId);
+  }
+
 
   function findSongRow(songNumber) {
     if (!songNumber) {
       return null;
     }
 
-    /*
-     * main.js gives every song row an exact
-     * data-song-index value.
-     */
     return document.querySelector(
       `#song-list .song[data-song-index="${songNumber}"]`
     );
   }
 
 
-  function applyRoadworkToRow(
-    row
-  ) {
+  function applyRoadworkToRow(row) {
     if (!row) {
       return false;
     }
@@ -348,132 +388,66 @@
       return false;
     }
 
-    /*
-     * Save the YouTube ID permanently.
-     */
-    if (songId) {
-      saveWhackedTrack(
-        songId
-      );
-    }
-
     const row =
-      findSongRow(
-        songNumber
-      );
+      findSongRow(songNumber);
 
     if (!row) {
       return false;
     }
 
-    applyRoadworkToRow(
+    if (songId) {
+      saveWhackedTrack(songId);
+    }
+
+    return applyRoadworkToRow(
       row
     );
-
-    return true;
   }
 
 
-  /*
-   * RESTORE ALL SAVED ROADWORK
-   *
-   * The song rows are rebuilt when the page loads.
-   * This waits for those rows to exist, then puts the
-   * roadwork signs back.
-   */
-
-  function restoreRoadwork() {
-    const savedTracks =
-      getWhackedTracks();
-
-    if (!savedTracks.length) {
-      return;
-    }
-
-    const rows =
-      document.querySelectorAll(
-        "#song-list .song[data-song-index]"
+  function loadSavedRoadwork() {
+    const saved =
+      new Set(
+        getWhackedTracks()
       );
 
-    if (!rows.length) {
+    if (!saved.size) {
       return;
     }
 
-    rows.forEach(
-      row => {
+    document
+      .querySelectorAll(
+        "#song-list .song"
+      )
+      .forEach(row => {
         const songNumber =
           Number(
             row.dataset.songIndex
           );
 
-        if (!songNumber) {
+        if (
+          !Number.isInteger(
+            songNumber
+          ) ||
+          songNumber < 1
+        ) {
           return;
         }
 
-        /*
-         * main.js exposes the YouTube ID on the row.
-         */
         const songId =
-          row.dataset.videoId;
+          getSongIdForNumber(
+            songNumber
+          );
 
         if (
           songId &&
-          savedTracks.includes(songId)
+          saved.has(songId)
         ) {
           applyRoadworkToRow(
             row
           );
         }
-      }
-    );
-
-    /*
-     * Also support the saved song number if
-     * the video ID is not available yet.
-     */
-    savedTracks.forEach(
-      savedId => {
-        const matchingRow =
-          document.querySelector(
-            `#song-list .song[data-video-id="${savedId}"]`
-          );
-
-        if (matchingRow) {
-          applyRoadworkToRow(
-            matchingRow
-          );
-        }
-      }
-    );
-  }
-
-
-  function startRoadworkRestore() {
-    /*
-     * main.js builds the rows asynchronously.
-     * Check several times so we don't race it.
-     */
-    restoreRoadwork();
-
-    setTimeout(
-      restoreRoadwork,
-      100
-    );
-
-    setTimeout(
-      restoreRoadwork,
-      300
-    );
-
-    setTimeout(
-      restoreRoadwork,
-      750
-    );
-
-    setTimeout(
-      restoreRoadwork,
-      1500
-    );
+      });
   }
 
 
@@ -482,9 +456,7 @@
      ========================================================= */
 
   function createGame() {
-    if (game) {
-      return game;
-    }
+    if (game) return game;
 
     const panel =
       document.createElement(
@@ -571,18 +543,15 @@
     Object.assign(
       $("h2", panel).style,
       {
-        margin:
-          "0 0 6px"
+        margin: "0 0 6px"
       }
     );
 
     Object.assign(
       $("#wat-status", panel).style,
       {
-        margin:
-          "0 0 4px",
-        minHeight:
-          "1.4em"
+        margin: "0 0 4px",
+        minHeight: "1.4em"
       }
     );
 
@@ -590,24 +559,18 @@
       $("#wat-time", panel)
         .parentElement.style,
       {
-        margin:
-          "0 0 8px"
+        margin: "0 0 8px"
       }
     );
 
     Object.assign(
       $("#wat-health", panel).style,
       {
-        display:
-          "block",
-        width:
-          "100%",
-        height:
-          "18px",
-        margin:
-          "8px 0 14px",
-        accentColor:
-          "#d4af37"
+        display: "block",
+        width: "100%",
+        height: "18px",
+        margin: "8px 0 14px",
+        accentColor: "#d4af37"
       }
     );
 
@@ -617,50 +580,35 @@
     Object.assign(
       board.style,
       {
-        display:
-          "grid",
+        display: "grid",
         gridTemplateColumns:
           "repeat(3, minmax(0, 1fr))",
-        gap:
-          "10px",
-        margin:
-          "18px auto"
+        gap: "10px",
+        margin: "18px auto"
       }
     );
 
-    for (
-      let i = 0;
-      i < 6;
-      i++
-    ) {
+    for (let i = 0; i < 6; i++) {
       const hole =
         document.createElement(
           "button"
         );
 
-      hole.type =
-        "button";
-
+      hole.type = "button";
       hole.className =
         "wat-hole";
-
       hole.textContent =
         "🕳️";
-
       hole.dataset.active =
         "false";
 
       Object.assign(
         hole.style,
         {
-          minHeight:
-            "76px",
-          padding:
-            "8px",
-          fontSize:
-            "2rem",
-          cursor:
-            "crosshair"
+          minHeight: "76px",
+          padding: "8px",
+          fontSize: "2rem",
+          cursor: "crosshair"
         }
       );
 
@@ -682,6 +630,17 @@
             "💥";
 
           trackHealth--;
+
+          /*
+           * LITTLE PHYSICAL FEEDBACK.
+           */
+          if (
+            trackHealth <= 0
+          ) {
+            vibrate(80);
+          } else {
+            vibrate(40);
+          }
 
           $("#wat-health", panel)
             .value =
@@ -722,8 +681,7 @@
       panel
     );
 
-    panel.hidden =
-      true;
+    panel.hidden = true;
 
     new MutationObserver(
       () =>
@@ -733,12 +691,10 @@
     ).observe(
       panel,
       {
-        attributes:
-          true,
-        attributeFilter:
-          [
-            "hidden"
-          ]
+        attributes: true,
+        attributeFilter: [
+          "hidden"
+        ]
       }
     );
 
@@ -758,22 +714,18 @@
       .querySelectorAll(
         ".wat-hole"
       )
-      .forEach(
-        hole => {
-          hole.dataset.active =
-            "false";
+      .forEach(hole => {
+        hole.dataset.active =
+          "false";
 
-          hole.textContent =
-            "🕳️";
-        }
-      );
+        hole.textContent =
+          "🕳️";
+      });
   }
 
 
   function spawnMole() {
-    if (!active) {
-      return;
-    }
+    if (!active) return;
 
     const holes = [
       ...game.board
@@ -807,7 +759,7 @@
         () => {
           if (
             hole.dataset.active ===
-              "true"
+            "true"
           ) {
             hole.textContent =
               "🕳️";
@@ -843,9 +795,7 @@
     gameTimer =
       setInterval(
         () => {
-          if (!active) {
-            return;
-          }
+          if (!active) return;
 
           secondsLeft--;
 
@@ -866,12 +816,9 @@
 
 
   function finish(won) {
-    if (!active) {
-      return;
-    }
+    if (!active) return;
 
-    active =
-      false;
+    active = false;
 
     clearTimeout(
       moleTimer
@@ -901,13 +848,12 @@
       getCurrentSongNumber();
 
     /*
-     * SAVE THE ROADWORK.
+     * SAVE THE TRACK PERMANENTLY.
      */
-    if (songId) {
+    const savedId =
       saveWhackedTrack(
         songId
       );
-    }
 
     /*
      * CLOSE THE ROAD.
@@ -918,21 +864,31 @@
         songId
       );
 
-    if (roadClosed) {
+    if (
+      roadClosed &&
+      savedId
+    ) {
+      game.status.innerHTML =
+        `💥 TRACK WHACKED!<br>` +
+        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
+    } else if (
+      roadClosed
+    ) {
       game.status.innerHTML =
         `💥 TRACK WHACKED!<br>` +
         `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
     } else {
       game.status.innerHTML =
         `💥 TRACK WHACKED!<br>` +
-        `<small>Saved for roadwork.</small>`;
+        `<small>Could not locate Song ${
+          songNumber || "?"
+        }.</small>`;
     }
   }
 
 
   function closeGame() {
-    active =
-      false;
+    active = false;
 
     clearTimeout(
       moleTimer
@@ -974,24 +930,20 @@
 
     $("#wat-refresh",
       game.panel
-    ).hidden =
-      true;
+    ).hidden = true;
 
     game.panel.hidden =
       false;
 
     if (!playing()) {
-      active =
-        false;
+      active = false;
 
       game.status.textContent =
-        "Play a track to start the game, then pause it to remove from playlist";
+        "Play a track to start the game.";
 
       game.panel.scrollIntoView({
-        behavior:
-          "smooth",
-        block:
-          "start"
+        behavior: "smooth",
+        block: "start"
       });
 
       return;
@@ -1004,25 +956,32 @@
       getCurrentSongId();
 
     /*
-     * Don't start another game for a road
-     * that has already been closed.
+     * Don't allow a road-closed track
+     * to be whacked again.
      */
     if (
-      songId &&
-      isTrackRemembered(songId)
+      isTrackRemembered(
+        songId
+      )
     ) {
-      active =
-        false;
+      active = false;
+
+      const row =
+        findSongRow(
+          songNumber
+        );
+
+      applyRoadworkToRow(
+        row
+      );
 
       game.status.innerHTML =
-        `🚧 ROAD CLOSED FOR ROADWORK<br>` +
-        `<small>This track has already been whacked.</small>`;
+        `🚧 ROAD CLOSED<br>` +
+        `<small>This track is already closed for roadwork.</small>`;
 
       game.panel.scrollIntoView({
-        behavior:
-          "smooth",
-        block:
-          "start"
+        behavior: "smooth",
+        block: "start"
       });
 
       return;
@@ -1031,8 +990,7 @@
     trackHealth =
       TRACK_HEALTH;
 
-    active =
-      true;
+    active = true;
 
     $("#wat-health",
       game.panel
@@ -1054,22 +1012,24 @@
     spawnMole();
 
     game.panel.scrollIntoView({
-      behavior:
-        "smooth",
-      block:
-        "start"
+      behavior: "smooth",
+      block: "start"
     });
   }
 
+
+  /* =========================================================
+     INIT
+     ========================================================= */
 
   function init() {
     setupToolbar();
 
     /*
-     * Restore saved roadwork after the archive
-     * has had a chance to build its song rows.
+     * Restore all previously closed roads
+     * from localStorage.
      */
-    startRoadworkRestore();
+    loadSavedRoadwork();
 
     const button =
       $("#whack-track");
@@ -1088,8 +1048,7 @@
     Object.assign(
       button.style,
       {
-        cursor:
-          "pointer"
+        cursor: "pointer"
       }
     );
 
