@@ -549,22 +549,7 @@
   }
 
 
-  function iconFilename(filename) {
-    /*
-      Handles the two filename spellings that have appeared
-      in the project without breaking the icon.
-    */
-
-    if (filename === "cidada.png") {
-      return "cicada.png";
-    }
-
-    if (filename === "shrimp") {
-      return "shrimp.png";
-    }
-
-    return filename;
-  }
+ 
 
 
   function fallback() {
