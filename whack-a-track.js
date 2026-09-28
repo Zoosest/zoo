@@ -3,7 +3,7 @@
   "use strict";
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 480;
+  const MOLE_VISIBLE_MS = 460;
   const MOLE_INTERVAL_MS = 1400;
   const youtube = () => window.rizneyPlayer || window.player || null;
   const $ = (selector, root = document) => root.querySelector(selector);
