@@ -17,7 +17,7 @@
   */
 
   const SONG_INFO = [
-    ["mega MIX'N'MOJO", "Intro", "skull.png"], // <--- Intro placeholder (adjust title/icon if needed)
+    ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"], // <--- Exact intro title
     ["Unfinished Business", "Transformation", "skull.png"],
     ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
@@ -159,7 +159,7 @@
     ["Arkhétypes", "Memory", "seahorse.png"],
     ["I See Dead People", "Passage", "headless-horseman.png"],
     ["Suffering Sycophants", "Emergence", "cicada.png"],
-    ["\"That's Life\"", "Imimpermanence", "fly.png"],
+    ["\"That's Life\"", "Impermanence", "fly.png"],
     ["Johatsu (蒸发) Skumm Bar", "Mystery", "eel.png"],
     ["Pimps Dont Cry", "Independence", "minx.png"],
     ["EVA?", "Gentleness", "koala.png"],
@@ -850,7 +850,7 @@
           input.value = "";
 
           const rows = songRows();
-          const targetRow = rows[match.index];
+          const targetRow = rows[match.index - 1]; // Offset by 1 for intro
           if (targetRow) {
             targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
             playSongFromRow(targetRow);
@@ -895,7 +895,7 @@
 
     numberLink.setAttribute(
       "aria-label",
-      `Play song ${index + 1}`
+      `Play song ${index + 2}` // +2 because index 0 is intro, and row index starts at 0
     );
 
     numberLink.addEventListener(
