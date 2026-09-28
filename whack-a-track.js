@@ -132,28 +132,50 @@
         pointer-events: none;
       } 
 
-      @media (max-width: 640px) {
-        #whack-a-track-game {
-          width: 100%;
-          margin-top: 4px;
-          margin-bottom: 12px;
-          padding: 8px 10px 10px;
-        } 
+      /*
+       * WHACK-A-TRACK BOARD
+       */
 
-        #whack-a-track-game #wat-board {
-          gap: 6px;
-          margin: 10px auto;
-        } 
-
-        #whack-a-track-game .wat-hole {
-          min-height: 58px !important;
-          padding: 4px !important;
-          font-size: 1.65rem !important;
-        }
+      #whack-a-track-game #wat-board {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(2, 1fr);
+        gap: 14px;
+        width: 100%;
+        max-width: 500px;
+        margin: 18px auto;
+        padding: 14px;
+        background: #55208a;
+        border-radius: 14px;
+        overflow: hidden;
       }
 
       /*
-       * DUCK TARGET
+       * BLACK HOLES
+       */
+
+      #whack-a-track-game .wat-hole {
+        position: relative;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        min-height: 90px;
+        padding: 0;
+        border: 0;
+        border-radius: 50%;
+        background: #000;
+        overflow: hidden;
+        cursor: crosshair;
+        font-size: 1rem;
+      }
+
+      #whack-a-track-game .wat-hole:hover {
+        background: #000;
+      }
+
+      /*
+       * DUCK
        */
 
       #whack-a-track-game .wat-duck {
@@ -164,6 +186,26 @@
         pointer-events: none;
         user-select: none;
         -webkit-user-drag: none;
+      }
+
+      @media (max-width: 640px) {
+        #whack-a-track-game {
+          width: 100%;
+          margin-top: 4px;
+          margin-bottom: 12px;
+          padding: 8px 10px 10px;
+        }
+
+        #whack-a-track-game #wat-board {
+          gap: 10px;
+          margin: 10px auto;
+          padding: 10px;
+        }
+
+        #whack-a-track-game .wat-hole {
+          min-height: 68px !important;
+          padding: 0 !important;
+        }
       }
     `; 
 
@@ -543,7 +585,8 @@
           "8px auto 18px",
         padding:
           "10px 14px 14px",
-        textAlign: "center",
+        textAlign:
+          "center",
         background:
           "#120b18",
         border:
@@ -594,17 +637,10 @@
     const board =
       $("#wat-board", panel); 
 
-    Object.assign(
-      board.style,
-      {
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(3, minmax(0, 1fr))",
-        gap: "10px",
-        margin: "18px auto"
-      }
-    ); 
-
+    /*
+     * Six simple hole buttons.
+     * The board itself supplies the purple background.
+     */
     for (let i = 0; i < 6; i++) {
       const hole =
         document.createElement(
@@ -618,16 +654,6 @@
         "🕳️";
       hole.dataset.active =
         "false"; 
-
-      Object.assign(
-        hole.style,
-        {
-          minHeight: "76px",
-          padding: "8px",
-          fontSize: "2rem",
-          cursor: "crosshair"
-        }
-      ); 
 
       hole.addEventListener(
         "click",
@@ -764,11 +790,6 @@
     hole.dataset.active =
       "true"; 
 
-    /*
-     * BRICK #1:
-     * Replace the old mouse emoji
-     * with the duck image.
-     */
     hole.innerHTML = `
       <img
         class="wat-duck"
