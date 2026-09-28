@@ -3,7 +3,7 @@
   "use strict";
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 460;
+  const MOLE_VISIBLE_MS = 480;
   const MOLE_INTERVAL_MS = 1400;
   const youtube = () => window.rizneyPlayer || window.player || null;
   const $ = (selector, root = document) => root.querySelector(selector);
@@ -76,15 +76,11 @@
       if (dock) new ResizeObserver(positionToolbar).observe(dock);
     }
 
-    // Keep CARDS immediately to the left of Whack-A-Track regardless of HTML order.
-    const cardsButton = $("#draw-cards");
-    const whackButton = $("#whack-track");
-    if (cardsButton && whackButton) whackButton.parentElement.insertBefore(cardsButton, whackButton);
-
     // Do not observe #reading here: opening CARDS must leave the toolbar visible.
     setToolbarHidden(false);
 
     // CARDS is a toggle: pressing it again closes the reading panel.
+    const cardsButton = $("#draw-cards");
     const reading = $("#reading");
     cardsButton?.addEventListener("click", event => {
       if (!reading || reading.hidden) return;
@@ -155,10 +151,12 @@
     $("#wat-refresh", panel).addEventListener("click", () => window.location.reload());
     ($(".player-dock") || $("main") || document.body).insertAdjacentElement("afterend", panel);
     panel.hidden = true;
+
     // The toolbar follows the game panel only. It returns as soon as the panel closes.
     new MutationObserver(() => setToolbarHidden(!panel.hidden)).observe(panel, {
       attributes: true, attributeFilter: ["hidden"]
     });
+
     game = { panel, board, status: $("#wat-status", panel) };
     return game;
   }
@@ -224,12 +222,14 @@
     clearInterval(gameTimer);
     $("#wat-refresh", game.panel).hidden = true;
     game.panel.hidden = false;
+
     if (!playing()) {
       active = false;
       game.status.textContent = "Play a track to start the game, then pause it to remove from playlist";
       game.panel.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
+
     trackHealth = TRACK_HEALTH;
     active = true;
     $("#wat-health", game.panel).value = trackHealth;
@@ -249,6 +249,9 @@
     button.addEventListener("click", startGame);
   }
 
-  if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", init, { once: true });
-  else init();
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
+  } else {
+    init();
+  }
 })();
