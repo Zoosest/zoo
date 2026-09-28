@@ -12,12 +12,120 @@
   const FALLBACK_ICON = "🐾";
 
   /*
+    Persistent Whack-A-Track storage.
+
+    A YouTube video ID is used as the permanent identifier.
+    This means removing a song will continue to work even
+    if the visible song rows change position.
+  */
+  const REMOVED_TRACKS_KEY = "rizney-whacked-tracks-v1";
+
+  function getRemovedTrackIds() {
+    try {
+      const raw = localStorage.getItem(REMOVED_TRACKS_KEY);
+
+      if (!raw) {
+        return new Set();
+      }
+
+      const parsed = JSON.parse(raw);
+
+      if (!Array.isArray(parsed)) {
+        return new Set();
+      }
+
+      return new Set(
+        parsed.filter(id => typeof id === "string" && id.trim())
+      );
+    } catch {
+      return new Set();
+    }
+  }
+
+  function saveRemovedTrackIds(ids) {
+    try {
+      localStorage.setItem(
+        REMOVED_TRACKS_KEY,
+        JSON.stringify([...ids])
+      );
+    } catch {
+      // If browser storage is unavailable, the site still works normally.
+    }
+  }
+
+  let removedTrackIds = getRemovedTrackIds();
+
+  function isTrackRemovedById(id) {
+    return !!id && removedTrackIds.has(id);
+  }
+
+  function getSongIndexFromId(id) {
+    const archive = window.rizneyArchive;
+
+    if (
+      archive &&
+      typeof archive.getSongIndexById === "function"
+    ) {
+      return archive.getSongIndexById(id);
+    }
+
+    return -1;
+  }
+
+  function getSongId(songIndex) {
+    const archive = window.rizneyArchive;
+
+    if (
+      archive &&
+      Array.isArray(archive.ids) &&
+      archive.ids[songIndex]
+    ) {
+      return archive.ids[songIndex];
+    }
+
+    return null;
+  }
+
+  function isSongIndexRemoved(songIndex) {
+    const id = getSongId(songIndex);
+
+    if (!id) {
+      return false;
+    }
+
+    return isTrackRemovedById(id);
+  }
+
+  function getAvailableSongIndices() {
+    const archive = window.rizneyArchive;
+
+    if (
+      archive &&
+      typeof archive.getAvailableIndices === "function"
+    ) {
+      return archive.getAvailableIndices();
+    }
+
+    if (
+      archive &&
+      Array.isArray(archive.ids)
+    ) {
+      return archive.ids
+        .map((_, index) => index)
+        .filter(index => !isSongIndexRemoved(index));
+    }
+
+    return [];
+  }
+
+  /*
     Song information is kept in chronological order.
-    The first entry [index 0] is your intro track, followed by your animal-icon songs.
+    The first entry [index 0] is your intro track,
+    followed by your animal-icon songs.
   */
 
   const SONG_INFO = [
-    ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"], // <--- Exact intro title
+    ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
     ["Unfinished Business", "Transformation", "skull.png"],
     ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
@@ -762,112 +870,403 @@
   }
 
 
+  function getRowSongIndex(row) {
+    if (!row) return -1;
+
+    const value = row.dataset.songIndex;
+
+    if (value === undefined) {
+      return -1;
+    }
+
+    const index = Number(value);
+
+    return Number.isInteger(index) ? index : -1;
+  }
+
+
+  /* =========================================================
+     REMOVE / RESTORE TRACKS
+     ========================================================= */
+
+  function removeTrackById(id) {
+    if (!id) return false;
+
+    removedTrackIds.add(id);
+    saveRemovedTrackIds(removedTrackIds);
+
+    removeTrackRowById(id);
+
+    document.dispatchEvent(
+      new CustomEvent("rizney:track-removed", {
+        detail: { id }
+      })
+    );
+
+    return true;
+  }
+
+
+  function restoreAllRemovedTracks() {
+    removedTrackIds.clear();
+
+    try {
+      localStorage.removeItem(REMOVED_TRACKS_KEY);
+    } catch {
+      // Continue even if storage is unavailable.
+    }
+
+    document.dispatchEvent(
+      new CustomEvent("rizney:tracks-restored")
+    );
+  }
+
+
+  function removeTrackRowById(id) {
+    const songIndex = getSongIndexFromId(id);
+
+    if (songIndex < 0) return;
+
+    const row = document.querySelector(
+      `#song-list .song[data-song-index="${songIndex}"]`
+    );
+
+    row?.remove();
+  }
+
+
+  function removeAllStoredTrackRows() {
+    songRows().forEach(row => {
+      const songIndex = getRowSongIndex(row);
+
+      if (songIndex < 0) return;
+
+      if (isSongIndexRemoved(songIndex)) {
+        row.remove();
+      }
+    });
+  }
+
+
+  function setupRemovalEvents() {
+    document.addEventListener(
+      "rizney:track-removed",
+      event => {
+        const id = event.detail?.id;
+
+        if (!id) return;
+
+        removedTrackIds = getRemovedTrackIds();
+
+        removeTrackRowById(id);
+
+        document
+          .querySelectorAll("#cards .card")
+          .forEach(card => {
+            const songIndex = getCardSongIndex(card);
+            const cardId = getSongId(songIndex);
+
+            if (cardId === id) {
+              card.remove();
+            }
+          });
+      }
+    );
+
+    document.addEventListener(
+      "rizney:tracks-restored",
+      () => {
+        window.location.reload();
+      }
+    );
+  }
+
+
+  /*
+    Expose a small archive API so whack-a-track.js and the
+    inline player can communicate with this file.
+  */
+  function setupArchiveAPI() {
+    const existing =
+      window.rizneyArchive || {};
+
+    window.rizneyArchive = {
+      ...existing,
+
+      isTrackRemoved: isTrackRemovedById,
+
+      removeTrack: removeTrackById,
+
+      restoreRemovedTracks: restoreAllRemovedTracks,
+
+      getRemovedCount: () =>
+        removedTrackIds.size,
+
+      getAvailableIndices: getAvailableSongIndices,
+
+      getSongIndexById: id => {
+        if (!id) return -1;
+
+        if (
+          Array.isArray(existing.ids)
+        ) {
+          return existing.ids.indexOf(id);
+        }
+
+        return -1;
+      },
+
+      ids:
+        Array.isArray(existing.ids)
+          ? existing.ids
+          : existing.ids || []
+    };
+  }
+
+
   /* =========================================================
      SEARCH BAR CREATION & LOGIC
      ========================================================= */
 
   function setupSearch() {
-    const songListContainer = document.getElementById("song-list");
-    if (!songListContainer || document.getElementById("archive-search-container")) return;
+    const songListContainer =
+      document.getElementById("song-list");
 
-    const container = document.createElement("div");
-    container.id = "archive-search-container";
+    if (
+      !songListContainer ||
+      document.getElementById("archive-search-container")
+    ) {
+      return;
+    }
 
-    const wrapper = document.createElement("div");
-    wrapper.id = "archive-search-wrapper";
+    const container =
+      document.createElement("div");
 
-    // Magnifying glass placed in the outer left number column
-    const icon = document.createElement("span");
-    icon.className = "search-magnifying-glass-column";
+    container.id =
+      "archive-search-container";
+
+    const wrapper =
+      document.createElement("div");
+
+    wrapper.id =
+      "archive-search-wrapper";
+
+    const icon =
+      document.createElement("span");
+
+    icon.className =
+      "search-magnifying-glass-column";
+
     icon.textContent = "🔎";
 
-    const input = document.createElement("input");
+    const input =
+      document.createElement("input");
+
     input.type = "text";
     input.id = "archive-search";
-    input.placeholder = "Search songs, keywords, or animals...";
-    input.setAttribute("autocomplete", "off");
+    input.placeholder =
+      "Search songs, keywords, or animals...";
+    input.setAttribute(
+      "autocomplete",
+      "off"
+    );
 
-    const dropdown = document.createElement("div");
-    dropdown.id = "search-dropdown";
+    const dropdown =
+      document.createElement("div");
+
+    dropdown.id =
+      "search-dropdown";
 
     wrapper.appendChild(icon);
     wrapper.appendChild(input);
+
     container.appendChild(wrapper);
     container.appendChild(dropdown);
 
-    songListContainer.parentNode.insertBefore(container, songListContainer);
+    songListContainer.parentNode.insertBefore(
+      container,
+      songListContainer
+    );
 
-    input.addEventListener("input", () => {
-      const query = input.value.toLowerCase().trim();
-      dropdown.innerHTML = "";
+    input.addEventListener(
+      "input",
+      () => {
+        const query =
+          input.value
+            .toLowerCase()
+            .trim();
 
-      if (query.length === 0) {
-        dropdown.classList.remove("active");
-        return;
-      }
+        dropdown.innerHTML = "";
 
-      const matches = [];
-      SONG_INFO.forEach((info, index) => {
-        const title = info[0].toLowerCase();
-        const keyword = info[1].toLowerCase();
-        const animal = iconLabel(iconFilename(info[2])).toLowerCase();
-
-        if (title.includes(query) || keyword.includes(query) || animal.includes(query)) {
-          matches.push({ index, title: info[0], keyword: info[1], animal: iconLabel(iconFilename(info[2])) });
+        if (query.length === 0) {
+          dropdown.classList.remove(
+            "active"
+          );
+          return;
         }
-      });
 
-      if (matches.length === 0) {
-        const noResult = document.createElement("div");
-        noResult.className = "search-result-item";
-        noResult.style.justifyContent = "center";
-        noResult.style.fontStyle = "italic";
-        noResult.textContent = "No matching songs found";
-        dropdown.appendChild(noResult);
-        dropdown.classList.add("active");
-        return;
-      }
+        const matches = [];
 
-      matches.slice(0, 15).forEach(match => {
-        const item = document.createElement("a");
-        item.className = "search-result-item";
-        item.href = "#";
+        SONG_INFO.forEach(
+          (info, infoIndex) => {
+            /*
+              SONG_INFO[0] is the intro.
 
-        const textSpan = document.createElement("span");
-        textSpan.className = "search-result-text";
-        textSpan.textContent = `♫ ${match.title}`;
+              SONG_INFO[1] is song index 0.
+              Therefore the actual player/song index is:
+                infoIndex - 1
+            */
+            if (infoIndex === 0) {
+              return;
+            }
 
-        const metaSpan = document.createElement("span");
-        metaSpan.className = "search-result-meta";
-        metaSpan.textContent = `${match.animal} • ${match.keyword}`;
+            const songIndex =
+              infoIndex - 1;
 
-        item.appendChild(textSpan);
-        item.appendChild(metaSpan);
+            if (
+              isSongIndexRemoved(songIndex)
+            ) {
+              return;
+            }
 
-        item.addEventListener("click", event => {
-          event.preventDefault();
-          dropdown.classList.remove("active");
-          input.value = "";
+            const title =
+              info[0].toLowerCase();
 
-          const rows = songRows();
-          const targetRow = rows[match.index - 1]; // Offset by 1 for intro
-          if (targetRow) {
-            targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
-            playSongFromRow(targetRow);
+            const keyword =
+              info[1].toLowerCase();
+
+            const animal =
+              iconLabel(
+                iconFilename(info[2])
+              ).toLowerCase();
+
+            if (
+              title.includes(query) ||
+              keyword.includes(query) ||
+              animal.includes(query)
+            ) {
+              matches.push({
+                songIndex,
+                title: info[0],
+                keyword: info[1],
+                animal:
+                  iconLabel(
+                    iconFilename(info[2])
+                  )
+              });
+            }
           }
-        });
+        );
 
-        dropdown.appendChild(item);
-      });
+        if (matches.length === 0) {
+          const noResult =
+            document.createElement("div");
 
-      dropdown.classList.add("active");
-    });
+          noResult.className =
+            "search-result-item";
 
-    document.addEventListener("click", event => {
-      if (!container.contains(event.target)) {
-        dropdown.classList.remove("active");
+          noResult.style.justifyContent =
+            "center";
+
+          noResult.style.fontStyle =
+            "italic";
+
+          noResult.textContent =
+            "No matching songs found";
+
+          dropdown.appendChild(noResult);
+
+          dropdown.classList.add(
+            "active"
+          );
+
+          return;
+        }
+
+        matches
+          .slice(0, 15)
+          .forEach(match => {
+            const item =
+              document.createElement("a");
+
+            item.className =
+              "search-result-item";
+
+            item.href = "#";
+
+            const textSpan =
+              document.createElement("span");
+
+            textSpan.className =
+              "search-result-text";
+
+            textSpan.textContent =
+              `♫ ${match.title}`;
+
+            const metaSpan =
+              document.createElement("span");
+
+            metaSpan.className =
+              "search-result-meta";
+
+            metaSpan.textContent =
+              `${match.animal} • ${match.keyword}`;
+
+            item.appendChild(textSpan);
+            item.appendChild(metaSpan);
+
+            item.addEventListener(
+              "click",
+              event => {
+                event.preventDefault();
+
+                dropdown.classList.remove(
+                  "active"
+                );
+
+                input.value = "";
+
+                const targetRow =
+                  document.querySelector(
+                    `#song-list .song[data-song-index="${match.songIndex}"]`
+                  );
+
+                if (targetRow) {
+                  targetRow.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                  });
+
+                  playSongFromRow(
+                    targetRow
+                  );
+                }
+              }
+            );
+
+            dropdown.appendChild(item);
+          });
+
+        dropdown.classList.add(
+          "active"
+        );
       }
-    });
+    );
+
+    document.addEventListener(
+      "click",
+      event => {
+        if (
+          !container.contains(
+            event.target
+          )
+        ) {
+          dropdown.classList.remove(
+            "active"
+          );
+        }
+      }
+    );
   }
 
 
@@ -875,38 +1274,51 @@
      SONG NUMBERS
      ========================================================= */
 
-  function makeSongNumber(row, index) {
+  function makeSongNumber(
+    row,
+    songIndex
+  ) {
     const oldNumber =
-      row.querySelector(".song-number");
+      row.querySelector(
+        ".song-number"
+      );
 
     if (!oldNumber) return;
 
-    if (oldNumber.tagName === "A") {
+    if (
+      oldNumber.tagName === "A"
+    ) {
       return;
     }
 
     const numberLink =
       document.createElement("a");
 
-    numberLink.className = "song-number";
+    numberLink.className =
+      "song-number";
+
     numberLink.href = "#";
+
     numberLink.textContent =
       oldNumber.textContent.trim();
 
     numberLink.setAttribute(
       "aria-label",
-      `Play song ${index + 2}` // +2 because index 0 is intro, and row index starts at 0
+      `Play song ${songIndex + 1}`
     );
 
     numberLink.addEventListener(
       "click",
       event => {
         event.preventDefault();
+
         playSongFromRow(row);
       }
     );
 
-    oldNumber.replaceWith(numberLink);
+    oldNumber.replaceWith(
+      numberLink
+    );
   }
 
 
@@ -915,16 +1327,38 @@
      ========================================================= */
 
   function updateSongRows() {
-    const rows = songRows();
+    const rows =
+      songRows();
 
-    rows.forEach((row, index) => {
-      // Offset by 1 because index 0 in SONG_INFO is the intro track
-      const info = SONG_INFO[index + 1];
+    rows.forEach(row => {
+      const songIndex =
+        getRowSongIndex(row);
+
+      if (songIndex < 0) return;
+
+      if (
+        isSongIndexRemoved(songIndex)
+      ) {
+        row.remove();
+        return;
+      }
+
+      /*
+        songIndex 0 = SONG_INFO[1]
+        songIndex 1 = SONG_INFO[2]
+        etc.
+      */
+      const info =
+        SONG_INFO[
+          songIndex + 1
+        ];
 
       if (!info) return;
 
       const titleElement =
-        row.querySelector(".song-title");
+        row.querySelector(
+          ".song-title"
+        );
 
       if (!titleElement) return;
 
@@ -936,12 +1370,20 @@
         );
 
       const keyword =
-        document.createElement("small");
+        document.createElement(
+          "small"
+        );
 
-      keyword.textContent = info[1];
+      keyword.textContent =
+        info[1];
 
-      titleElement.appendChild(titleText);
-      titleElement.appendChild(keyword);
+      titleElement.appendChild(
+        titleText
+      );
+
+      titleElement.appendChild(
+        keyword
+      );
     });
   }
 
@@ -951,19 +1393,39 @@
      ========================================================= */
 
   function putIcons() {
-    const rows = songRows();
+    const rows =
+      songRows();
 
-    rows.forEach((row, index) => {
-      if (row.querySelector(".animal-button")) {
+    rows.forEach(row => {
+      const songIndex =
+        getRowSongIndex(row);
+
+      if (songIndex < 0) return;
+
+      if (
+        isSongIndexRemoved(songIndex)
+      ) {
+        row.remove();
         return;
       }
 
-      // Offset by 1 because index 0 in SONG_INFO is the intro track
-      const info = SONG_INFO[index + 1];
+      if (
+        row.querySelector(
+          ".animal-button"
+        )
+      ) {
+        return;
+      }
+
+      const info =
+        SONG_INFO[
+          songIndex + 1
+        ];
 
       if (!info) return;
 
-      const filename = info[2];
+      const filename =
+        info[2];
 
       if (!filename) return;
 
@@ -977,11 +1439,15 @@
         event => {
           event.preventDefault();
           event.stopPropagation();
+
           playSongFromRow(row);
         }
       );
 
-      makeSongNumber(row, index);
+      makeSongNumber(
+        row,
+        songIndex
+      );
     });
   }
 
@@ -991,12 +1457,39 @@
      ========================================================= */
 
   function getCardSongIndex(card) {
-    const link = card.querySelector("a");
+    if (!card) return -1;
+
+    /*
+      Prefer a real data-song-index if one exists.
+      This is safer than relying on the displayed number.
+    */
+    if (
+      card.dataset.songIndex !== undefined
+    ) {
+      const dataIndex =
+        Number(
+          card.dataset.songIndex
+        );
+
+      if (
+        Number.isInteger(
+          dataIndex
+        ) &&
+        dataIndex >= 0
+      ) {
+        return dataIndex;
+      }
+    }
+
+    const link =
+      card.querySelector("a");
 
     if (!link) return -1;
 
     const match =
-      link.textContent.match(/(\d+)/);
+      link.textContent.match(
+        /(\d+)/
+      );
 
     if (!match) return -1;
 
@@ -1004,26 +1497,46 @@
       Number(match[1]);
 
     if (
-      !Number.isInteger(songNumber) ||
+      !Number.isInteger(
+        songNumber
+      ) ||
       songNumber < 1
     ) {
       return -1;
     }
 
-    // Offset by 1 to account for the intro track at index 0
-    return songNumber;
+    /*
+      Cards display human song numbers.
+
+      Song #1 = player index 0.
+      Song #2 = player index 1.
+    */
+    return songNumber - 1;
   }
 
 
   function playCard(card) {
     if (!card) return;
 
+    const songIndex =
+      getCardSongIndex(card);
+
+    if (songIndex < 0) return;
+
+    if (
+      isSongIndexRemoved(songIndex)
+    ) {
+      return;
+    }
+
     const link =
       card.querySelector("a");
 
-    if (!link) return;
-
-    if (typeof link.onclick === "function") {
+    if (
+      link &&
+      typeof link.onclick ===
+        "function"
+    ) {
       link.onclick({
         preventDefault() {},
         stopPropagation() {}
@@ -1032,14 +1545,13 @@
       return;
     }
 
-    const songIndex =
-      getCardSongIndex(card);
-
     if (
-      songIndex >= 0 &&
-      typeof window.play === "function"
+      typeof window.play ===
+      "function"
     ) {
-      window.play(songIndex);
+      window.play(
+        songIndex
+      );
     }
   }
 
@@ -1048,7 +1560,8 @@
     if (!card) return;
 
     if (
-      card.dataset.animalCardReady === "true"
+      card.dataset.animalCardReady ===
+      "true"
     ) {
       return;
     }
@@ -1058,6 +1571,7 @@
       event => {
         event.preventDefault();
         event.stopPropagation();
+
         playCard(card);
       }
     );
@@ -1071,6 +1585,7 @@
         ) {
           event.preventDefault();
           event.stopPropagation();
+
           playCard(card);
         }
       }
@@ -1104,8 +1619,17 @@
 
     if (songIndex < 0) return;
 
+    if (
+      isSongIndexRemoved(songIndex)
+    ) {
+      card.remove();
+      return;
+    }
+
     const info =
-      SONG_INFO[songIndex];
+      SONG_INFO[
+        songIndex + 1
+      ];
 
     if (!info) return;
 
@@ -1115,10 +1639,14 @@
     if (!animalFile) return;
 
     const actualFilename =
-      iconFilename(animalFile);
+      iconFilename(
+        animalFile
+      );
 
     const animalName =
-      iconLabel(actualFilename);
+      iconLabel(
+        actualFilename
+      );
 
     if (
       card.querySelector(
@@ -1130,28 +1658,39 @@
     }
 
     const symbol =
-      card.querySelector(".symbol");
+      card.querySelector(
+        ".symbol"
+      );
 
     const strong =
-      card.querySelector("strong");
+      card.querySelector(
+        "strong"
+      );
 
     const link =
-      card.querySelector("a");
+      card.querySelector(
+        "a"
+      );
 
     if (symbol) {
-      symbol.style.display = "none";
+      symbol.style.display =
+        "none";
     }
 
     if (strong) {
-      strong.style.display = "none";
+      strong.style.display =
+        "none";
     }
 
     if (link) {
-      link.style.display = "none";
+      link.style.display =
+        "none";
     }
 
     const img =
-      document.createElement("img");
+      document.createElement(
+        "img"
+      );
 
     img.className =
       "card-animal-icon";
@@ -1178,11 +1717,15 @@
       String(songIndex);
 
     img.onerror = () => {
-      img.replaceWith(fallback());
+      img.replaceWith(
+        fallback()
+      );
     };
 
     const name =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
 
     name.className =
       "card-animal-name";
@@ -1191,6 +1734,14 @@
       animalName;
 
     name.dataset.songIndex =
+      String(songIndex);
+
+    /*
+      Give the card itself the real song index too.
+      This makes the card immune to changes in
+      visible song numbering.
+    */
+    card.dataset.songIndex =
       String(songIndex);
 
     card.appendChild(img);
@@ -1214,9 +1765,9 @@
         );
 
       cardElements.forEach(
-        card => addAnimalToCard(card)
+        card =>
+          addAnimalToCard(card)
       );
-
     } finally {
       updatingCards = false;
     }
@@ -1257,7 +1808,8 @@
 
     const dockHeight =
       dock
-        ? dock.getBoundingClientRect().height
+        ? dock.getBoundingClientRect()
+            .height
         : 0;
 
     const usableHeight =
@@ -1312,7 +1864,6 @@
     const observer =
       new MutationObserver(
         mutations => {
-
           let newCards = false;
 
           for (
@@ -1354,8 +1905,23 @@
      ========================================================= */
 
   function init() {
+    /*
+      Give the other scripts access to the persistent
+      removal system before anything else runs.
+    */
+    setupArchiveAPI();
+
+    setupRemovalEvents();
+
     addStyles();
+
     setupSearch();
+
+    /*
+      Remove anything that was previously whacked
+      before rebuilding the visible rows.
+    */
+    removeAllStoredTrackRows();
 
     updateSongRows();
 
