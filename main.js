@@ -7,7 +7,7 @@
   "use strict";
 
   const RAW_PREFIX =
-    "https://raw.githubusercontent.com/zoosest/zoo-/main/assets/animal-icons/";
+    "https://raw.githubusercontent.com/zoosest/zoo/main/assets/animal-icons/";
 
   const FALLBACK_ICON = "🐾";
 
