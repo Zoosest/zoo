@@ -457,7 +457,7 @@
 
   </section>
 
-  <!-- BUTTON ORDER INTENTIONALLY CHANGED:
+  <!-- BUTTON ORDER INTENTIONALLY KEPT:
        Previous → CARDS → Whack-A-Track → Random → Next -->
 
   <nav class="controls" aria-label="Music controls">
@@ -874,7 +874,7 @@
     const ids = songs
       .map(url =>
         url.match(
-          /(?:youtu\.be\/|shorts\/|watch\?v=)([^?&/]+)/
+          /(?:youtu\.be\/|shorts\/|watch\?v=)([^?&]+)/
         )?.[1]
       )
       .filter(Boolean);
@@ -893,13 +893,144 @@
     let currentIndex = -1;
 
     /*
-       INTRO TRANSITION PROTECTION
+      ============================================================
+      WHACK-A-TRACK MEMORY
+      ============================================================
 
-       When NEXT is manually pressed during the intro,
-       the YouTube player can send a stale ENDED event
-       from the intro while Song #1 is being loaded.
+      A whacked song is remembered by YouTube video ID.
 
-       This flag belongs ONLY to that one transition.
+      localStorage means the choice survives closing the browser
+      and coming back to the site later.
+    */
+
+    const REMOVED_TRACKS_KEY = 'rizney-whacked-tracks-v1';
+
+    function getRemovedTracks() {
+      try {
+        const saved =
+          JSON.parse(
+            localStorage.getItem(
+              REMOVED_TRACKS_KEY
+            ) || '[]'
+          );
+
+        return new Set(
+          Array.isArray(saved)
+            ? saved
+            : []
+        );
+      } catch (error) {
+        return new Set();
+      }
+    }
+
+    let removedTracks =
+      getRemovedTracks();
+
+    function saveRemovedTracks() {
+      try {
+        localStorage.setItem(
+          REMOVED_TRACKS_KEY,
+          JSON.stringify(
+            [...removedTracks]
+          )
+        );
+      } catch (error) {
+        /* Ignore storage errors. */
+      }
+    }
+
+    function isRemoved(index) {
+      return Boolean(
+        ids[index] &&
+        removedTracks.has(ids[index])
+      );
+    }
+
+    function availableIndices() {
+      return ids
+        .map((id, index) => index)
+        .filter(index => !isRemoved(index));
+    }
+
+    /*
+      Remove a song from the working playlist.
+
+      IMPORTANT:
+      The original ids array is never destroyed.
+      We simply remember which IDs are unavailable.
+
+      That keeps all of the existing song numbering and
+      animal-icon system intact.
+    */
+    function removeTrack(index) {
+
+      if (
+        index < 0 ||
+        !ids[index]
+      ) {
+        return;
+      }
+
+      removedTracks.add(
+        ids[index]
+      );
+
+      saveRemovedTracks();
+
+      /*
+        Hide the chronological row immediately.
+        main.js can still work with the row that remains in
+        the DOM without us changing its animal-icon system.
+      */
+      const rows =
+        [...list.querySelectorAll('.song')];
+
+      const row = rows[index];
+
+      if (row) {
+        row.hidden = true;
+      }
+
+      /*
+        If CARDS happened to contain the removed song,
+        rebuild the current reading without it.
+      */
+      if (cardPlaylist !== null) {
+
+        cardPlaylist =
+          cardPlaylist.filter(
+            songIndex =>
+              !isRemoved(songIndex)
+          );
+
+        if (
+          cardPosition >=
+          cardPlaylist.length
+        ) {
+          cardPosition =
+            Math.max(
+              0,
+              cardPlaylist.length - 1
+            );
+        }
+
+        cards.innerHTML = '';
+
+        if (cardPlaylist.length) {
+          buildReadingCards();
+        } else {
+          reading.hidden = true;
+          cardPlaylist = null;
+          cardPosition = 0;
+        }
+      }
+    }
+
+    /*
+      ============================================================
+      INTRO TRANSITION PROTECTION
+      ============================================================
     */
 
     let introTransitionPending = false;
@@ -908,6 +1039,7 @@
     let cardPosition = 0;
 
     const titleFor = i => {
+
       if (i === -1) {
         return "MEGA MIX'N'MOJO Intro";
       }
@@ -923,7 +1055,8 @@
           cardPosition <= 0;
 
         nextButton.disabled =
-          cardPosition >= cardPlaylist.length - 1;
+          cardPosition >=
+          cardPlaylist.length - 1;
 
         return;
       }
@@ -931,7 +1064,12 @@
       previousButton.disabled =
         currentIndex < 0;
 
-      nextButton.disabled = false;
+      /*
+        There is always a next button unless
+        there genuinely are no available songs.
+      */
+      nextButton.disabled =
+        availableIndices().length === 0;
     }
 
     function playIntro() {
@@ -951,6 +1089,7 @@
         player.loadVideoById({
           videoId: introVideoId
         });
+
       }
 
       updateButtons();
@@ -963,7 +1102,10 @@
 
     function play(index) {
 
-      if (!ids[index]) {
+      if (
+        !ids[index] ||
+        isRemoved(index)
+      ) {
         return;
       }
 
@@ -980,6 +1122,7 @@
         player.loadVideoById({
           videoId: ids[index]
         });
+
       }
 
       updateButtons();
@@ -999,12 +1142,18 @@
         return;
       }
 
+      const index =
+        cardPlaylist[position];
+
+      if (isRemoved(index)) {
+        return;
+      }
+
       introTransitionPending = false;
 
       cardPosition = position;
 
-      currentIndex =
-        cardPlaylist[position];
+      currentIndex = index;
 
       nowPlaying.textContent =
         `Reading ${position + 1} of ${cardPlaylist.length}: ${titleFor(currentIndex)}`;
@@ -1014,9 +1163,67 @@
         player.loadVideoById({
           videoId: ids[currentIndex]
         });
+
       }
 
       updateButtons();
+    }
+
+    /*
+      Find the next available song after the current song.
+
+      This is the important part that makes:
+      WHACK → REMOVE → NEXT SONG
+      actually work.
+    */
+    function nextAvailableIndex(fromIndex) {
+
+      for (
+        let i = fromIndex + 1;
+        i < ids.length;
+        i++
+      ) {
+
+        if (!isRemoved(i)) {
+          return i;
+        }
+
+      }
+
+      /*
+        If there isn't one after the current song,
+        wrap around to the beginning.
+      */
+      for (
+        let i = 0;
+        i <= fromIndex;
+        i++
+      ) {
+
+        if (!isRemoved(i)) {
+          return i;
+        }
+
+      }
+
+      return -1;
+    }
+
+    function previousAvailableIndex(fromIndex) {
+
+      for (
+        let i = fromIndex - 1;
+        i >= 0;
+        i--
+      ) {
+
+        if (!isRemoved(i)) {
+          return i;
+        }
+
+      }
+
+      return -1;
     }
 
     function next() {
@@ -1047,27 +1254,34 @@
       }
 
       /*
-         INTRO → SONG #1
+        INTRO → FIRST AVAILABLE SONG
       */
-
       if (currentIndex === -1) {
 
-        play(0);
+        const first =
+          availableIndices()[0];
+
+        if (first !== undefined) {
+          play(first);
+        }
 
         return;
       }
 
-      if (
-        currentIndex <
-        ids.length - 1
-      ) {
+      const nextIndex =
+        nextAvailableIndex(
+          currentIndex
+        );
 
-        play(currentIndex + 1);
+      if (nextIndex !== -1) {
+
+        play(nextIndex);
 
       } else {
 
         nowPlaying.textContent =
           'You reached the end of the collection ✦';
+
       }
 
       updateButtons();
@@ -1082,6 +1296,7 @@
           playPosition(
             cardPosition - 1
           );
+
         }
 
         return;
@@ -1096,9 +1311,109 @@
 
       if (currentIndex > 0) {
 
-        play(currentIndex - 1);
+        const previousIndex =
+          previousAvailableIndex(
+            currentIndex
+          );
+
+        if (
+          previousIndex !== -1
+        ) {
+
+          play(previousIndex);
+
+        }
+
       }
     }
+
+    /*
+      ============================================================
+      REMOVE CURRENT TRACK
+      ============================================================
+    */
+
+    function removeCurrentTrack() {
+
+      if (
+        currentIndex < 0 ||
+        !ids[currentIndex]
+      ) {
+        return;
+      }
+
+      const removedIndex =
+        currentIndex;
+
+      /*
+        Find the next song BEFORE changing currentIndex.
+      */
+      const nextIndex =
+        nextAvailableIndex(
+          removedIndex
+        );
+
+      removeTrack(
+        removedIndex
+      );
+
+      /*
+        Stop the current YouTube video first.
+      */
+      if (player) {
+
+        try {
+          player.stopVideo();
+        } catch (error) {
+          /* Ignore YouTube API errors. */
+        }
+
+      }
+
+      cardPlaylist = null;
+      cardPosition = 0;
+
+      /*
+        Now immediately continue with the next
+        surviving song.
+      */
+      if (
+        nextIndex !== -1 &&
+        nextIndex !== removedIndex
+      ) {
+
+        play(nextIndex);
+
+      } else {
+
+        currentIndex = -1;
+
+        nowPlaying.textContent =
+          'All available tracks have been whacked ✦';
+
+        updateButtons();
+
+      }
+    }
+
+    /*
+      Whack-A-Track already sends this event when the
+      game is beaten.
+
+      The event is now connected directly to the playlist.
+    */
+    window.addEventListener(
+      'rizney:track-removed',
+      () => {
+        removeCurrentTrack();
+      }
+    );
+
+    /*
+      ============================================================
+      YOUTUBE PLAYER
+      ============================================================
+    */
 
     window.onYouTubeIframeAPIReady = () => {
 
@@ -1126,21 +1441,23 @@
                 "Now playing: MEGA MIX'N'MOJO Intro";
 
               updateButtons();
+
             },
 
             onStateChange: e => {
 
               /*
-                 When Song #1 actually begins playing,
-                 the special intro transition is finished.
+                When Song #1 actually begins playing,
+                the special intro transition is finished.
               */
-
               if (
                 e.data ===
                 YT.PlayerState.PLAYING
               ) {
 
-                introTransitionPending = false;
+                introTransitionPending =
+                  false;
+
               }
 
               if (
@@ -1148,23 +1465,38 @@
                 YT.PlayerState.ENDED
               ) {
 
-                if (introTransitionPending) {
+                if (
+                  introTransitionPending
+                ) {
 
-                  introTransitionPending = false;
+                  introTransitionPending =
+                    false;
 
                   return;
+
                 }
 
                 next();
+
               }
+
             }
+
           }
+
         }
       );
 
       window.rizneyPlayer =
         player;
+
     };
+
+    /*
+      ============================================================
+      CHRONOLOGICAL SONG LIST
+      ============================================================
+    */
 
     ids.forEach((id, index) => {
 
@@ -1192,34 +1524,74 @@
         >Play</button>
       `;
 
+      /*
+        If this song was already whacked on an earlier visit,
+        don't show it.
+      */
+      if (isRemoved(index)) {
+        row.hidden = true;
+      }
+
       row.querySelector(
         'button'
       ).onclick = () => {
 
+        if (isRemoved(index)) {
+          return;
+        }
+
         cardPlaylist = null;
         cardPosition = 0;
 
-        introTransitionPending = false;
+        introTransitionPending =
+          false;
 
         play(index);
+
       };
 
       list.appendChild(row);
+
     });
 
+    /*
+      ============================================================
+      RANDOM
+      ============================================================
+    */
+
     $('#random-song').onclick = () => {
+
+      const available =
+        availableIndices();
+
+      if (!available.length) {
+        return;
+      }
 
       cardPlaylist = null;
       cardPosition = 0;
 
-      introTransitionPending = false;
+      introTransitionPending =
+        false;
 
-      play(
-        Math.floor(
-          Math.random() * ids.length
-        )
-      );
+      const randomIndex =
+        available[
+          Math.floor(
+            Math.random() *
+            available.length
+          )
+        ];
+
+      play(randomIndex);
+
     };
+
+    /*
+      ============================================================
+      PREVIOUS / NEXT
+      ============================================================
+    */
 
     previousButton.onclick =
       previous;
@@ -1228,29 +1600,22 @@
 
       if (currentIndex === -1) {
 
-        introTransitionPending = true;
+        introTransitionPending =
+          true;
+
       }
 
       next();
+
     };
 
-    $('#draw-cards').onclick = () => {
+    /*
+      ============================================================
+      CARDS
+      ============================================================
+    */
 
-      introTransitionPending = false;
-
-      cardPlaylist =
-        [...ids.keys()]
-          .sort(
-            () => Math.random() - 0.5
-          )
-          .slice(
-            0,
-            Math.min(6, ids.length)
-          );
-
-      cardPosition = 0;
-
-      reading.hidden = false;
+    function buildReadingCards() {
 
       cards.innerHTML = '';
 
@@ -1274,7 +1639,8 @@
                 'article'
               );
 
-            card.className = 'card';
+            card.className =
+              'card';
 
             card.innerHTML = `
               <span class="symbol">
@@ -1299,14 +1665,51 @@
               playPosition(
                 position
               );
+
             };
 
             cards.appendChild(card);
+
           }
         );
+    }
+
+    $('#draw-cards').onclick = () => {
+
+      introTransitionPending =
+        false;
+
+      const available =
+        availableIndices();
+
+      cardPlaylist =
+        [...available]
+          .sort(
+            () => Math.random() - 0.5
+          )
+          .slice(
+            0,
+            Math.min(
+              6,
+              available.length
+            )
+          );
+
+      cardPosition = 0;
+
+      reading.hidden = false;
+
+      buildReadingCards();
 
       updateButtons();
+
     };
+
+    /*
+      ============================================================
+      CONTEXT PAGE
+      ============================================================
+    */
 
     const contextButton =
       $('#context-button');
@@ -1332,6 +1735,7 @@
         'hidden';
 
       contextClose.focus();
+
     }
 
     function closeContext() {
@@ -1349,6 +1753,7 @@
         '';
 
       contextButton.focus();
+
     }
 
     contextButton.addEventListener(
@@ -1373,16 +1778,53 @@
         ) {
 
           closeContext();
+
         }
+
       }
     );
+
+    /*
+      ============================================================
+      PUBLIC PLAYLIST HELPERS
+      ============================================================
+
+      These are available to other site scripts without exposing
+      the internal playlist variables themselves.
+    */
+
+    window.rizneyArchive = {
+
+      ids,
+
+      isTrackRemoved:
+        isRemoved,
+
+      availableIndices,
+
+      removeTrack,
+
+      removeCurrentTrack,
+
+      getCurrentTrackIndex:
+        () => currentIndex,
+
+      getCurrentTrackId:
+        () =>
+          currentIndex >= 0
+            ? ids[currentIndex]
+            : null,
+
+      getRemovedCount:
+        () => removedTracks.size
+
+    };
 
     updateButtons();
 
   </script>
 
   <script src="./main.js"></script>
-
   <script src="./whack-a-track.js"></script>
 
 </body>
