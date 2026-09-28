@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 560;
+  const MOLE_VISIBLE_MS = 460;
   const MOLE_INTERVAL_MS = 1400;
 
   const REMOVED_TRACKS_KEY = "rizneyWhackedTracks";
@@ -211,6 +211,33 @@
 
 
   /* =========================================================
+     GET SAVED TRACKS
+     ========================================================= */
+
+  function getWhackedTracks() {
+
+    try {
+
+      const saved =
+        JSON.parse(
+          localStorage.getItem(
+            REMOVED_TRACKS_KEY
+          ) || "[]"
+        );
+
+      return Array.isArray(saved)
+        ? saved
+        : [];
+
+    } catch (error) {
+
+      return [];
+
+    }
+  }
+
+
+  /* =========================================================
      SAVE WHACKED SONG
      ========================================================= */
 
@@ -229,28 +256,8 @@
     }
 
 
-    let removed = [];
-
-
-    try {
-
-      removed =
-        JSON.parse(
-          localStorage.getItem(
-            REMOVED_TRACKS_KEY
-          ) || "[]"
-        );
-
-
-      if (!Array.isArray(removed)) {
-        removed = [];
-      }
-
-    } catch (error) {
-
-      removed = [];
-
-    }
+    const removed =
+      getWhackedTracks();
 
 
     if (!removed.includes(videoId)) {
@@ -273,6 +280,23 @@
 
 
     return videoId;
+  }
+
+
+  /* =========================================================
+     CHECK WHETHER A TRACK IS REMEMBERED
+     ========================================================= */
+
+  function isTrackRemembered(videoId) {
+
+    if (!videoId) {
+      return false;
+    }
+
+    const saved =
+      getWhackedTracks();
+
+    return saved.includes(videoId);
   }
 
 
@@ -760,8 +784,14 @@
 
       if (savedId) {
 
+        const remembered =
+          isTrackRemembered(savedId);
+
+
         game.status.innerHTML =
-          `💥 TRACK WHACKED!<br><small>SAVED: ${savedId}</small>`;
+          remembered
+            ? `💥 TRACK WHACKED!<br><small>SAVED: ${savedId}</small><br><small>REMEMBERED: YES</small>`
+            : `💥 TRACK WHACKED!<br><small>SAVED: ${savedId}</small><br><small>REMEMBERED: NO</small>`;
 
       } else {
 
