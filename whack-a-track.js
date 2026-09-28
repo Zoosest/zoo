@@ -1,4 +1,3 @@
-
 /* Whack-a-Track mini-game for the Rizney Music Archive. */
 (() => {
   "use strict";
@@ -8,8 +7,7 @@
   const MOLE_VISIBLE_MS = 660;
   const MOLE_INTERVAL_MS = 1400;
 
-  const REMOVED_TRACKS_KEY =
-    "rizneyWhackedTracks";
+  const REMOVED_TRACKS_KEY = "rizneyWhackedTracks";
 
   const youtube = () =>
     window.rizneyPlayer || window.player || null;
@@ -58,7 +56,6 @@
     );
   }
 
-
   function positionToolbar() {
     const dock = $(".player-dock");
 
@@ -70,10 +67,8 @@
     }
   }
 
-
   function setupToolbar() {
-    const style =
-      document.createElement("style");
+    const style = document.createElement("style");
 
     style.textContent = `
       .controls {
@@ -130,6 +125,14 @@
         pointer-events: none;
       }
 
+      /* Whack-a-Track custom image styling */
+      .wat-hole img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        pointer-events: none;
+      }
+
       @media (max-width: 640px) {
         #whack-a-track-game {
           width: 100%;
@@ -146,13 +149,11 @@
         #whack-a-track-game .wat-hole {
           min-height: 58px !important;
           padding: 4px !important;
-          font-size: 1.65rem !important;
         }
       }
     `;
 
     document.head.appendChild(style);
-
     positionToolbar();
 
     window.addEventListener(
@@ -163,11 +164,8 @@
 
     if (window.ResizeObserver) {
       const dock = $(".player-dock");
-
       if (dock) {
-        new ResizeObserver(
-          positionToolbar
-        ).observe(dock);
+        new ResizeObserver(positionToolbar).observe(dock);
       }
     }
 
@@ -176,101 +174,46 @@
 
 
   /* =========================================================
-     YOUTUBE
+     YOUTUBE & CURRENT SONG
      ========================================================= */
 
   const playing = () => {
     const player = youtube();
-
     return (
       player &&
-      typeof player.getPlayerState ===
-        "function" &&
+      typeof player.getPlayerState === "function" &&
       window.YT &&
-      player.getPlayerState() ===
-        YT.PlayerState.PLAYING
+      player.getPlayerState() === YT.PlayerState.PLAYING
     );
   };
 
-
-  /* =========================================================
-     CURRENT SONG
-     ========================================================= */
-
   function getCurrentSongId() {
     const player = youtube();
-
-    if (
-      !player ||
-      typeof player.getVideoData !==
-        "function"
-    ) {
+    if (!player || typeof player.getVideoData !== "function") {
       return null;
     }
-
     try {
-      const data =
-        player.getVideoData();
-
-      if (
-        !data ||
-        !data.video_id
-      ) {
-        return null;
-      }
-
-      return String(
-        data.video_id
-      );
-
+      const data = player.getVideoData();
+      return data && data.video_id ? String(data.video_id) : null;
     } catch (error) {
       return null;
     }
   }
-
 
   function getCurrentSongNumber() {
-    const nowPlaying =
-      $("#now-playing");
-
-    if (!nowPlaying) {
-      return null;
-    }
-
-    const match =
-      nowPlaying.textContent.match(
-        /Song\s+(\d+)/i
-      );
-
-    if (!match) {
-      return null;
-    }
-
-    return Number(match[1]);
+    const nowPlaying = $("#now-playing");
+    if (!nowPlaying) return null;
+    const match = nowPlaying.textContent.match(/Song\s+(\d+)/i);
+    return match ? Number(match[1]) : null;
   }
 
-
   function getSongIdForNumber(songNumber) {
-    if (
-      !songNumber ||
-      !Number.isInteger(songNumber)
-    ) {
-      return null;
-    }
-
+    if (!songNumber || !Number.isInteger(songNumber)) return null;
     try {
-      if (
-        typeof ids !== "undefined" &&
-        ids[songNumber]
-      ) {
-        return String(
-          ids[songNumber]
-        );
+      if (typeof ids !== "undefined" && ids[songNumber]) {
+        return String(ids[songNumber]);
       }
-    } catch (error) {
-      /* ids may not be available yet. */
-    }
-
+    } catch (error) {}
     return null;
   }
 
@@ -281,174 +224,70 @@
 
   function getWhackedTracks() {
     try {
-      const raw =
-        localStorage.getItem(
-          REMOVED_TRACKS_KEY
-        );
-
-      const parsed =
-        JSON.parse(
-          raw || "[]"
-        );
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-
+      const raw = localStorage.getItem(REMOVED_TRACKS_KEY);
+      const parsed = JSON.parse(raw || "[]");
+      return Array.isArray(parsed) ? parsed : [];
     } catch (error) {
       return [];
     }
   }
 
-
   function saveWhackedTrack(songId) {
-    if (!songId) {
-      return null;
-    }
-
+    if (!songId) return null;
     try {
-      const tracks =
-        getWhackedTracks();
-
-      if (
-        !tracks.includes(songId)
-      ) {
+      const tracks = getWhackedTracks();
+      if (!tracks.includes(songId)) {
         tracks.push(songId);
-
-        localStorage.setItem(
-          REMOVED_TRACKS_KEY,
-          JSON.stringify(tracks)
-        );
+        localStorage.setItem(REMOVED_TRACKS_KEY, JSON.stringify(tracks));
       }
-
       return songId;
-
     } catch (error) {
       return null;
     }
   }
 
-
   function isTrackRemembered(songId) {
-    if (!songId) {
-      return false;
-    }
-
-    return getWhackedTracks()
-      .includes(songId);
+    if (!songId) return false;
+    return getWhackedTracks().includes(songId);
   }
-
 
   function findSongRow(songNumber) {
-    if (!songNumber) {
-      return null;
-    }
-
-    return document.querySelector(
-      `#song-list .song[data-song-index="${songNumber}"]`
-    );
+    if (!songNumber) return null;
+    return document.querySelector(`#song-list .song[data-song-index="${songNumber}"]`);
   }
 
-
   function applyRoadworkToRow(row) {
-    if (!row) {
-      return false;
-    }
-
-    row.classList.add(
-      "rizney-roadwork"
-    );
-
-    row.dataset.rizneyRoadwork =
-      "true";
-
-    const playButton =
-      row.querySelector(".play");
-
+    if (!row) return false;
+    row.classList.add("rizney-roadwork");
+    row.dataset.rizneyRoadwork = "true";
+    const playButton = row.querySelector(".play");
     if (playButton) {
       playButton.disabled = true;
-
-      playButton.setAttribute(
-        "aria-label",
-        "Song closed for roadwork"
-      );
+      playButton.setAttribute("aria-label", "Song closed for roadwork");
     }
-
     return true;
   }
 
-
-  function closeRoad(
-    songNumber,
-    songId
-  ) {
-    if (
-      !songNumber &&
-      !songId
-    ) {
-      return false;
-    }
-
-    const row =
-      findSongRow(songNumber);
-
-    if (!row) {
-      return false;
-    }
-
-    if (songId) {
-      saveWhackedTrack(songId);
-    }
-
-    return applyRoadworkToRow(
-      row
-    );
+  function closeRoad(songNumber, songId) {
+    if (!songNumber && !songId) return false;
+    const row = findSongRow(songNumber);
+    if (!row) return false;
+    if (songId) saveWhackedTrack(songId);
+    return applyRoadworkToRow(row);
   }
 
-
   function loadSavedRoadwork() {
-    const saved =
-      new Set(
-        getWhackedTracks()
-      );
+    const saved = new Set(getWhackedTracks());
+    if (!saved.size) return;
 
-    if (!saved.size) {
-      return;
-    }
-
-    document
-      .querySelectorAll(
-        "#song-list .song"
-      )
-      .forEach(row => {
-        const songNumber =
-          Number(
-            row.dataset.songIndex
-          );
-
-        if (
-          !Number.isInteger(
-            songNumber
-          ) ||
-          songNumber < 1
-        ) {
-          return;
-        }
-
-        const songId =
-          getSongIdForNumber(
-            songNumber
-          );
-
-        if (
-          songId &&
-          saved.has(songId)
-        ) {
-          applyRoadworkToRow(
-            row
-          );
-        }
-      });
+    document.querySelectorAll("#song-list .song").forEach(row => {
+      const songNumber = Number(row.dataset.songIndex);
+      if (!Number.isInteger(songNumber) || songNumber < 1) return;
+      const songId = getSongIdForNumber(songNumber);
+      if (songId && saved.has(songId)) {
+        applyRoadworkToRow(row);
+      }
+    });
   }
 
 
@@ -459,616 +298,283 @@
   function createGame() {
     if (game) return game;
 
-    const panel =
-      document.createElement(
-        "section"
-      );
-
-    panel.id =
-      "whack-a-track-game";
-
-    panel.setAttribute(
-      "aria-label",
-      "Whack-a-Track"
-    );
+    const panel = document.createElement("section");
+    panel.id = "whack-a-track-game";
+    panel.setAttribute("aria-label", "Whack-a-Track");
 
     panel.innerHTML = `
       <h2>Whack-a-Track</h2>
-
-      <p id="wat-status"
-         aria-live="polite"></p>
-
+      <p id="wat-status" aria-live="polite"></p>
       <p>
-        <span id="wat-time">
-          ${GAME_DURATION}
-        </span>s
+        <span id="wat-time">${GAME_DURATION}</span>s
       </p>
-
       <progress
         id="wat-health"
         max="${TRACK_HEALTH}"
         value="${TRACK_HEALTH}"
         aria-label="Track health"
       ></progress>
-
       <div
         id="wat-board"
         role="group"
         aria-label="Whack-a-Track board"
       ></div>
-
-      <button
-        id="wat-refresh"
-        type="button"
-        hidden
-      >
-        Refresh playlist
-      </button>
-
-      <button
-        id="wat-close"
-        type="button"
-      >
-        Close game
-      </button>
+      <button id="wat-refresh" type="button" hidden>Refresh playlist</button>
+      <button id="wat-close" type="button">Close game</button>
     `;
 
-    Object.assign(
-      panel.style,
-      {
-        position: "sticky",
-        top:
-          "var(--player-dock-height, 104px)",
-        zIndex: "20",
-        maxWidth:
-          "min(92vw, 620px)",
-        boxSizing: "border-box",
-        margin:
-          "8px auto 18px",
-        padding:
-          "10px 14px 14px",
-        textAlign: "center",
-        background:
-          "#120b18",
-        border:
-          "2px solid #d4af37",
-        borderRadius:
-          "12px",
-        boxShadow:
-          "0 0 24px rgba(212,175,55,.35)",
-        scrollMarginTop:
-          "calc(var(--player-dock-height, 0px) + 8px)"
-      }
-    );
+    Object.assign(panel.style, {
+      position: "sticky",
+      top: "var(--player-dock-height, 104px)",
+      zIndex: "20",
+      maxWidth: "min(92vw, 620px)",
+      boxSizing: "border-box",
+      margin: "8px auto 18px",
+      padding: "10px 14px 14px",
+      textAlign: "center",
+      background: "#120b18",
+      border: "2px solid #d4af37",
+      borderRadius: "12px",
+      boxShadow: "0 0 24px rgba(212,175,55,.35)",
+      scrollMarginTop: "calc(var(--player-dock-height, 0px) + 8px)"
+    });
 
-    Object.assign(
-      $("h2", panel).style,
-      {
-        margin: "0 0 6px"
-      }
-    );
+    Object.assign($("h2", panel).style, { margin: "0 0 6px" });
+    Object.assign($("#wat-status", panel).style, { margin: "0 0 4px", minHeight: "1.4em" });
+    Object.assign($("#wat-time", panel).parentElement.style, { margin: "0 0 8px" });
+    Object.assign($("#wat-health", panel).style, {
+      display: "block",
+      width: "100%",
+      height: "18px",
+      margin: "8px 0 14px",
+      accentColor: "#d4af37"
+    });
 
-    Object.assign(
-      $("#wat-status", panel).style,
-      {
-        margin: "0 0 4px",
-        minHeight: "1.4em"
-      }
-    );
-
-    Object.assign(
-      $("#wat-time", panel)
-        .parentElement.style,
-      {
-        margin: "0 0 8px"
-      }
-    );
-
-    Object.assign(
-      $("#wat-health", panel).style,
-      {
-        display: "block",
-        width: "100%",
-        height: "18px",
-        margin: "8px 0 14px",
-        accentColor: "#d4af37"
-      }
-    );
-
-    const board =
-      $("#wat-board", panel);
-
-    Object.assign(
-      board.style,
-      {
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(3, minmax(0, 1fr))",
-        gap: "10px",
-        margin: "18px auto"
-      }
-    );
+    const board = $("#wat-board", panel);
+    Object.assign(board.style, {
+      display: "grid",
+      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      gap: "10px",
+      margin: "18px auto"
+    });
 
     for (let i = 0; i < 6; i++) {
-      const hole =
-        document.createElement(
-          "button"
-        );
-
+      const hole = document.createElement("button");
       hole.type = "button";
-      hole.className =
-        "wat-hole";
-      hole.textContent =
-        "🕳️";
-      hole.dataset.active =
-        "false";
+      hole.className = "wat-hole";
+      hole.dataset.active = "false";
 
-      Object.assign(
-        hole.style,
-        {
-          minHeight: "76px",
-          padding: "8px",
-          fontSize: "2rem",
-          cursor: "crosshair"
+      const img = document.createElement("img");
+      img.src = "assets/holes.png";
+      img.alt = "Hole";
+      hole.appendChild(img);
+
+      Object.assign(hole.style, {
+        minHeight: "76px",
+        padding: "6px",
+        background: "transparent",
+        border: "none",
+        cursor: "crosshair",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center"
+      });
+
+      hole.addEventListener("click", () => {
+        if (!active || hole.dataset.active !== "true") {
+          return;
         }
-      );
 
-      hole.addEventListener(
-        "click",
-        () => {
-          if (
-            !active ||
-            hole.dataset.active !==
-              "true"
-          ) {
-            return;
-          }
+        hole.dataset.active = "false";
+        img.src = "assets/holes.png";
 
-          hole.dataset.active =
-            "false";
+        trackHealth--;
 
-          hole.textContent =
-            "💥";
-
-          trackHealth--;
-
-          /*
-           * STRONGER LITTLE PHYSICAL FEEDBACK.
-           */
-          if (
-            trackHealth <= 0
-          ) {
-            vibrate(180);
-          } else {
-            vibrate(100);
-          }
-
-          $("#wat-health", panel)
-            .value =
-            trackHealth;
-
-          if (
-            trackHealth <= 0
-          ) {
-            finish(true);
-          }
+        if (trackHealth <= 0) {
+          vibrate(180);
+        } else {
+          vibrate(100);
         }
-      );
 
-      board.appendChild(
-        hole
-      );
+        $("#wat-health", panel).value = trackHealth;
+
+        if (trackHealth <= 0) {
+          finish(true);
+        }
+      });
+
+      board.appendChild(hole);
     }
 
-    $("#wat-close", panel)
-      .addEventListener(
-        "click",
-        closeGame
-      );
+    $("#wat-close", panel).addEventListener("click", closeGame);
+    $("#wat-refresh", panel).addEventListener("click", () => window.location.reload());
 
-    $("#wat-refresh", panel)
-      .addEventListener(
-        "click",
-        () =>
-          window.location.reload()
-      );
-
-    (
-      $(".player-dock") ||
-      $("main") ||
-      document.body
-    ).insertAdjacentElement(
-      "afterend",
-      panel
-    );
-
+    ($(".player-dock") \vert{}\vert{} $("main") || document.body).insertAdjacentElement("afterend", panel);
     panel.hidden = true;
 
-    new MutationObserver(
-      () =>
-        setToolbarHidden(
-          !panel.hidden
-        )
-    ).observe(
-      panel,
-      {
-        attributes: true,
-        attributeFilter: [
-          "hidden"
-        ]
-      }
-    );
+    new MutationObserver(() =>
+      setToolbarHidden(!panel.hidden)
+    ).observe(panel, {
+      attributes: true,
+      attributeFilter: ["hidden"]
+    });
 
     game = {
       panel,
       board,
-      status:
-        $("#wat-status", panel)
+      status: $("#wat-status", panel)
     };
 
     return game;
   }
 
-
   function hideMoles() {
-    game.board
-      .querySelectorAll(
-        ".wat-hole"
-      )
-      .forEach(hole => {
-        hole.dataset.active =
-          "false";
-
-        hole.textContent =
-          "🕳️";
-      });
+    game.board.querySelectorAll(".wat-hole").forEach(hole => {
+      hole.dataset.active = "false";
+      const img = hole.querySelector("img");
+      if (img) img.src = "assets/holes.png";
+    });
   }
-
 
   function spawnMole() {
     if (!active) return;
 
-    const holes = [
-      ...game.board
-        .querySelectorAll(
-          ".wat-hole"
-        )
-    ];
-
-    const hole =
-      holes[
-        Math.floor(
-          Math.random() *
-            holes.length
-        )
-      ];
+    const holes = [...game.board.querySelectorAll(".wat-hole")];
+    const hole = holes[Math.floor(Math.random() * holes.length)];
 
     hideMoles();
 
-    hole.dataset.active =
-      "true";
+    hole.dataset.active = "true";
+    const img = hole.querySelector("img");
+    if (img) img.src = "assets/duck.png";
 
-    hole.textContent =
-      "🐭";
+    clearTimeout(hideTimer);
+    hideTimer = setTimeout(() => {
+      if (hole.dataset.active === "true") {
+        if (img) img.src = "assets/holes.png";
+      }
+      hole.dataset.active = "false";
+    }, MOLE_VISIBLE_MS);
 
-    clearTimeout(
-      hideTimer
-    );
-
-    hideTimer =
-      setTimeout(
-        () => {
-          if (
-            hole.dataset.active ===
-            "true"
-          ) {
-            hole.textContent =
-              "🕳️";
-          }
-
-          hole.dataset.active =
-            "false";
-        },
-        MOLE_VISIBLE_MS
-      );
-
-    moleTimer =
-      setTimeout(
-        spawnMole,
-        MOLE_INTERVAL_MS
-      );
+    moleTimer = setTimeout(spawnMole, MOLE_INTERVAL_MS);
   }
-
 
   function startClock() {
-    clearInterval(
-      gameTimer
-    );
+    clearInterval(gameTimer);
+    secondsLeft = GAME_DURATION;
+    $("#wat-time", game.panel).textContent = secondsLeft;
 
-    secondsLeft =
-      GAME_DURATION;
+    gameTimer = setInterval(() => {
+      if (!active) return;
+      secondsLeft--;
+      $("#wat-time", game.panel).textContent = secondsLeft;
 
-    $("#wat-time",
-      game.panel
-    ).textContent =
-      secondsLeft;
-
-    gameTimer =
-      setInterval(
-        () => {
-          if (!active) return;
-
-          secondsLeft--;
-
-          $("#wat-time",
-            game.panel
-          ).textContent =
-            secondsLeft;
-
-          if (
-            secondsLeft <= 0
-          ) {
-            finish(false);
-          }
-        },
-        1000
-      );
+      if (secondsLeft <= 0) {
+        finish(false);
+      }
+    }, 1000);
   }
-
 
   function finish(won) {
     if (!active) return;
-
     active = false;
 
-    clearTimeout(
-      moleTimer
-    );
-
-    clearTimeout(
-      hideTimer
-    );
-
-    clearInterval(
-      gameTimer
-    );
-
+    clearTimeout(moleTimer);
+    clearTimeout(hideTimer);
+    clearInterval(gameTimer);
     hideMoles();
 
     if (!won) {
-      game.status.textContent =
-        "The track survived. Try again!";
-
+      game.status.textContent = "The track survived. Try again!";
       return;
     }
 
-    const songId =
-      getCurrentSongId();
+    const songId = getCurrentSongId();
+    const songNumber = getCurrentSongNumber();
+    const savedId = saveWhackedTrack(songId);
+    const roadClosed = closeRoad(songNumber, songId);
 
-    const songNumber =
-      getCurrentSongNumber();
-
-    /*
-     * SAVE THE TRACK PERMANENTLY.
-     */
-    const savedId =
-      saveWhackedTrack(
-        songId
-      );
-
-    /*
-     * CLOSE THE ROAD.
-     */
-    const roadClosed =
-      closeRoad(
-        songNumber,
-        songId
-      );
-
-    if (
-      roadClosed &&
-      savedId
-    ) {
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
-    } else if (
-      roadClosed
-    ) {
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
+    if (roadClosed) {
+      game.status.innerHTML = `💥 TRACK WHACKED!<br><small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
     } else {
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>Could not locate Song ${
-          songNumber || "?"
-        }.</small>`;
+      game.status.innerHTML = `💥 TRACK WHACKED!<br><small>Could not locate Song ${songNumber || "?"}.</small>`;
     }
   }
-
 
   function closeGame() {
     active = false;
-
-    clearTimeout(
-      moleTimer
-    );
-
-    clearTimeout(
-      hideTimer
-    );
-
-    clearInterval(
-      gameTimer
-    );
-
+    clearTimeout(moleTimer);
+    clearTimeout(hideTimer);
+    clearInterval(gameTimer);
     if (game) {
-      game.panel.hidden =
-        true;
+      game.panel.hidden = true;
     }
   }
-
 
   function startGame(event) {
     event?.preventDefault();
     event?.stopImmediatePropagation();
 
-    game =
-      createGame();
+    game = createGame();
+    clearTimeout(moleTimer);
+    clearTimeout(hideTimer);
+    clearInterval(gameTimer);
 
-    clearTimeout(
-      moleTimer
-    );
-
-    clearTimeout(
-      hideTimer
-    );
-
-    clearInterval(
-      gameTimer
-    );
-
-    $("#wat-refresh",
-      game.panel
-    ).hidden = true;
-
-    game.panel.hidden =
-      false;
+    $("#wat-refresh", game.panel).hidden = true;
+    game.panel.hidden = false;
 
     if (!playing()) {
       active = false;
-
-      game.status.textContent =
-        "Play a track to start the game.";
-
-      game.panel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
+      game.status.textContent = "Play a track to start the game.";
+      game.panel.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
 
-    const songNumber =
-      getCurrentSongNumber();
+    const songNumber = getCurrentSongNumber();
+    const songId = getCurrentSongId();
 
-    const songId =
-      getCurrentSongId();
-
-    /*
-     * Don't allow a road-closed track
-     * to be whacked again.
-     */
-    if (
-      isTrackRemembered(
-        songId
-      )
-    ) {
+    if (isTrackRemembered(songId)) {
       active = false;
-
-      const row =
-        findSongRow(
-          songNumber
-        );
-
-      applyRoadworkToRow(
-        row
-      );
-
-      game.status.innerHTML =
-        `🚧 ROAD CLOSED<br>` +
-        `<small>This track is already closed for roadwork.</small>`;
-
-      game.panel.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-
+      const row = findSongRow(songNumber);
+      applyRoadworkToRow(row);
+      game.status.innerHTML = `🚧 ROAD CLOSED<br><small>This track is already closed for roadwork.</small>`;
+      game.panel.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
 
-    trackHealth =
-      TRACK_HEALTH;
-
+    trackHealth = TRACK_HEALTH;
     active = true;
 
-    $("#wat-health",
-      game.panel
-    ).value =
-      trackHealth;
-
+    $("#wat-health", game.panel).value = trackHealth;
     hideMoles();
 
     game.status.innerHTML =
       `🎵 ROAD OPEN<br>` +
-      `<small>Song ${
-        songNumber || "?"
-      } · ${
-        songId || "unknown"
-      }</small><br>` +
-      `<small>Whack every mouse before the clock runs out!</small>`;
+      `<small>Song ${songNumber || "?"} · ${songId || "unknown"}</small><br>` +
+      `<small>Whack every duck before the clock runs out!</small>`;
 
     startClock();
     spawnMole();
 
-    game.panel.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
-    });
+    game.panel.scrollIntoView({ behavior: "smooth", block: "start" });
   }
-
-
-  /* =========================================================
-     INIT
-     ========================================================= */
 
   function init() {
     setupToolbar();
-
-    /*
-     * Restore all previously closed roads
-     * from localStorage.
-     */
     loadSavedRoadwork();
 
-    const button =
-      $("#whack-track");
-
-    if (
-      !button ||
-      button.dataset.whackGameBound ===
-        "true"
-    ) {
+    const button = $("#whack-track");
+    if (!button || button.dataset.whackGameBound === "true") {
       return;
     }
 
-    button.dataset.whackGameBound =
-      "true";
-
-    Object.assign(
-      button.style,
-      {
-        cursor: "pointer"
-      }
-    );
-
-    button.addEventListener(
-      "click",
-      startGame
-    );
+    button.dataset.whackGameBound = "true";
+    Object.assign(button.style, { cursor: "pointer" });
+    button.addEventListener("click", startGame);
   }
 
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      init,
-      { once: true }
-    );
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", init, { once: true });
   } else {
     init();
   }
