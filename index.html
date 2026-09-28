@@ -947,20 +947,16 @@
 
 
     /*
-       YOUTUBE TRANSITION GUARD
+       INTRO SKIP GUARD
 
-       When we manually change videos, YouTube can sometimes
-       send an old ENDED event from the previous video.
+       If the user manually presses NEXT while the intro
+       is playing, YouTube can sometimes send the intro's
+       old ENDED event after Song #1 has already started.
 
-       This short guard prevents that stale event from causing
-       an accidental extra NEXT.
+       This flag tells that one old event to be ignored.
     */
 
-    let ignoreEndedUntil = 0;
-
-    function markVideoChange() {
-      ignoreEndedUntil = Date.now() + 1500;
-    }
+    let ignoreIntroEnded = false;
 
 
     /* =========================================================
@@ -1031,12 +1027,17 @@
 
       currentIndex = -1;
 
+      /*
+         We are deliberately choosing the intro,
+         so any old intro-skip protection is cleared.
+      */
+
+      ignoreIntroEnded = false;
+
       nowPlaying.textContent =
         "Now playing: MEGA MIX'N'MOJO Intro";
 
       if (player) {
-
-        markVideoChange();
 
         player.loadVideoById({
           videoId: introVideoId
@@ -1071,8 +1072,6 @@
         `Now playing: ${titleFor(index)}`;
 
       if (player) {
-
-        markVideoChange();
 
         player.loadVideoById({
           videoId: ids[index]
@@ -1110,8 +1109,6 @@
         `Reading ${position + 1} of ${cardPlaylist.length}: ${titleFor(currentIndex)}`;
 
       if (player) {
-
-        markVideoChange();
 
         player.loadVideoById({
           videoId: ids[currentIndex]
@@ -1280,11 +1277,11 @@
             onStateChange: e => {
 
               /*
-                 When a video really ends, continue normally.
+                 If the user manually pressed NEXT
+                 while the intro was playing, there can
+                 be one stale ENDED event from that intro.
 
-                 The transition guard prevents a stale ENDED
-                 event from a video we just left from causing
-                 an unwanted extra NEXT.
+                 Consume only that one event.
               */
 
               if (
@@ -1292,11 +1289,17 @@
                 YT.PlayerState.ENDED
               ) {
 
-                if (
-                  Date.now() < ignoreEndedUntil
-                ) {
+                if (ignoreIntroEnded) {
+
+                  ignoreIntroEnded = false;
+
                   return;
                 }
+
+                /*
+                   Otherwise this is a genuine video ending,
+                   so continue normally.
+                */
 
                 next();
               }
@@ -1385,8 +1388,19 @@
     previousButton.onclick =
       previous;
 
-    nextButton.onclick =
-      next;
+    nextButton.onclick = () => {
+
+      /*
+         ONLY when manually skipping from the intro,
+         protect Song #1 from a stale intro ENDED event.
+      */
+
+      if (currentIndex === -1) {
+        ignoreIntroEnded = true;
+      }
+
+      next();
+    };
 
 
     /* =========================================================
