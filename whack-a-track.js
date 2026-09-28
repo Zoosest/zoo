@@ -1,317 +1,27 @@
-/* Whack-a-Track mini-game for the Rizney YouTube player. */
+/* =========================================================
+   RIZNEY MUSIC ARCHIVE
+   WHACK-A-TRACK — CLEAN BASELINE
+   ========================================================= */
+
 (() => {
   "use strict";
 
-  const TRACK_HEALTH = 24;
-  const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 490;
-  const MOLE_INTERVAL_MS = 1400;
-
-  /* Tracks defeated by Whack-A-Track are remembered here. */
-  const REMOVED_TRACKS_KEY = "rizney-whacked-tracks-v1";
-
-  const youtube = () =>
-    window.rizneyPlayer || window.player || null;
+  const TRACK_HEALTH = 12;
+  const GAME_DURATION = 60;
+  const MOLE_VISIBLE_MS = 700;
+  const MOLE_INTERVAL_MS = 1200;
 
   const $ = (selector, root = document) =>
     root.querySelector(selector);
 
-  const controls = () =>
-    $(".controls");
-
-  let game;
+  let game = null;
   let active = false;
   let trackHealth = TRACK_HEALTH;
   let secondsLeft = GAME_DURATION;
-  let moleTimer;
-  let hideTimer;
-  let gameTimer;
 
-
-  /* =========================================================
-     PERSISTENT WHACKED TRACKS
-     ========================================================= */
-
-  function getRemovedTracks() {
-    try {
-      const saved =
-        localStorage.getItem(REMOVED_TRACKS_KEY);
-
-      if (!saved) {
-        return [];
-      }
-
-      const parsed = JSON.parse(saved);
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-    } catch (error) {
-      return [];
-    }
-  }
-
-
-  function saveRemovedTrack(videoId) {
-    if (!videoId) {
-      return;
-    }
-
-    const removed =
-      getRemovedTracks();
-
-    if (removed.includes(videoId)) {
-      return;
-    }
-
-    removed.push(videoId);
-
-    try {
-      localStorage.setItem(
-        REMOVED_TRACKS_KEY,
-        JSON.stringify(removed)
-      );
-    } catch (error) {
-      console.warn(
-        "Whack-A-Track could not save the removed track.",
-        error
-      );
-    }
-  }
-
-
-  function getCurrentVideoId() {
-    const player = youtube();
-
-    if (!player) {
-      return null;
-    }
-
-    try {
-      if (
-        typeof player.getVideoData ===
-        "function"
-      ) {
-        const data =
-          player.getVideoData();
-
-        if (
-          data &&
-          data.video_id
-        ) {
-          return data.video_id;
-        }
-      }
-    } catch (error) {
-      // Ignore and try the alternate method below.
-    }
-
-    try {
-      if (
-        typeof player.getVideoUrl ===
-        "function"
-      ) {
-        const url =
-          player.getVideoUrl();
-
-        if (url) {
-          const match =
-            url.match(
-              /[?&]v=([^&]+)/ 
-            );
-
-          if (match) {
-            return match[1];
-          }
-        }
-      }
-    } catch (error) {
-      // Nothing else to do.
-    }
-
-    return null;
-  }
-
-
-  function rememberCurrentTrack() {
-    const videoId =
-      getCurrentVideoId();
-
-    if (!videoId) {
-      console.warn(
-        "Whack-A-Track won, but no YouTube video ID was found."
-      );
-
-      return null;
-    }
-
-    saveRemovedTrack(videoId);
-
-    return videoId;
-  }
-
-
-  /* =========================================================
-     TOOLBAR
-     ========================================================= */
-
-  function setToolbarHidden(hidden) {
-    controls()?.classList.toggle(
-      "toolbar-hidden",
-      hidden
-    );
-  }
-
-
-  function positionToolbar() {
-    const dock =
-      $(".player-dock");
-
-    if (dock) {
-      document.documentElement.style.setProperty(
-        "--player-dock-height",
-        `${dock.offsetHeight}px`
-      );
-    }
-  }
-
-
-  function scrollToReading() {
-    const reading =
-      $("#reading");
-
-    if (!reading || reading.hidden) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      reading.scrollIntoView({
-        behavior: "smooth",
-        block: "start"
-      });
-    });
-  }
-
-
-  function setupToolbar() {
-    const style =
-      document.createElement("style");
-
-    style.textContent = `
-      .controls {
-        position: sticky;
-        top: var(--player-dock-height, 0px);
-        z-index: 90;
-        transition:
-          opacity .18s ease,
-          visibility .18s ease;
-      }
-
-      .controls.toolbar-hidden {
-        visibility: hidden;
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      #reading,
-      #whack-a-track-game {
-        scroll-margin-top:
-          calc(var(--player-dock-height, 0px) + 8px);
-      }
-
-      @media (max-width: 640px) {
-        #whack-a-track-game {
-          width: 100%;
-          margin-top: 4px;
-          margin-bottom: 12px;
-          padding: 8px 10px 10px;
-        }
-
-        #whack-a-track-game #wat-board {
-          gap: 6px;
-          margin: 10px auto;
-        }
-
-        #whack-a-track-game .wat-hole {
-          min-height: 58px !important;
-          padding: 4px !important;
-          font-size: 1.65rem !important;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-
-    positionToolbar();
-
-    window.addEventListener(
-      "resize",
-      positionToolbar,
-      { passive: true }
-    );
-
-    if (window.ResizeObserver) {
-      const dock =
-        $(".player-dock");
-
-      if (dock) {
-        new ResizeObserver(
-          positionToolbar
-        ).observe(dock);
-      }
-    }
-
-    setToolbarHidden(false);
-
-
-    /* CARDS stays completely independent. */
-
-    const cardsButton =
-      $("#draw-cards");
-
-    const reading =
-      $("#reading");
-
-    cardsButton?.addEventListener(
-      "click",
-      event => {
-        if (!reading || reading.hidden) {
-          return;
-        }
-
-        event.preventDefault();
-        event.stopImmediatePropagation();
-
-        reading.hidden = true;
-      },
-      true
-    );
-
-
-    cardsButton?.addEventListener(
-      "click",
-      scrollToReading
-    );
-  }
-
-
-  /* =========================================================
-     PLAYER STATE
-     ========================================================= */
-
-  const playing = () => {
-    const player =
-      youtube();
-
-    return (
-      player &&
-      typeof player.getPlayerState ===
-        "function" &&
-      window.YT &&
-      player.getPlayerState() ===
-        YT.PlayerState.PLAYING
-    );
-  };
+  let moleTimer = null;
+  let hideTimer = null;
+  let gameTimer = null;
 
 
   /* =========================================================
@@ -319,31 +29,22 @@
      ========================================================= */
 
   function createGame() {
-    if (game) {
-      return game;
-    }
+    if (game) return game;
 
-    const panel =
-      document.createElement("section");
+    const panel = document.createElement("section");
 
-    panel.id =
-      "whack-a-track-game";
-
-    panel.setAttribute(
-      "aria-label",
-      "Whack-a-Track"
-    );
+    panel.id = "whack-a-track-game";
+    panel.setAttribute("aria-label", "Whack-a-Track");
 
     panel.innerHTML = `
       <h2>Whack-a-Track</h2>
 
-      <p id="wat-status"
-         aria-live="polite"></p>
+      <p id="wat-status" aria-live="polite">
+        Whack the mouse!
+      </p>
 
       <p>
-        <span id="wat-time">
-          ${GAME_DURATION}
-        </span>s
+        <span id="wat-time">${GAME_DURATION}</span>s
       </p>
 
       <progress
@@ -359,188 +60,133 @@
         aria-label="Whack-a-Track board">
       </div>
 
-      <button
-        id="wat-refresh"
-        type="button"
-        hidden>
-        Restore Removed Tracks
-      </button>
-
-      <button
-        id="wat-close"
-        type="button">
+      <button id="wat-close" type="button">
         Close game
       </button>
     `;
 
 
+    /* =======================================================
+       PANEL STYLE
+       ======================================================= */
+
     Object.assign(panel.style, {
-      position: "sticky",
-      top: "var(--player-dock-height, 104px)",
-      zIndex: "20",
       maxWidth: "min(92vw, 620px)",
       boxSizing: "border-box",
-      margin: "8px auto 18px",
-      padding: "10px 14px 14px",
+      margin: "12px auto 20px",
+      padding: "14px",
       textAlign: "center",
       background: "#120b18",
       border: "2px solid #d4af37",
       borderRadius: "12px",
-      boxShadow:
-        "0 0 24px rgba(212,175,55,.35)",
-      scrollMarginTop:
-        "calc(var(--player-dock-height, 0px) + 8px)"
+      boxShadow: "0 0 24px rgba(212,175,55,.35)"
     });
 
 
-    Object.assign(
-      $("h2", panel).style,
-      {
-        margin: "0 0 6px"
-      }
-    );
+    /* =======================================================
+       BOARD
+       ======================================================= */
+
+    const board = $("#wat-board", panel);
+
+    Object.assign(board.style, {
+      display: "grid",
+      gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+      gap: "10px",
+      margin: "18px auto"
+    });
 
 
-    Object.assign(
-      $("#wat-status", panel).style,
-      {
-        margin: "0 0 4px",
-        minHeight: "1.4em"
-      }
-    );
+    /* =======================================================
+       HEALTH BAR
+       ======================================================= */
+
+    const health = $("#wat-health", panel);
+
+    Object.assign(health.style, {
+      display: "block",
+      width: "100%",
+      height: "18px",
+      margin: "10px 0 16px",
+      accentColor: "#d4af37"
+    });
 
 
-    Object.assign(
-      $("#wat-time", panel)
-        .parentElement.style,
-      {
-        margin: "0 0 8px"
-      }
-    );
-
-
-    Object.assign(
-      $("#wat-health", panel).style,
-      {
-        display: "block",
-        width: "100%",
-        height: "18px",
-        margin: "8px 0 14px",
-        accentColor: "#d4af37"
-      }
-    );
-
-
-    const board =
-      $("#wat-board", panel);
-
-    Object.assign(
-      board.style,
-      {
-        display: "grid",
-        gridTemplateColumns:
-          "repeat(3, minmax(0, 1fr))",
-        gap: "10px",
-        margin: "18px auto"
-      }
-    );
-
+    /* =======================================================
+       CREATE SIX HOLES
+       ======================================================= */
 
     for (let i = 0; i < 6; i++) {
-      const hole =
-        document.createElement("button");
+
+      const hole = document.createElement("button");
 
       hole.type = "button";
+      hole.className = "wat-hole";
 
-      hole.className =
-        "wat-hole";
+      hole.textContent = "🕳️";
 
-      hole.textContent =
-        "🕳️";
+      hole.dataset.active = "false";
 
-      hole.dataset.active =
-        "false";
+      Object.assign(hole.style, {
+        minHeight: "76px",
+        padding: "8px",
+        fontSize: "2rem",
+        cursor: "crosshair"
+      });
 
 
-      Object.assign(
-        hole.style,
-        {
-          minHeight: "76px",
-          padding: "8px",
-          fontSize: "2rem",
-          cursor: "crosshair"
+      hole.addEventListener("click", () => {
+
+        if (!active) return;
+
+        if (hole.dataset.active !== "true") return;
+
+
+        /* HIT */
+
+        hole.dataset.active = "false";
+        hole.textContent = "💥";
+
+        trackHealth--;
+
+        health.value = trackHealth;
+
+
+        if (trackHealth <= 0) {
+          finishGame(true);
         }
-      );
 
-
-      hole.addEventListener(
-        "click",
-        () => {
-          if (!active) {
-            return;
-          }
-
-          if (
-            hole.dataset.active !==
-            "true"
-          ) {
-            return;
-          }
-
-          hole.dataset.active =
-            "false";
-
-          hole.textContent =
-            "💥";
-
-          trackHealth--;
-
-          $("#wat-health", panel).value =
-            trackHealth;
-
-          if (trackHealth <= 0) {
-            finish(true);
-          }
-        }
-      );
+      });
 
 
       board.appendChild(hole);
     }
 
 
-    $("#wat-close", panel)
-      .addEventListener(
-        "click",
-        closeGame
-      );
+    /* =======================================================
+       CLOSE BUTTON
+       ======================================================= */
+
+    $("#wat-close", panel).addEventListener(
+      "click",
+      closeGame
+    );
 
 
-    $("#wat-refresh", panel)
-      .addEventListener(
-        "click",
-        () => {
-          try {
-            localStorage.removeItem(
-              REMOVED_TRACKS_KEY
-            );
-          } catch (error) {
-            console.warn(
-              "Could not restore removed tracks.",
-              error
-            );
-          }
+    /* =======================================================
+       INSERT GAME BELOW PLAYER
+       ======================================================= */
 
-          window.location.reload();
-        }
-      );
+    const playerDock =
+      document.querySelector(".player-dock");
 
+    const main =
+      document.querySelector("main");
 
-    (
-      $(".player-dock") ||
-      $("main") ||
-      document.body
-    ).insertAdjacentElement(
+    const destination =
+      playerDock || main || document.body;
+
+    destination.insertAdjacentElement(
       "afterend",
       panel
     );
@@ -549,26 +195,12 @@
     panel.hidden = true;
 
 
-    new MutationObserver(
-      () => {
-        setToolbarHidden(
-          !panel.hidden
-        );
-      }
-    ).observe(
-      panel,
-      {
-        attributes: true,
-        attributeFilter: ["hidden"]
-      }
-    );
-
-
     game = {
       panel,
       board,
-      status:
-        $("#wat-status", panel)
+      status: $("#wat-status", panel),
+      time: $("#wat-time", panel),
+      health
     };
 
     return game;
@@ -576,68 +208,64 @@
 
 
   /* =========================================================
-     MOLES
+     HIDE ALL MICE
      ========================================================= */
 
   function hideMoles() {
-    game.board
-      .querySelectorAll(".wat-hole")
-      .forEach(hole => {
-        hole.dataset.active =
-          "false";
 
-        hole.textContent =
-          "🕳️";
-      });
+    if (!game) return;
+
+    const holes =
+      game.board.querySelectorAll(".wat-hole");
+
+    holes.forEach(hole => {
+
+      hole.dataset.active = "false";
+      hole.textContent = "🕳️";
+
+    });
   }
 
 
+  /* =========================================================
+     SPAWN MOUSE
+     ========================================================= */
+
   function spawnMole() {
-    if (!active) {
-      return;
-    }
+
+    if (!active) return;
 
     const holes = [
-      ...game.board.querySelectorAll(
-        ".wat-hole"
-      )
+      ...game.board.querySelectorAll(".wat-hole")
     ];
 
-    const hole =
-      holes[
-        Math.floor(
-          Math.random() *
-          holes.length
-        )
-      ];
+    if (!holes.length) return;
 
 
     hideMoles();
 
 
-    hole.dataset.active =
-      "true";
+    const randomIndex =
+      Math.floor(Math.random() * holes.length);
 
-    hole.textContent =
-      "🐭";
+    const hole =
+      holes[randomIndex];
+
+
+    hole.dataset.active = "true";
+    hole.textContent = "🐭";
 
 
     clearTimeout(hideTimer);
 
+    hideTimer = setTimeout(() => {
 
-    hideTimer =
-      setTimeout(() => {
-        if (
-          hole.dataset.active ===
-          "true"
-        ) {
-          hole.textContent =
-            "🕳️";
-        }
+      if (hole.dataset.active === "true") {
+        hole.dataset.active = "false";
+        hole.textContent = "🕳️";
+      }
 
-        hole.dataset.active =
-          "false";
-      }, MOLE_VISIBLE_MS);
+    }, MOLE_VISIBLE_MS);
 
 
     moleTimer =
@@ -649,48 +277,44 @@
 
 
   /* =========================================================
-     CLOCK
+     GAME CLOCK
      ========================================================= */
 
   function startClock() {
+
     clearInterval(gameTimer);
 
-    secondsLeft =
-      GAME_DURATION;
+    secondsLeft = GAME_DURATION;
 
-    $("#wat-time", game.panel)
-      .textContent =
+    game.time.textContent =
       secondsLeft;
 
 
-    gameTimer =
-      setInterval(() => {
-        if (!active) {
-          return;
-        }
+    gameTimer = setInterval(() => {
 
-        secondsLeft--;
+      if (!active) return;
 
-        $("#wat-time", game.panel)
-          .textContent =
-          secondsLeft;
+      secondsLeft--;
+
+      game.time.textContent =
+        secondsLeft;
 
 
-        if (secondsLeft <= 0) {
-          finish(false);
-        }
-      }, 1000);
+      if (secondsLeft <= 0) {
+        finishGame(false);
+      }
+
+    }, 1000);
   }
 
 
   /* =========================================================
-     FINISH
+     FINISH GAME
      ========================================================= */
 
-  function finish(won) {
-    if (!active) {
-      return;
-    }
+  function finishGame(won) {
+
+    if (!active) return;
 
     active = false;
 
@@ -702,63 +326,32 @@
 
 
     if (won) {
-      /*
-        This is the ONLY new behavior.
 
-        When the player defeats the track,
-        remember the current YouTube ID.
-      */
-
-      const videoId =
-        rememberCurrentTrack();
-
-
-      if (videoId) {
-        game.status.textContent =
-          "💥 TRACK WHACKED!";
-
-        /*
-          Give the archive system a chance
-          to react if we add its playlist
-          integration later.
-        */
-
-        document.dispatchEvent(
-          new CustomEvent(
-            "rizney:track-removed",
-            {
-              detail: {
-                id: videoId
-              }
-            }
-          )
-        );
-      } else {
-        game.status.textContent =
-          "💥 TRACK WHACKED!";
-      }
-
-
-      $("#wat-refresh", game.panel)
-        .hidden = false;
+      game.status.textContent =
+        "💥 TRACK WHACKED!";
 
     } else {
+
       game.status.textContent =
         "The track survived. Try again!";
+
     }
   }
 
 
   /* =========================================================
-     CLOSE
+     CLOSE GAME
      ========================================================= */
 
   function closeGame() {
+
     active = false;
 
     clearTimeout(moleTimer);
     clearTimeout(hideTimer);
     clearInterval(gameTimer);
+
+    hideMoles();
 
     if (game) {
       game.panel.hidden = true;
@@ -771,66 +364,59 @@
      ========================================================= */
 
   function startGame(event) {
-    event?.preventDefault();
-    event?.stopImmediatePropagation();
 
-    game =
-      createGame();
+    event.preventDefault();
+    event.stopImmediatePropagation();
+
+
+    game = createGame();
+
 
     clearTimeout(moleTimer);
     clearTimeout(hideTimer);
     clearInterval(gameTimer);
 
 
-    $("#wat-refresh", game.panel)
-      .hidden = true;
+    /* RESET GAME */
+
+    trackHealth = TRACK_HEALTH;
+    secondsLeft = GAME_DURATION;
+
+    game.health.value =
+      trackHealth;
+
+    game.time.textContent =
+      secondsLeft;
+
+    game.status.textContent =
+      "Whack every mouse before the clock runs out!";
 
 
-    game.panel.hidden =
-      false;
+    hideMoles();
 
 
-    if (!playing()) {
-      active = false;
+    /* SHOW GAME */
 
-      game.status.textContent =
-        "Play a track to start the game.";
+    game.panel.hidden = false;
 
+
+    /* START */
+
+    active = true;
+
+    startClock();
+    spawnMole();
+
+
+    /* SCROLL TO GAME */
+
+    requestAnimationFrame(() => {
 
       game.panel.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
 
-      return;
-    }
-
-
-    trackHealth =
-      TRACK_HEALTH;
-
-    active = true;
-
-
-    $("#wat-health", game.panel)
-      .value =
-      trackHealth;
-
-
-    hideMoles();
-
-
-    game.status.textContent =
-      "Whack every mouse before the clock runs out!";
-
-
-    startClock();
-    spawnMole();
-
-
-    game.panel.scrollIntoView({
-      behavior: "smooth",
-      block: "start"
     });
   }
 
@@ -840,17 +426,21 @@
      ========================================================= */
 
   function init() {
-    setupToolbar();
-
 
     const button =
-      $("#whack-track");
+      document.getElementById("whack-track");
+
+
+    if (!button) {
+      console.warn(
+        "Whack-A-Track: #whack-track button not found."
+      );
+      return;
+    }
 
 
     if (
-      !button ||
-      button.dataset.whackGameBound ===
-        "true"
+      button.dataset.whackGameBound === "true"
     ) {
       return;
     }
@@ -860,32 +450,32 @@
       "true";
 
 
-    Object.assign(
-      button.style,
-      {
-        cursor: "pointer"
-      }
-    );
-
-
     button.addEventListener(
       "click",
       startGame
     );
+
   }
 
 
+  /* =========================================================
+     WAIT FOR PAGE
+     ========================================================= */
+
   if (
-    document.readyState ===
-    "loading"
+    document.readyState === "loading"
   ) {
+
     document.addEventListener(
       "DOMContentLoaded",
       init,
       { once: true }
     );
+
   } else {
+
     init();
+
   }
 
 })();
