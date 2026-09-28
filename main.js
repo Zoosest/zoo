@@ -1,4 +1,4 @@
- /* =========================================================
+/* =========================================================
    RIZNEY MUSIC ARCHIVE
    Animal icons + song titles + keywords + Music Reading cards
    ========================================================= */
@@ -7,7 +7,7 @@
   "use strict";
 
   const RAW_PREFIX =
-    "https://raw.githubusercontent.com/Zoosest/zoo-/main/assets/animal-icons/";
+    "https://raw.githubusercontent.com/zoosest/zoo-/main/assets/animal-icons/";
 
   const FALLBACK_ICON = "🐾";
 
@@ -549,7 +549,22 @@
   }
 
 
- 
+  function iconFilename(filename) {
+    /*
+      Handles the two filename spellings that have appeared
+      in the project without breaking the icon.
+    */
+
+    if (filename === "cidada.png") {
+      return "cicada.png";
+    }
+
+    if (filename === "shrimp") {
+      return "shrimp.png";
+    }
+
+    return filename;
+  }
 
 
   function fallback() {
