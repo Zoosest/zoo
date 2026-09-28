@@ -493,8 +493,6 @@
 
   <!-- ==========================================
        CONTEXT
-       This is now part of the same page.
-       Opening it does NOT stop YouTube.
        ========================================== -->
 
   <section
@@ -602,8 +600,12 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
 
-  
+
   <script>
+    /* =========================================================
+       PLAYLIST
+       ========================================================= */
+
     const songs = [
       'https://youtube.com/shorts/nSog7wdCuzM',
       'https://youtu.be/9lMRH8Q47KU',
@@ -829,44 +831,180 @@
       'https://youtu.be/K2Dujl_bFZg'
     ];
 
+
+    /* =========================================================
+       INTRO
+       ========================================================= */
+
+    /*
+       The intro is deliberately NOT inside the songs array.
+
+       Therefore:
+       - it gets no playlist number
+       - it gets no animal
+       - it gets no keyword
+       - it does not appear in Search
+       - it does not appear in CARDS
+       - Random cannot select it
+    */
+
+    const introVideoId = 'mkKOtZPLkzY';
+
+
+    /* =========================================================
+       GET VIDEO IDS
+       ========================================================= */
+
     const ids = songs
-      .map(url => url.match(/(?:youtu\.be\/|shorts\/|watch\?v=)([^?&/]+)/)?.[1])
+      .map(url =>
+        url.match(
+          /(?:youtu\.be\/|shorts\/|watch\?v=)([^?&/]+)/
+        )?.[1]
+      )
       .filter(Boolean);
 
+
+    /* =========================================================
+       ELEMENTS
+       ========================================================= */
+
     const $ = s => document.querySelector(s);
+
     const nowPlaying = $('#now-playing');
     const list = $('#song-list');
     const cards = $('#cards');
     const reading = $('#reading');
+
     const previousButton = $('#previous-song');
     const nextButton = $('#next-song');
 
+
+    /* =========================================================
+       PLAYER STATE
+       ========================================================= */
+
     let player = null;
-    let currentIndex = 0;
+
+    /*
+       currentIndex:
+
+       -1 = INTRO
+        0 = Unfinished Business / Song #1
+        1 = Song #2
+        2 = Song #3
+        etc.
+    */
+
+    let currentIndex = -1;
+
+
+    /* =========================================================
+       MUSIC READING STATE
+       ========================================================= */
+
     let cardPlaylist = null;
     let cardPosition = 0;
 
-    const titleFor = i => `Song ${i + 1}`;
+
+    /* =========================================================
+       TITLES
+       ========================================================= */
+
+    const titleFor = i => {
+      if (i === -1) {
+        return "MEGA MIX'N'MOJO Intro";
+      }
+
+      return `Song ${i + 1}`;
+    };
+
+
+    /* =========================================================
+       BUTTON STATE
+       ========================================================= */
 
     function updateButtons() {
-      previousButton.disabled =
-        cardPlaylist === null
-          ? currentIndex <= 0
-          : cardPosition <= 0;
 
-      nextButton.disabled =
-        cardPlaylist === null
-          ? currentIndex >= ids.length - 1
-          : cardPosition >= cardPlaylist.length - 1;
+      /*
+         Music Reading mode
+      */
+
+      if (cardPlaylist !== null) {
+
+        previousButton.disabled =
+          cardPosition <= 0;
+
+        nextButton.disabled =
+          cardPosition >= cardPlaylist.length - 1;
+
+        return;
+      }
+
+
+      /*
+         Normal playlist mode.
+
+         Previous is disabled during the intro.
+         From Song #1, Previous goes back to intro.
+      */
+
+      previousButton.disabled =
+        currentIndex < 0;
+
+      nextButton.disabled = false;
     }
 
-    function play(index) {
-      if (!ids[index]) return;
 
-      currentIndex = index;
-      nowPlaying.textContent = `Now playing: ${titleFor(index)}`;
+    /* =========================================================
+       PLAY INTRO
+       ========================================================= */
+
+    function playIntro() {
+
+      cardPlaylist = null;
+      cardPosition = 0;
+
+      currentIndex = -1;
+
+      nowPlaying.textContent =
+        "Now playing: MEGA MIX'N'MOJO Intro";
 
       if (player) {
+
+        player.loadVideoById({
+          videoId: introVideoId
+        });
+      }
+
+      updateButtons();
+
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    }
+
+
+    /* =========================================================
+       PLAY NORMAL SONG
+       ========================================================= */
+
+    function play(index) {
+
+      if (!ids[index]) {
+        return;
+      }
+
+      cardPlaylist = null;
+      cardPosition = 0;
+
+      currentIndex = index;
+
+      nowPlaying.textContent =
+        `Now playing: ${titleFor(index)}`;
+
+      if (player) {
+
         player.loadVideoById({
           videoId: ids[index]
         });
@@ -880,16 +1018,30 @@
       });
     }
 
+
+    /* =========================================================
+       PLAY MUSIC READING POSITION
+       ========================================================= */
+
     function playPosition(position) {
-      if (!cardPlaylist || cardPlaylist[position] === undefined) return;
+
+      if (
+        !cardPlaylist ||
+        cardPlaylist[position] === undefined
+      ) {
+        return;
+      }
 
       cardPosition = position;
-      currentIndex = cardPlaylist[position];
+
+      currentIndex =
+        cardPlaylist[position];
 
       nowPlaying.textContent =
         `Reading ${position + 1} of ${cardPlaylist.length}: ${titleFor(currentIndex)}`;
 
       if (player) {
+
         player.loadVideoById({
           videoId: ids[currentIndex]
         });
@@ -898,22 +1050,68 @@
       updateButtons();
     }
 
+
+    /* =========================================================
+       NEXT
+       ========================================================= */
+
     function next() {
+
+      /*
+         MUSIC READING
+      */
+
       if (cardPlaylist !== null) {
-        if (cardPosition < cardPlaylist.length - 1) {
-          return playPosition(cardPosition + 1);
+
+        if (
+          cardPosition <
+          cardPlaylist.length - 1
+        ) {
+
+          playPosition(
+            cardPosition + 1
+          );
+
+          return;
         }
 
         cardPlaylist = null;
         cardPosition = 0;
-        nowPlaying.textContent = 'Music reading complete ✦';
+
+        nowPlaying.textContent =
+          'Music reading complete ✦';
+
         updateButtons();
+
         return;
       }
 
-      if (currentIndex < ids.length - 1) {
+
+      /*
+         INTRO → SONG #1
+      */
+
+      if (currentIndex === -1) {
+
+        play(0);
+
+        return;
+      }
+
+
+      /*
+         NORMAL PLAYLIST
+      */
+
+      if (
+        currentIndex <
+        ids.length - 1
+      ) {
+
         play(currentIndex + 1);
+
       } else {
+
         nowPlaying.textContent =
           'You reached the end of the collection ✦';
       }
@@ -921,147 +1119,371 @@
       updateButtons();
     }
 
+
+    /* =========================================================
+       PREVIOUS
+       ========================================================= */
+
     function previous() {
+
+      /*
+         MUSIC READING
+      */
+
       if (cardPlaylist !== null) {
+
         if (cardPosition > 0) {
-          playPosition(cardPosition - 1);
+
+          playPosition(
+            cardPosition - 1
+          );
         }
+
         return;
       }
 
+
+      /*
+         SONG #1 → INTRO
+      */
+
+      if (currentIndex === 0) {
+
+        playIntro();
+
+        return;
+      }
+
+
+      /*
+         NORMAL PLAYLIST
+      */
+
       if (currentIndex > 0) {
+
         play(currentIndex - 1);
       }
     }
 
+
+    /* =========================================================
+       YOUTUBE PLAYER
+       ========================================================= */
+
     window.onYouTubeIframeAPIReady = () => {
-      player = new YT.Player('player', {
-        videoId: ids[0],
-        playerVars: {
-          autoplay: 0,
-          rel: 0,
-          modestbranding: 1,
-          playsinline: 1
-        },
-        events: {
-          onReady: () => {
-            window.rizneyPlayer = player;
-            updateButtons();
+
+      player = new YT.Player(
+        'player',
+        {
+
+          /*
+             IMPORTANT:
+
+             The player starts with the INTRO,
+             not ids[0].
+          */
+
+          videoId: introVideoId,
+
+          playerVars: {
+            autoplay: 0,
+            rel: 0,
+            modestbranding: 1,
+            playsinline: 1
           },
 
-          onStateChange: e => {
-            if (e.data === YT.PlayerState.ENDED) {
-              next();
+          events: {
+
+            onReady: () => {
+
+              window.rizneyPlayer =
+                player;
+
+              nowPlaying.textContent =
+                "Now playing: MEGA MIX'N'MOJO Intro";
+
+              updateButtons();
+            },
+
+
+            onStateChange: e => {
+
+              /*
+                 When the intro ends,
+                 automatically begin Song #1.
+
+                 When a normal song ends,
+                 continue normally.
+              */
+
+              if (
+                e.data ===
+                YT.PlayerState.ENDED
+              ) {
+
+                next();
+              }
             }
           }
         }
-      });
+      );
 
-      window.rizneyPlayer = player;
+      window.rizneyPlayer =
+        player;
     };
 
+
+    /* =========================================================
+       BUILD CHRONOLOGICAL SONG LIST
+       ========================================================= */
+
     ids.forEach((id, index) => {
-      const row = document.createElement('article');
+
+      const row =
+        document.createElement('article');
 
       row.className = 'song';
 
       row.innerHTML = `
-        <span class="song-number">${index + 1}</span>
+        <span class="song-number">
+          ${index + 1}
+        </span>
+
         <span class="song-title">
           ♫ ${titleFor(index)}
-          <small>YouTube video • chronological position ${index + 1}</small>
+
+          <small>
+            YouTube video • chronological position ${index + 1}
+          </small>
         </span>
-        <button class="play" type="button">Play</button>
+
+        <button
+          class="play"
+          type="button"
+        >Play</button>
       `;
 
-      row.querySelector('button').onclick = () => {
+
+      row.querySelector(
+        'button'
+      ).onclick = () => {
+
         cardPlaylist = null;
         cardPosition = 0;
+
         play(index);
       };
+
 
       list.appendChild(row);
     });
 
+
+    /* =========================================================
+       RANDOM
+       ========================================================= */
+
     $('#random-song').onclick = () => {
+
       cardPlaylist = null;
       cardPosition = 0;
-      play(Math.floor(Math.random() * ids.length));
+
+      /*
+         Random only uses ids,
+         so the intro can NEVER be selected.
+      */
+
+      play(
+        Math.floor(
+          Math.random() * ids.length
+        )
+      );
     };
 
-    previousButton.onclick = previous;
-    nextButton.onclick = next;
+
+    /* =========================================================
+       PREVIOUS / NEXT BUTTONS
+       ========================================================= */
+
+    previousButton.onclick =
+      previous;
+
+    nextButton.onclick =
+      next;
+
+
+    /* =========================================================
+       CARDS
+       ========================================================= */
 
     $('#draw-cards').onclick = () => {
-      cardPlaylist = [...ids.keys()]
-        .sort(() => Math.random() - 0.5)
-        .slice(0, Math.min(6, ids.length));
+
+      /*
+         Cards only choose from the real playlist.
+         The intro is excluded.
+      */
+
+      cardPlaylist =
+        [...ids.keys()]
+          .sort(
+            () => Math.random() - 0.5
+          )
+          .slice(
+            0,
+            Math.min(6, ids.length)
+          );
 
       cardPosition = 0;
+
       reading.hidden = false;
+
       cards.innerHTML = '';
 
-      ['✦','✧','✩','✹','✺','✷']
-        .slice(0, cardPlaylist.length)
-        .forEach((symbol, position) => {
-          const card = document.createElement('article');
 
-          card.className = 'card';
+      [
+        '✦',
+        '✧',
+        '✩',
+        '✹',
+        '✺',
+        '✷'
+      ]
+        .slice(
+          0,
+          cardPlaylist.length
+        )
+        .forEach(
+          (symbol, position) => {
 
-          card.innerHTML = `
-            <span class="symbol">${symbol}</span>
-            <strong>Reading ${position + 1}</strong>
-            <a href="#">Play song ${cardPlaylist[position] + 1}</a>
-          `;
+            const card =
+              document.createElement(
+                'article'
+              );
 
-          card.querySelector('a').onclick = e => {
-            e.preventDefault();
-            playPosition(position);
-          };
+            card.className = 'card';
 
-          cards.appendChild(card);
-        });
+            card.innerHTML = `
+              <span class="symbol">
+                ${symbol}
+              </span>
+
+              <strong>
+                Reading ${position + 1}
+              </strong>
+
+              <a href="#">
+                Play song ${cardPlaylist[position] + 1}
+              </a>
+            `;
+
+
+            card.querySelector(
+              'a'
+            ).onclick = e => {
+
+              e.preventDefault();
+
+              playPosition(
+                position
+              );
+            };
+
+
+            cards.appendChild(card);
+          }
+        );
+
 
       updateButtons();
     };
 
 
-    /* ==========================================
-       CONTEXT BUTTON
-       Opens Context without leaving this page.
-       Therefore the YouTube player keeps playing.
-       ========================================== */
+    /* =========================================================
+       CONTEXT
+       ========================================================= */
 
-    const contextButton = $('#context-button');
-    const contextOverlay = $('#context-overlay');
-    const contextClose = $('#context-close');
+    const contextButton =
+      $('#context-button');
+
+    const contextOverlay =
+      $('#context-overlay');
+
+    const contextClose =
+      $('#context-close');
+
 
     function openContext() {
-      contextOverlay.classList.add('open');
-      contextOverlay.setAttribute('aria-hidden', 'false');
-      document.body.style.overflow = 'hidden';
+
+      contextOverlay.classList.add(
+        'open'
+      );
+
+      contextOverlay.setAttribute(
+        'aria-hidden',
+        'false'
+      );
+
+      document.body.style.overflow =
+        'hidden';
+
       contextClose.focus();
     }
 
+
     function closeContext() {
-      contextOverlay.classList.remove('open');
-      contextOverlay.setAttribute('aria-hidden', 'true');
-      document.body.style.overflow = '';
+
+      contextOverlay.classList.remove(
+        'open'
+      );
+
+      contextOverlay.setAttribute(
+        'aria-hidden',
+        'true'
+      );
+
+      document.body.style.overflow =
+        '';
+
       contextButton.focus();
     }
 
-    contextButton.addEventListener('click', openContext);
-    contextClose.addEventListener('click', closeContext);
 
-    document.addEventListener('keydown', e => {
-      if (e.key === 'Escape' && contextOverlay.classList.contains('open')) {
-        closeContext();
+    contextButton.addEventListener(
+      'click',
+      openContext
+    );
+
+    contextClose.addEventListener(
+      'click',
+      closeContext
+    );
+
+
+    document.addEventListener(
+      'keydown',
+      e => {
+
+        if (
+          e.key === 'Escape' &&
+          contextOverlay.classList.contains(
+            'open'
+          )
+        ) {
+
+          closeContext();
+        }
       }
-    });
+    );
 
+
+    /* =========================================================
+       INITIAL STATE
+       ========================================================= */
 
     updateButtons();
+
   </script>
+
 
   <script src="./main.js"></script>
   <script src="./whack-a-track.js"></script>
