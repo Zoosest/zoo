@@ -257,14 +257,22 @@
 
       #archive-search-container {
         position: relative;
-        width: min(100% - 48px, 600px);
-        margin: 0 auto 20px auto;
+        width: calc(100% - 58px);
+        margin-left: 58px;
+        margin-bottom: 20px;
         box-sizing: border-box;
+      }
+
+      #archive-search-wrapper {
+        position: relative;
+        width: 100%;
+        display: flex;
+        align-items: center;
       }
 
       #archive-search {
         width: 100%;
-        padding: 12px 16px;
+        padding: 12px 16px 12px 42px;
         background: transparent;
         border: 2px solid rgba(150, 150, 150, 0.4);
         border-radius: 12px;
@@ -283,6 +291,15 @@
       #archive-search:focus {
         border-color: var(--bright-gold, #f5d76e);
         background: rgba(33, 16, 46, 0.6);
+      }
+
+      .search-magnifying-glass {
+        position: absolute;
+        left: 14px;
+        font-size: 1rem;
+        color: var(--gold, #d4af37);
+        pointer-events: none;
+        line-height: 1;
       }
 
       #search-dropdown {
@@ -533,6 +550,11 @@
 
       @media (max-width: 700px) {
 
+        #archive-search-container {
+          width: calc(100% - 42px);
+          margin-left: 42px;
+        }
+
         #song-list .song {
           grid-template-columns: minmax(0, 1fr) 54px;
           gap: 8px;
@@ -725,6 +747,13 @@
     const container = document.createElement("div");
     container.id = "archive-search-container";
 
+    const wrapper = document.createElement("div");
+    wrapper.id = "archive-search-wrapper";
+
+    const icon = document.createElement("span");
+    icon.className = "search-magnifying-glass";
+    icon.textContent = "🔎";
+
     const input = document.createElement("input");
     input.type = "text";
     input.id = "archive-search";
@@ -734,7 +763,9 @@
     const dropdown = document.createElement("div");
     dropdown.id = "search-dropdown";
 
-    container.appendChild(input);
+    wrapper.appendChild(icon);
+    wrapper.appendChild(input);
+    container.appendChild(wrapper);
     container.appendChild(dropdown);
 
     songListContainer.parentNode.insertBefore(container, songListContainer);
@@ -1294,7 +1325,7 @@
 
   function init() {
     addStyles();
-    setupSearch(); // <-- Search bar hook integrated here!
+    setupSearch();
 
     updateSongRows();
 
