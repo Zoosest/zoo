@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 460;
+  const MOLE_VISIBLE_MS = 560;
   const MOLE_INTERVAL_MS = 1400;
 
   const REMOVED_TRACKS_KEY = "rizneyWhackedTracks";
@@ -220,15 +220,20 @@
       getCurrentSongId();
 
     if (!videoId) {
+
       console.log(
         "Whack-a-Track: Could not find current YouTube video ID."
       );
-      return;
+
+      return null;
     }
+
 
     let removed = [];
 
+
     try {
+
       removed =
         JSON.parse(
           localStorage.getItem(
@@ -236,17 +241,22 @@
           ) || "[]"
         );
 
+
       if (!Array.isArray(removed)) {
         removed = [];
       }
 
     } catch (error) {
+
       removed = [];
+
     }
 
 
     if (!removed.includes(videoId)) {
+
       removed.push(videoId);
+
     }
 
 
@@ -260,6 +270,9 @@
       "Whack-a-Track saved:",
       videoId
     );
+
+
+    return videoId;
   }
 
 
@@ -277,8 +290,10 @@
     const panel =
       document.createElement("section");
 
+
     panel.id =
       "whack-a-track-game";
+
 
     panel.setAttribute(
       "aria-label",
@@ -467,6 +482,7 @@
             return;
           }
 
+
           if (
             hole.dataset.active !==
             "true"
@@ -490,7 +506,9 @@
 
 
           if (trackHealth <= 0) {
+
             finish(true);
+
           }
 
         }
@@ -498,6 +516,7 @@
 
 
       board.appendChild(hole);
+
     }
 
 
@@ -534,9 +553,11 @@
 
     new MutationObserver(
       () => {
+
         setToolbarHidden(
           !panel.hidden
         );
+
       }
     ).observe(
       panel,
@@ -548,10 +569,14 @@
 
 
     game = {
+
       panel,
+
       board,
+
       status:
         $("#wat-status", panel)
+
     };
 
 
@@ -581,6 +606,7 @@
           "🕳️";
 
       });
+
   }
 
 
@@ -616,6 +642,7 @@
     hole.dataset.active =
       "true";
 
+
     hole.textContent =
       "🐭";
 
@@ -631,9 +658,12 @@
             hole.dataset.active ===
             "true"
           ) {
+
             hole.textContent =
               "🕳️";
+
           }
+
 
           hole.dataset.active =
             "false";
@@ -648,6 +678,7 @@
         spawnMole,
         MOLE_INTERVAL_MS
       );
+
   }
 
 
@@ -687,12 +718,15 @@
 
 
           if (secondsLeft <= 0) {
+
             finish(false);
+
           }
 
         },
         1000
       );
+
   }
 
 
@@ -720,15 +754,21 @@
 
     if (won) {
 
-      game.status.textContent =
-        "💥 TRACK WHACKED!";
+      const savedId =
+        saveWhackedTrack();
 
-      /*
-        TEST ONLY:
-        Save the current YouTube video ID.
-        Nothing else on the playlist changes yet.
-      */
-      saveWhackedTrack();
+
+      if (savedId) {
+
+        game.status.innerHTML =
+          `💥 TRACK WHACKED!<br><small>SAVED: ${savedId}</small>`;
+
+      } else {
+
+        game.status.textContent =
+          "💥 TRACK WHACKED!";
+
+      }
 
     } else {
 
@@ -736,6 +776,7 @@
         "The track survived. Try again!";
 
     }
+
   }
 
 
@@ -754,8 +795,11 @@
 
 
     if (game) {
+
       game.panel.hidden = true;
+
     }
+
   }
 
 
@@ -790,20 +834,25 @@
 
       active = false;
 
+
       game.status.textContent =
         "Play a track to start the game, then pause it to remove from playlist";
+
 
       game.panel.scrollIntoView({
         behavior: "smooth",
         block: "start"
       });
 
+
       return;
+
     }
 
 
     trackHealth =
       TRACK_HEALTH;
+
 
     active = true;
 
@@ -829,6 +878,7 @@
       behavior: "smooth",
       block: "start"
     });
+
   }
 
 
@@ -870,6 +920,7 @@
       "click",
       startGame
     );
+
   }
 
 
