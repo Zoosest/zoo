@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 660;
+  const MOLE_VISIBLE_MS = 460;
   const MOLE_INTERVAL_MS = 1400;
 
   const REMOVED_TRACKS_KEY = "rizneyWhackedTracks";
@@ -213,6 +213,23 @@
     const tracks = getWhackedTracks();
 
     return tracks.includes(videoId);
+  }
+
+  /* ---------------------------------------------------------
+     BRICK #3 — CHECK WHETHER CURRENT SONG WAS SAVED
+     --------------------------------------------------------- */
+
+  function checkCurrentSong() {
+    const videoId = getCurrentSongId();
+
+    if (!videoId) {
+      return null;
+    }
+
+    return {
+      videoId,
+      remembered: isTrackRemembered(videoId)
+    };
   }
 
   /* ---------------------------------------------------------
@@ -458,13 +475,6 @@
       return;
     }
 
-    /*
-     * BRICK #2 TEST:
-     *
-     * First save the current YouTube ID.
-     * Then immediately read localStorage back.
-     */
-
     const savedId = saveWhackedTrack();
 
     if (savedId) {
@@ -514,11 +524,26 @@
 
     game.panel.hidden = false;
 
+    const songCheck = checkCurrentSong();
+
+    if (songCheck?.remembered) {
+      game.status.innerHTML =
+        `🧠 THIS TRACK IS ALREADY REMEMBERED!<br>` +
+        `<small>${songCheck.videoId}</small>`;
+    } else if (songCheck?.videoId) {
+      game.status.innerHTML =
+        `🎵 NEW TRACK<br>` +
+        `<small>${songCheck.videoId}</small>`;
+    } else {
+      game.status.textContent =
+        "Could not identify the current track.";
+    }
+
     if (!playing()) {
       active = false;
 
-      game.status.textContent =
-        "Play a track to start the game, then pause it to remove from playlist";
+      game.status.innerHTML +=
+        `<br><small>Play a track to start the game.</small>`;
 
       game.panel.scrollIntoView({
         behavior: "smooth",
@@ -536,8 +561,14 @@
 
     hideMoles();
 
-    game.status.textContent =
-      "Whack every mouse before the clock runs out!";
+    game.status.innerHTML =
+      songCheck?.remembered
+        ? `🧠 THIS TRACK IS ALREADY REMEMBERED!<br>` +
+          `<small>${songCheck.videoId}</small><br>` +
+          `<small>Game can still be played for this test.</small>`
+        : `🎵 NEW TRACK<br>` +
+          `<small>${songCheck?.videoId || "UNKNOWN"}</small><br>` +
+          `<small>Whack every mouse before the clock runs out!</small>`;
 
     startClock();
     spawnMole();
