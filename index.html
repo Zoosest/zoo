@@ -264,11 +264,6 @@
       object-fit:contain;
     }
 
-    /* ================================
-       CONTEXT OVERLAY
-       The music player stays alive underneath.
-       ================================ */
-
     #context-overlay {
       position:fixed;
       inset:0;
@@ -462,6 +457,9 @@
 
   </section>
 
+  <!-- BUTTON ORDER INTENTIONALLY CHANGED:
+       Previous → CARDS → Whack-A-Track → Random → Next -->
+
   <nav class="controls" aria-label="Music controls">
 
     <button
@@ -472,9 +470,9 @@
     >«</button>
 
     <button
-      id="random-song"
+      id="draw-cards"
       type="button"
-    >Random</button>
+    >CARDS</button>
 
     <button
       id="whack-track"
@@ -482,9 +480,9 @@
     >Whack-A-Track</button>
 
     <button
-      id="draw-cards"
+      id="random-song"
       type="button"
-    >CARDS</button>
+    >Random</button>
 
     <button
       id="next-song"
@@ -527,10 +525,6 @@
     />
 
   </footer>
-
-  <!-- ==========================================
-       CONTEXT
-       ========================================== -->
 
   <section
     id="context-overlay"
@@ -649,10 +643,6 @@
   <script src="https://www.youtube.com/iframe_api"></script>
 
   <script>
-
-    /* =========================================================
-       PLAYLIST
-       ========================================================= */
 
     const songs = [
       'https://youtube.com/shorts/nSog7wdCuzM',
@@ -879,29 +869,7 @@
       'https://youtu.be/K2Dujl_bFZg'
     ];
 
-
-    /* =========================================================
-       INTRO
-       ========================================================= */
-
-    /*
-       The intro is deliberately NOT inside the songs array.
-
-       Therefore:
-       - it gets no playlist number
-       - it gets no animal
-       - it gets no keyword
-       - it does not appear in Search
-       - it does not appear in CARDS
-       - Random cannot select it
-    */
-
     const introVideoId = 'mkKOtZPLkzY';
-
-
-    /* =========================================================
-       GET VIDEO IDS
-       ========================================================= */
 
     const ids = songs
       .map(url =>
@@ -910,11 +878,6 @@
         )?.[1]
       )
       .filter(Boolean);
-
-
-    /* =========================================================
-       ELEMENTS
-       ========================================================= */
 
     const $ = s => document.querySelector(s);
 
@@ -926,25 +889,8 @@
     const previousButton = $('#previous-song');
     const nextButton = $('#next-song');
 
-
-    /* =========================================================
-       PLAYER STATE
-       ========================================================= */
-
     let player = null;
-
-    /*
-       currentIndex:
-
-       -1 = INTRO
-        0 = Unfinished Business / Song #1
-        1 = Song #2
-        2 = Song #3
-        etc.
-    */
-
     let currentIndex = -1;
-
 
     /*
        INTRO TRANSITION PROTECTION
@@ -958,18 +904,8 @@
 
     let introTransitionPending = false;
 
-
-    /* =========================================================
-       MUSIC READING STATE
-       ========================================================= */
-
     let cardPlaylist = null;
     let cardPosition = 0;
-
-
-    /* =========================================================
-       TITLES
-       ========================================================= */
 
     const titleFor = i => {
       if (i === -1) {
@@ -979,16 +915,7 @@
       return `Song ${i + 1}`;
     };
 
-
-    /* =========================================================
-       BUTTON STATE
-       ========================================================= */
-
     function updateButtons() {
-
-      /*
-         Music Reading mode
-      */
 
       if (cardPlaylist !== null) {
 
@@ -1001,24 +928,11 @@
         return;
       }
 
-
-      /*
-         Normal playlist mode.
-
-         Previous is disabled during the intro.
-         From Song #1, Previous goes back to intro.
-      */
-
       previousButton.disabled =
         currentIndex < 0;
 
       nextButton.disabled = false;
     }
-
-
-    /* =========================================================
-       PLAY INTRO
-       ========================================================= */
 
     function playIntro() {
 
@@ -1026,11 +940,6 @@
       cardPosition = 0;
 
       currentIndex = -1;
-
-      /*
-         We are deliberately choosing the intro,
-         so any old intro transition protection is cleared.
-      */
 
       introTransitionPending = false;
 
@@ -1051,11 +960,6 @@
         behavior: 'smooth'
       });
     }
-
-
-    /* =========================================================
-       PLAY NORMAL SONG
-       ========================================================= */
 
     function play(index) {
 
@@ -1086,11 +990,6 @@
       });
     }
 
-
-    /* =========================================================
-       PLAY MUSIC READING POSITION
-       ========================================================= */
-
     function playPosition(position) {
 
       if (
@@ -1099,10 +998,6 @@
       ) {
         return;
       }
-
-      /*
-         A Music Reading selection is not an intro transition.
-      */
 
       introTransitionPending = false;
 
@@ -1124,16 +1019,7 @@
       updateButtons();
     }
 
-
-    /* =========================================================
-       NEXT
-       ========================================================= */
-
     function next() {
-
-      /*
-         MUSIC READING
-      */
 
       if (cardPlaylist !== null) {
 
@@ -1160,7 +1046,6 @@
         return;
       }
 
-
       /*
          INTRO → SONG #1
       */
@@ -1171,11 +1056,6 @@
 
         return;
       }
-
-
-      /*
-         NORMAL PLAYLIST
-      */
 
       if (
         currentIndex <
@@ -1193,16 +1073,7 @@
       updateButtons();
     }
 
-
-    /* =========================================================
-       PREVIOUS
-       ========================================================= */
-
     function previous() {
-
-      /*
-         MUSIC READING
-      */
 
       if (cardPlaylist !== null) {
 
@@ -1216,11 +1087,6 @@
         return;
       }
 
-
-      /*
-         SONG #1 → INTRO
-      */
-
       if (currentIndex === 0) {
 
         playIntro();
@@ -1228,34 +1094,17 @@
         return;
       }
 
-
-      /*
-         NORMAL PLAYLIST
-      */
-
       if (currentIndex > 0) {
 
         play(currentIndex - 1);
       }
     }
 
-
-    /* =========================================================
-       YOUTUBE PLAYER
-       ========================================================= */
-
     window.onYouTubeIframeAPIReady = () => {
 
       player = new YT.Player(
         'player',
         {
-
-          /*
-             IMPORTANT:
-
-             The player starts with the INTRO,
-             not ids[0].
-          */
 
           videoId: introVideoId,
 
@@ -1279,15 +1128,11 @@
               updateButtons();
             },
 
-
             onStateChange: e => {
 
               /*
                  When Song #1 actually begins playing,
                  the special intro transition is finished.
-
-                 This prevents the protection from hanging
-                 around and interfering with Song #1 later.
               */
 
               if (
@@ -1297,16 +1142,6 @@
 
                 introTransitionPending = false;
               }
-
-
-              /*
-                 If the user manually pressed NEXT
-                 while the intro was playing, YouTube can
-                 send one stale ENDED event from that intro.
-
-                 Only consume it when we are still marked as
-                 being in the special intro transition.
-              */
 
               if (
                 e.data ===
@@ -1320,11 +1155,6 @@
                   return;
                 }
 
-                /*
-                   Otherwise this is a genuine video ending,
-                   so continue normally.
-                */
-
                 next();
               }
             }
@@ -1335,11 +1165,6 @@
       window.rizneyPlayer =
         player;
     };
-
-
-    /* =========================================================
-       BUILD CHRONOLOGICAL SONG LIST
-       ========================================================= */
 
     ids.forEach((id, index) => {
 
@@ -1367,7 +1192,6 @@
         >Play</button>
       `;
 
-
       row.querySelector(
         'button'
       ).onclick = () => {
@@ -1380,14 +1204,8 @@
         play(index);
       };
 
-
       list.appendChild(row);
     });
-
-
-    /* =========================================================
-       RANDOM
-       ========================================================= */
 
     $('#random-song').onclick = () => {
 
@@ -1396,11 +1214,6 @@
 
       introTransitionPending = false;
 
-      /*
-         Random only uses ids,
-         so the intro can NEVER be selected.
-      */
-
       play(
         Math.floor(
           Math.random() * ids.length
@@ -1408,20 +1221,10 @@
       );
     };
 
-
-    /* =========================================================
-       PREVIOUS / NEXT BUTTONS
-       ========================================================= */
-
     previousButton.onclick =
       previous;
 
     nextButton.onclick = () => {
-
-      /*
-         ONLY when manually skipping from the intro,
-         protect Song #1 from a stale intro ENDED event.
-      */
 
       if (currentIndex === -1) {
 
@@ -1431,17 +1234,7 @@
       next();
     };
 
-
-    /* =========================================================
-       CARDS
-       ========================================================= */
-
     $('#draw-cards').onclick = () => {
-
-      /*
-         Cards only choose from the real playlist.
-         The intro is excluded.
-      */
 
       introTransitionPending = false;
 
@@ -1460,7 +1253,6 @@
       reading.hidden = false;
 
       cards.innerHTML = '';
-
 
       [
         '✦',
@@ -1498,7 +1290,6 @@
               </a>
             `;
 
-
             card.querySelector(
               'a'
             ).onclick = e => {
@@ -1510,19 +1301,12 @@
               );
             };
 
-
             cards.appendChild(card);
           }
         );
 
-
       updateButtons();
     };
-
-
-    /* =========================================================
-       CONTEXT
-       ========================================================= */
 
     const contextButton =
       $('#context-button');
@@ -1532,7 +1316,6 @@
 
     const contextClose =
       $('#context-close');
-
 
     function openContext() {
 
@@ -1551,7 +1334,6 @@
       contextClose.focus();
     }
 
-
     function closeContext() {
 
       contextOverlay.classList.remove(
@@ -1569,7 +1351,6 @@
       contextButton.focus();
     }
 
-
     contextButton.addEventListener(
       'click',
       openContext
@@ -1579,7 +1360,6 @@
       'click',
       closeContext
     );
-
 
     document.addEventListener(
       'keydown',
@@ -1596,11 +1376,6 @@
         }
       }
     );
-
-
-    /* =========================================================
-       INITIAL STATE
-       ========================================================= */
 
     updateButtons();
 
