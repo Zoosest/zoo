@@ -1,1398 +1,1255 @@
-/* Whack-a-Track mini-game for the Rizney Music Archive. */
 (() => {
-  "use strict";
+"use strict";
+/* =========================================================
+WHACK-A-TRACK WITH A QUACK
+========================================================= */
+const TRACK_HEALTH = 24;
+const GAME_DURATION = 80;
+const MOLE_VISIBLE_MS = 660;
+const MOLE_INTERVAL_MS = 1400;
+const DUCK_IMAGE = "./assets/duck.png";
+const DUCK_HIT_IMAGE = "./assets/duck-hit.png";
+const WHACK_IMAGE = "./assets/whack.png";
+const REMOVED_TRACKS_KEY =
+"rizneyWhackedTracks";
+/* =========================================================
+STATE
+========================================================= */
+let gameActive = false;
+let gameTrackIndex = null;
+let health = TRACK_HEALTH;
+let timeLeft = GAME_DURATION;
+let timer = null;
+let moleTimer = null;
+let activeHole = null;
+let activeDuck = null;
+let gameEl = null;
+let boardEl = null;
+let healthEl = null;
+let timerEl = null;
+let statusEl = null;
+/* =========================================================
+HELPERS
+========================================================= */
+const $ = selector =>
+document.querySelector(selector);
+function getWhackedTracks() {
+try {
+return JSON.parse(
+localStorage.getItem(
+REMOVED_TRACKS_KEY
+)
+) || [];
+} catch {
+return [];
+}
+}
+function saveWhackedTracks(tracks) {
+localStorage.setItem(
+REMOVED_TRACKS_KEY,
+JSON.stringify(tracks)
+);
+}
+function isTrackWhacked(index) {
+return getWhackedTracks()
+.includes(index);
+}
+/* =========================================================
+STYLES
+========================================================= */
+function addStyles() {
+if (
+  document.getElementById(
+    "whack-a-track-styles"
+  )
+) {
+  return;
+}
 
-  const TRACK_HEALTH = 24;
-  const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 660;
-  const MOLE_INTERVAL_MS = 1400;
+const style =
+  document.createElement("style");
 
-  const REMOVED_TRACKS_KEY =
-    "rizneyWhackedTracks";
+style.id =
+  "whack-a-track-styles";
 
-  const DUCK_IMAGE =
-    "./assets/duck.png";
+style.textContent = `
 
-  const youtube = () =>
-    window.rizneyPlayer || window.player || null;
+  /* =====================================================
+     GAME WRAPPER
+     ===================================================== */
 
-  const $ = (selector, root = document) =>
-    root.querySelector(selector);
-
-  const controls = () =>
-    $(".controls");
-
-  let game;
-  let active = false;
-  let trackHealth = TRACK_HEALTH;
-  let secondsLeft = GAME_DURATION;
-  let moleTimer;
-  let hideTimer;
-  let gameTimer;
+  #whack-a-track-game {
+    width: min(100%, 900px);
+    margin: 25px auto;
+    padding: 16px;
+    background: #120b18;
+    border: 1px solid #d4af37;
+    border-radius: 12px;
+    text-align: center;
+  }
 
 
-  /* =========================================================
-     PHONE VIBRATION
-     ========================================================= */
+  #whack-a-track-game h2 {
+    margin-top: 0;
+    color: #f5d76e;
+  }
 
-  function vibrate(duration) {
-    if (
-      typeof navigator !== "undefined" &&
-      typeof navigator.vibrate === "function"
-    ) {
-      try {
-        navigator.vibrate(duration);
-      } catch (error) {
-        /* Vibration is optional. */
-      }
+
+  /* =====================================================
+     GAME INFO
+     ===================================================== */
+
+  #whack-a-track-game .wat-info {
+    display: flex;
+    justify-content: center;
+    gap: 18px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    color: #e0aaff;
+    font-family: Georgia,
+      "Times New Roman",
+      serif;
+    font-size: .9rem;
+  }
+
+
+  #whack-a-track-game .wat-health {
+    color: #f5d76e;
+  }
+
+
+  #whack-a-track-game .wat-time {
+    color: #e0aaff;
+  }
+
+
+  /* =====================================================
+     BOARD
+     ===================================================== */
+
+  #whack-a-track-game .wat-board {
+    position: relative;
+
+    width: 100%;
+    max-width: 500px;
+
+    aspect-ratio: 500 / 220;
+
+    margin: 12px auto;
+
+    background-color: #55208a;
+
+    background-image:
+      url("./assets/holes.png");
+
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: 100% 100%;
+
+    border: 2px solid #d4af37;
+    border-radius: 10px;
+
+    overflow: hidden;
+  }
+
+
+  /* =====================================================
+     HOLES / INVISIBLE HIT BUTTONS
+     ===================================================== */
+
+  #whack-a-track-game .wat-hole {
+    position: absolute;
+
+    width: 76px;
+    height: 76px;
+
+    padding: 0;
+    margin: 0;
+
+    /*
+       The buttons are now invisible.
+
+       They still exist and still receive clicks,
+       but the holes.png artwork provides the
+       visible holes.
+    */
+
+    background: transparent;
+
+    border: 0;
+
+    border-radius: 50%;
+
+    appearance: none;
+    -webkit-appearance: none;
+
+    cursor: pointer;
+
+    overflow: visible;
+
+    z-index: 5;
+  }
+
+
+  #whack-a-track-game .wat-hole:hover {
+    background: transparent;
+  }
+
+
+  #whack-a-track-game .wat-hole:focus {
+    outline: none;
+  }
+
+
+  /* =====================================================
+     DUCK
+     ===================================================== */
+
+  #whack-a-track-game .wat-duck {
+    position: absolute;
+
+    left: 50%;
+    bottom: 2px;
+
+    width: 72px;
+    height: 72px;
+
+    transform:
+      translateX(-50%)
+      scaleY(.94);
+
+    object-fit: contain;
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+
+    z-index: 10;
+
+    transform-origin: bottom center;
+  }
+
+
+  /* =====================================================
+     HIT IMAGE
+     ===================================================== */
+
+  #whack-a-track-game .wat-duck-hit {
+    position: absolute;
+
+    left: 50%;
+    bottom: 2px;
+
+    width: 72px;
+    height: 72px;
+
+    transform:
+      translateX(-50%);
+
+    object-fit: contain;
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+
+    z-index: 11;
+  }
+
+
+  /* =====================================================
+     WHACK / QUACK IMAGE
+     ===================================================== */
+
+  #whack-a-track-game .wat-whack {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 90px;
+    height: 90px;
+
+    object-fit: contain;
+
+    transform:
+      translate(-50%, -50%)
+      rotate(-8deg);
+
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+
+    z-index: 20;
+
+    animation:
+      wat-whack-pop .18s
+      ease-out;
+  }
+
+
+  @keyframes wat-whack-pop {
+
+    0% {
+      transform:
+        translate(-50%, -50%)
+        scale(.55)
+        rotate(-8deg);
+      opacity: 0;
+    }
+
+    100% {
+      transform:
+        translate(-50%, -50%)
+        scale(1)
+        rotate(-8deg);
+      opacity: 1;
     }
   }
 
 
-  /* =========================================================
-     TOOLBAR
-     ========================================================= */
+  /* =====================================================
+     CONTROLS
+     ===================================================== */
 
-  function setToolbarHidden(hidden) {
-    controls()?.classList.toggle(
-      "toolbar-hidden",
-      hidden
-    );
+  #whack-a-track-game .wat-controls {
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-top: 12px;
   }
 
 
-  function positionToolbar() {
-    const dock = $(".player-dock");
+  #whack-a-track-game button.wat-start,
+  #whack-a-track-game button.wat-end {
+    border: 1px solid #d4af37;
+    border-radius: 999px;
 
-    if (dock) {
-      document.documentElement.style.setProperty(
-        "--player-dock-height",
-        `${dock.offsetHeight}px`
-      );
-    }
+    padding: 9px 14px;
+
+    color: #fff;
+    background: #55208a;
+
+    font: inherit;
+    font-size: .8rem;
+
+    cursor: pointer;
   }
 
 
-  function setupToolbar() {
-    const style =
-      document.createElement("style");
-
-    style.textContent = `
-      .controls {
-        position: sticky;
-        top: var(--player-dock-height, 0px);
-        z-index: 90;
-        transition:
-          opacity .18s ease,
-          visibility .18s ease;
-      }
-
-      .controls.toolbar-hidden {
-        visibility: hidden;
-        opacity: 0;
-        pointer-events: none;
-      }
-
-      #reading,
-      #whack-a-track-game {
-        scroll-margin-top:
-          calc(var(--player-dock-height, 0px) + 8px);
-      }
-
-
-      /* =====================================================
-         ROADWORK ROW
-         ===================================================== */
-
-      #song-list .song.rizney-roadwork {
-        opacity: .72;
-      }
-
-      #song-list .song.rizney-roadwork::after {
-        content: "🚧 WHACKED!";
-        display: block;
-        grid-column: 1 / -1;
-        margin: 4px 0 4px;
-        padding: 6px 10px;
-        text-align: center;
-        font-weight: 800;
-        letter-spacing: .08em;
-        color: #f5d76e;
-        background: #120b18;
-        border: 1px solid #d4af37;
-        border-radius: 8px;
-      }
-
-      #song-list .song.rizney-roadwork .animal-button {
-        cursor: not-allowed;
-        opacity: .45;
-        pointer-events: none;
-      }
-
-      #song-list .song.rizney-roadwork .song-number {
-        cursor: not-allowed;
-        opacity: .45;
-        pointer-events: none;
-      }
-
-
-      /* =====================================================
-         WHACK-A-TRACK BOARD
-         ===================================================== */
-
-      #whack-a-track-game #wat-board {
-        position: relative;
-        display: grid;
-        grid-template-columns:
-          repeat(3, minmax(0, 1fr));
-        grid-template-rows:
-          repeat(2, 1fr);
-        gap: 14px;
-
-        width: 100%;
-        max-width: 500px;
-
-        margin: 18px auto;
-        padding: 14px;
-
-        background: #55208a;
-        border-radius: 14px;
-
-        box-sizing: border-box;
-        overflow: visible;
-      }
-
-
-      /* =====================================================
-         FIXED BLACK HOLE
-
-         The hole has an actual fixed width/height.
-         The duck is absolutely positioned, so it can NEVER
-         stretch the button.
-         ===================================================== */
-
-      #whack-a-track-game .wat-hole {
-        position: relative;
-
-        width: 76px;
-        height: 76px;
-
-        min-width: 76px;
-        min-height: 76px;
-
-        max-width: 76px;
-        max-height: 76px;
-
-        justify-self: center;
-        align-self: center;
-
-        padding: 0;
-
-        border: 0;
-        border-radius: 50%;
-
-        background: #000;
-
-        cursor: crosshair;
-
-        display: block;
-
-        overflow: visible;
-
-        box-sizing: border-box;
-      }
-
-
-      /* =====================================================
-         DUCK
-
-         Absolutely positioned.
-         It does NOT participate in the button's layout.
-         ===================================================== */
-
-      #whack-a-track-game .wat-duck {
-        position: absolute;
-
-        left: 50%;
-        bottom: 0;
-
-        width: 72px;
-        height: 72px;
-
-        max-width: none;
-        max-height: none;
-
-        object-fit: contain;
-
-        transform:
-          translateX(-50%)
-          scaleY(.94);
-
-        transform-origin:
-          center bottom;
-
-        pointer-events: none;
-        user-select: none;
-        -webkit-user-drag: none;
-
-        display: block;
-      }
-
-
-      /* =====================================================
-         MOBILE
-         ===================================================== */
-
-      @media (max-width: 640px) {
-
-        #whack-a-track-game {
-          width: 100%;
-          margin-top: 4px;
-          margin-bottom: 12px;
-          padding: 8px 10px 10px;
-        }
-
-        #whack-a-track-game #wat-board {
-          gap: 10px;
-          padding: 12px 8px;
-          margin: 10px auto;
-        }
-
-        #whack-a-track-game .wat-hole {
-          width: 62px;
-          height: 62px;
-
-          min-width: 62px;
-          min-height: 62px;
-
-          max-width: 62px;
-          max-height: 62px;
-        }
-
-        #whack-a-track-game .wat-duck {
-          width: 60px;
-          height: 60px;
-        }
-      }
-    `;
-
-    document.head.appendChild(style);
-
-    positionToolbar();
-
-    window.addEventListener(
-      "resize",
-      positionToolbar,
-      { passive: true }
-    );
-
-    if (window.ResizeObserver) {
-      const dock = $(".player-dock");
-
-      if (dock) {
-        new ResizeObserver(
-          positionToolbar
-        ).observe(dock);
-      }
-    }
-
-    setToolbarHidden(false);
+  #whack-a-track-game button.wat-start:hover,
+  #whack-a-track-game button.wat-end:hover {
+    background: #7e35bc;
   }
 
 
-  /* =========================================================
-     YOUTUBE
-     ========================================================= */
+  /* =====================================================
+     STATUS
+     ===================================================== */
 
-  const playing = () => {
-    const player = youtube();
+  #whack-a-track-game .wat-status {
+    min-height: 22px;
 
-    return (
-      player &&
-      typeof player.getPlayerState ===
-        "function" &&
-      window.YT &&
-      player.getPlayerState() ===
-        YT.PlayerState.PLAYING
-    );
-  };
+    margin-top: 10px;
 
+    color: #b9a8c5;
 
-  /* =========================================================
-     CURRENT SONG
-     ========================================================= */
-
-  function getCurrentSongId() {
-    const player = youtube();
-
-    if (
-      !player ||
-      typeof player.getVideoData !==
-        "function"
-    ) {
-      return null;
-    }
-
-    try {
-      const data =
-        player.getVideoData();
-
-      if (
-        !data ||
-        !data.video_id
-      ) {
-        return null;
-      }
-
-      return String(
-        data.video_id
-      );
-
-    } catch (error) {
-      return null;
-    }
+    font-size: .8rem;
   }
 
 
-  function getCurrentSongNumber() {
-    const nowPlaying =
-      $("#now-playing");
+  /* =====================================================
+     ROAD CLOSED
+     ===================================================== */
 
-    if (!nowPlaying) {
-      return null;
-    }
+  .wat-road-closed {
+    display: inline-block;
 
-    const match =
-      nowPlaying.textContent.match(
-        /Song\s+(\d+)/i
-      );
+    margin-left: 8px;
 
-    if (!match) {
-      return null;
-    }
-
-    return Number(match[1]);
+    color: #f5d76e;
+    font-weight: bold;
   }
 
 
-  function getSongIdForNumber(songNumber) {
-    if (
-      !songNumber ||
-      !Number.isInteger(songNumber)
-    ) {
-      return null;
-    }
-
-    try {
-      if (
-        typeof ids !== "undefined" &&
-        ids[songNumber]
-      ) {
-        return String(
-          ids[songNumber]
-        );
-      }
-    } catch (error) {
-      /* ids may not be available yet. */
-    }
-
-    return null;
+  .wat-whacked-row {
+    opacity: .72;
   }
 
 
-  /* =========================================================
-     PERSISTENT ROADWORK
-     ========================================================= */
-
-  function getWhackedTracks() {
-    try {
-      const raw =
-        localStorage.getItem(
-          REMOVED_TRACKS_KEY
-        );
-
-      const parsed =
-        JSON.parse(
-          raw || "[]"
-        );
-
-      return Array.isArray(parsed)
-        ? parsed
-        : [];
-
-    } catch (error) {
-      return [];
-    }
+  .wat-whacked-row .play {
+    opacity: .45;
+    cursor: not-allowed;
   }
 
 
-  function saveWhackedTrack(songId) {
-    if (!songId) {
-      return null;
+  /* =====================================================
+     MOBILE
+     ===================================================== */
+
+  @media (max-width: 500px) {
+
+    #whack-a-track-game {
+      padding: 12px;
     }
 
-    try {
-      const tracks =
-        getWhackedTracks();
 
-      if (
-        !tracks.includes(songId)
-      ) {
-        tracks.push(songId);
-
-        localStorage.setItem(
-          REMOVED_TRACKS_KEY,
-          JSON.stringify(tracks)
-        );
-      }
-
-      return songId;
-
-    } catch (error) {
-      return null;
+    #whack-a-track-game .wat-hole {
+      width: 62px;
+      height: 62px;
     }
+
+
+    #whack-a-track-game .wat-duck,
+    #whack-a-track-game .wat-duck-hit {
+      width: 60px;
+      height: 60px;
+    }
+
+
+    #whack-a-track-game .wat-whack {
+      width: 76px;
+      height: 76px;
+    }
+
   }
 
+`;
 
-  function isTrackRemembered(songId) {
-    if (!songId) {
-      return false;
-    }
+document.head.appendChild(style);
 
-    return getWhackedTracks()
-      .includes(songId);
-  }
+}
+/* =========================================================
+CREATE GAME
+========================================================= */
+function createGame() {
+if (
+  document.getElementById(
+    "whack-a-track-game"
+  )
+) {
+  return;
+}
 
+addStyles();
 
-  function findSongRow(songNumber) {
-    if (!songNumber) {
-      return null;
-    }
+const main =
+  document.querySelector("main");
 
-    return document.querySelector(
-      `#song-list .song[data-song-index="${songNumber}"]`
-    );
-  }
-
-
-  function applyRoadworkToRow(row) {
-    if (!row) {
-      return false;
-    }
-
-    row.classList.add(
-      "rizney-roadwork"
-    );
-
-    row.dataset.rizneyRoadwork =
-      "true";
-
-    const playButton =
-      row.querySelector(".play");
-
-    if (playButton) {
-      playButton.disabled = true;
-
-      playButton.setAttribute(
-        "aria-label",
-        "Song closed for roadwork"
-      );
-    }
-
-    return true;
-  }
+if (!main) {
+  return;
+}
 
 
-  function closeRoad(
-    songNumber,
-    songId
-  ) {
-    if (
-      !songNumber &&
-      !songId
-    ) {
-      return false;
-    }
+gameEl =
+  document.createElement("section");
 
-    const row =
-      findSongRow(songNumber);
-
-    if (!row) {
-      return false;
-    }
-
-    if (songId) {
-      saveWhackedTrack(songId);
-    }
-
-    return applyRoadworkToRow(
-      row
-    );
-  }
+gameEl.id =
+  "whack-a-track-game";
 
 
-  function loadSavedRoadwork() {
-    const saved =
-      new Set(
-        getWhackedTracks()
-      );
+gameEl.innerHTML = `
 
-    if (!saved.size) {
-      return;
-    }
+  <h2>WHACK-A-TRACK WITH A QUACK 😸</h2>
 
-    document
-      .querySelectorAll(
-        "#song-list .song"
-      )
-      .forEach(row => {
+  <div class="wat-info">
 
-        const songNumber =
-          Number(
-            row.dataset.songIndex
-          );
+    <span class="wat-health">
+      Track Health:
+      <strong id="wat-health">
+        ${TRACK_HEALTH}
+      </strong>
+    </span>
 
-        if (
-          !Number.isInteger(
-            songNumber
-          ) ||
-          songNumber < 1
-        ) {
-          return;
-        }
+    <span class="wat-time">
+      Time:
+      <strong id="wat-time">
+        ${GAME_DURATION}
+      </strong>
+    </span>
 
-        const songId =
-          getSongIdForNumber(
-            songNumber
-          );
-
-        if (
-          songId &&
-          saved.has(songId)
-        ) {
-          applyRoadworkToRow(
-            row
-          );
-        }
-      });
-  }
+  </div>
 
 
-  /* =========================================================
-     GAME
-     ========================================================= */
+  <div
+    class="wat-board"
+    id="wat-board"
+  ></div>
 
-  function createGame() {
-    if (game) return game;
 
-    const panel =
+  <div class="wat-controls">
+
+    <button
+      class="wat-start"
+      id="wat-start"
+      type="button"
+    >
+      Start Game
+    </button>
+
+    <button
+      class="wat-end"
+      id="wat-end"
+      type="button"
+    >
+      End Game
+    </button>
+
+  </div>
+
+
+  <div
+    class="wat-status"
+    id="wat-status"
+  >
+    Whack every duck before the clock runs out!
+  </div>
+
+`;
+
+
+main.appendChild(gameEl);
+
+
+boardEl =
+  $("#wat-board");
+
+healthEl =
+  $("#wat-health");
+
+timerEl =
+  $("#wat-time");
+
+statusEl =
+  $("#wat-status");
+
+
+$("#wat-start").onclick =
+  startGame;
+
+$("#wat-end").onclick =
+  endGame;
+
+
+buildHoles();
+
+markWhackedRows();
+
+}
+/* =========================================================
+BUILD SIX INVISIBLE HIT BUTTONS
+========================================================= */
+function buildHoles() {
+boardEl.innerHTML = "";
+
+
+/*
+   3 columns x 2 rows.
+
+   These positions correspond to the
+   holes in holes.png.
+*/
+
+const positions = [
+
+  { left: "21%", top: "17%" },
+  { left: "50%", top: "17%" },
+  { left: "79%", top: "17%" },
+
+  { left: "21%", top: "55%" },
+  { left: "50%", top: "55%" },
+  { left: "79%", top: "55%" }
+
+];
+
+
+positions.forEach(
+  (position, index) => {
+
+    const hole =
       document.createElement(
-        "section"
+        "button"
       );
 
-    panel.id =
-      "whack-a-track-game";
+    hole.type = "button";
 
-    panel.setAttribute(
-      "aria-label",
-      "Whack-a-Track"
-    );
+    hole.className =
+      "wat-hole";
 
-    panel.innerHTML = `
-      <h2>Whack-a-Track</h2>
-
-      <p id="wat-status"
-         aria-live="polite"></p>
-
-      <p>
-        <span id="wat-time">
-          ${GAME_DURATION}
-        </span>s
-      </p>
-
-      <progress
-        id="wat-health"
-        max="${TRACK_HEALTH}"
-        value="${TRACK_HEALTH}"
-        aria-label="Track health"
-      ></progress>
-
-      <div
-        id="wat-board"
-        role="group"
-        aria-label="Whack-a-Track board"
-      ></div>
-
-      <button
-        id="wat-refresh"
-        type="button"
-        hidden
-      >
-        Refresh playlist
-      </button>
-
-      <button
-        id="wat-close"
-        type="button"
-      >
-        Close game
-      </button>
-    `;
+    hole.dataset.index =
+      index;
 
 
-    Object.assign(
-      panel.style,
-      {
-        position: "sticky",
+    hole.style.left =
+      `calc(${position.left} - 38px)`;
 
-        top:
-          "var(--player-dock-height, 104px)",
+    hole.style.top =
+      `calc(${position.top} - 38px)`;
 
-        zIndex: "20",
 
-        maxWidth:
-          "min(92vw, 620px)",
+    /*
+       Empty by default.
 
-        boxSizing: "border-box",
+       The duck gets inserted here
+       only when this hole is active.
+    */
 
-        margin:
-          "8px auto 18px",
+    hole.innerHTML = "";
 
-        padding:
-          "10px 14px 14px",
 
-        textAlign: "center",
+    hole.onclick = () => {
 
-        background:
-          "#120b18",
-
-        border:
-          "2px solid #d4af37",
-
-        borderRadius:
-          "12px",
-
-        boxShadow:
-          "0 0 24px rgba(212,175,55,.35)",
-
-        scrollMarginTop:
-          "calc(var(--player-dock-height, 0px) + 8px)"
+      if (!gameActive) {
+        return;
       }
-    );
 
-
-    Object.assign(
-      $("h2", panel).style,
-      {
-        margin:
-          "0 0 6px"
+      if (
+        hole !== activeHole
+      ) {
+        return;
       }
-    );
 
-
-    Object.assign(
-      $("#wat-status", panel).style,
-      {
-        margin:
-          "0 0 4px",
-
-        minHeight:
-          "1.4em"
-      }
-    );
-
-
-    Object.assign(
-      $("#wat-time", panel)
-        .parentElement.style,
-      {
-        margin:
-          "0 0 8px"
-      }
-    );
-
-
-    Object.assign(
-      $("#wat-health", panel).style,
-      {
-        display:
-          "block",
-
-        width:
-          "100%",
-
-        height:
-          "18px",
-
-        margin:
-          "8px 0 14px",
-
-        accentColor:
-          "#d4af37"
-      }
-    );
-
-
-    const board =
-      $("#wat-board", panel);
-
-
-    /* =======================================================
-       SIX FIXED HOLES
-       ======================================================= */
-
-    for (
-      let i = 0;
-      i < 6;
-      i++
-    ) {
-
-      const hole =
-        document.createElement(
-          "button"
-        );
-
-      hole.type =
-        "button";
-
-      hole.className =
-        "wat-hole";
-
-      /*
-       * IMPORTANT:
-       * No emoji.
-       *
-       * The black circle itself IS the hole.
-       */
-      hole.innerHTML = "";
-
-      hole.dataset.active =
-        "false";
-
-
-      hole.addEventListener(
-        "click",
-        () => {
-
-          if (
-            !active ||
-            hole.dataset.active !==
-              "true"
-          ) {
-            return;
-          }
-
-
-          hole.dataset.active =
-            "false";
-
-
-          /*
-           * Keep the hit feedback simple
-           * for now.
-           */
-          hole.innerHTML =
-            "💥";
-
-
-          trackHealth--;
-
-
-          if (
-            trackHealth <= 0
-          ) {
-            vibrate(180);
-          } else {
-            vibrate(100);
-          }
-
-
-          $("#wat-health", panel)
-            .value =
-            trackHealth;
-
-
-          if (
-            trackHealth <= 0
-          ) {
-            finish(true);
-          }
-        }
-      );
-
-
-      board.appendChild(
-        hole
-      );
-    }
-
-
-    $("#wat-close", panel)
-      .addEventListener(
-        "click",
-        closeGame
-      );
-
-
-    $("#wat-refresh", panel)
-      .addEventListener(
-        "click",
-        () =>
-          window.location.reload()
-      );
-
-
-    (
-      $(".player-dock") ||
-      $("main") ||
-      document.body
-    ).insertAdjacentElement(
-      "afterend",
-      panel
-    );
-
-
-    panel.hidden =
-      true;
-
-
-    new MutationObserver(
-      () =>
-        setToolbarHidden(
-          !panel.hidden
-        )
-    ).observe(
-      panel,
-      {
-        attributes:
-          true,
-
-        attributeFilter:
-          [
-            "hidden"
-          ]
-      }
-    );
-
-
-    game = {
-      panel,
-      board,
-
-      status:
-        $("#wat-status", panel)
+      hitDuck(hole);
     };
 
 
-    return game;
+    boardEl.appendChild(hole);
+  }
+);
+
+}
+/* =========================================================
+SPAWN DUCK
+========================================================= */
+function spawnMole() {
+if (!gameActive) {
+  return;
+}
+
+
+/*
+   Remove previous duck.
+*/
+
+clearActiveHole();
+
+
+const holes =
+  Array.from(
+    boardEl.querySelectorAll(
+      ".wat-hole"
+    )
+  );
+
+
+if (!holes.length) {
+  return;
+}
+
+
+const randomIndex =
+  Math.floor(
+    Math.random() *
+    holes.length
+  );
+
+
+const hole =
+  holes[randomIndex];
+
+
+activeHole =
+  hole;
+
+
+const duck =
+  document.createElement(
+    "img"
+  );
+
+
+duck.className =
+  "wat-duck";
+
+duck.src =
+  DUCK_IMAGE;
+
+duck.alt =
+  "Duck target";
+
+duck.draggable =
+  false;
+
+
+hole.appendChild(
+  duck
+);
+
+
+activeDuck =
+  duck;
+
+
+/*
+   Little squash as the duck appears.
+*/
+
+duck.animate(
+  [
+    {
+      transform:
+        "translateX(-50%) scaleY(.35)"
+    },
+    {
+      transform:
+        "translateX(-50%) scaleY(1.02)"
+    },
+    {
+      transform:
+        "translateX(-50%) scaleY(.94)"
+    }
+  ],
+  {
+    duration: 180,
+    easing: "ease-out"
+  }
+);
+
+
+/*
+   Automatically disappear after
+   a short amount of time.
+*/
+
+setTimeout(() => {
+
+  if (
+    gameActive &&
+    hole === activeHole
+  ) {
+    clearActiveHole();
+  }
+
+}, MOLE_VISIBLE_MS);
+
+}
+/* =========================================================
+CLEAR ACTIVE DUCK
+========================================================= */
+function clearActiveHole() {
+if (activeHole) {
+
+  activeHole.innerHTML =
+    "";
+
+}
+
+activeHole =
+  null;
+
+activeDuck =
+  null;
+
+}
+/* =========================================================
+HIT DUCK
+========================================================= */
+function hitDuck(hole) {
+if (
+  !gameActive ||
+  hole !== activeHole
+) {
+  return;
+}
+
+
+/*
+   Duck gets replaced by
+   the hit version.
+*/
+
+if (activeDuck) {
+
+  activeDuck.src =
+    DUCK_HIT_IMAGE;
+
+  activeDuck.className =
+    "wat-duck-hit";
+
+}
+
+
+/*
+   Add WHACK image.
+*/
+
+const whack =
+  document.createElement(
+    "img"
+  );
+
+whack.className =
+  "wat-whack";
+
+whack.src =
+  WHACK_IMAGE;
+
+whack.alt =
+  "WHACK";
+
+
+hole.appendChild(
+  whack
+);
+
+
+/*
+   Vibrate when available.
+*/
+
+if (
+  navigator.vibrate
+) {
+  navigator.vibrate(100);
+}
+
+
+/*
+   Remove one health.
+*/
+
+health--;
+
+healthEl.textContent =
+  health;
+
+
+/*
+   The track is defeated.
+*/
+
+if (health <= 0) {
+
+  if (
+    navigator.vibrate
+  ) {
+    navigator.vibrate(180);
   }
 
 
-  /* =========================================================
-     HIDE DUCKS
-     ========================================================= */
+  finishGame(true);
 
-  function hideMoles() {
+  return;
+}
 
-    game.board
-      .querySelectorAll(
-        ".wat-hole"
-      )
-      .forEach(
-        hole => {
 
-          hole.dataset.active =
-            "false";
+/*
+   Clear the hit animation.
+*/
 
-          /*
-           * Empty black circle.
-           * No hole emoji.
-           */
-          hole.innerHTML = "";
-        }
-      );
+setTimeout(() => {
+
+  if (
+    hole === activeHole
+  ) {
+    clearActiveHole();
   }
 
+}, 220);
 
-  /* =========================================================
-     SPAWN DUCK
-     ========================================================= */
+}
+/* =========================================================
+START GAME
+========================================================= */
+function startGame() {
+if (gameActive) {
+  return;
+}
 
-  function spawnMole() {
 
-    if (!active) {
+/*
+   Get the currently playing song
+   from the main player's state.
+*/
+
+if (
+  typeof currentIndex ===
+  "undefined"
+) {
+  statusEl.textContent =
+    "Play a track first.";
+  return;
+}
+
+
+if (
+  currentIndex < 0
+) {
+  statusEl.textContent =
+    "Play a track first.";
+  return;
+}
+
+
+if (
+  typeof isTrackWhacked ===
+  "function" &&
+  isTrackWhacked(
+    currentIndex
+  )
+) {
+  statusEl.textContent =
+    "🚧 This track is already whacked!";
+  return;
+}
+
+
+gameTrackIndex =
+  currentIndex;
+
+
+health =
+  TRACK_HEALTH;
+
+timeLeft =
+  GAME_DURATION;
+
+
+healthEl.textContent =
+  health;
+
+timerEl.textContent =
+  timeLeft;
+
+
+gameActive =
+  true;
+
+
+statusEl.textContent =
+  "Whack every duck before the clock runs out!";
+
+
+/*
+   Scroll the game into view.
+*/
+
+gameEl.scrollIntoView({
+  behavior: "smooth",
+  block: "center"
+});
+
+
+/*
+   Start the duck cycle.
+*/
+
+spawnMole();
+
+
+moleTimer =
+  setInterval(
+    spawnMole,
+    MOLE_INTERVAL_MS
+  );
+
+
+/*
+   Start countdown.
+*/
+
+timer =
+  setInterval(() => {
+
+    if (!gameActive) {
       return;
     }
 
 
-    const holes = [
-      ...game.board
-        .querySelectorAll(
-          ".wat-hole"
-        )
-    ];
+    timeLeft--;
 
 
-    const hole =
-      holes[
-        Math.floor(
-          Math.random() *
-            holes.length
-        )
-      ];
-
-
-    hideMoles();
-
-
-    hole.dataset.active =
-      "true";
-
-
-    /*
-     * The duck is absolutely positioned.
-     *
-     * Because of that, it cannot stretch
-     * the black circular button.
-     */
-    hole.innerHTML = `
-      <img
-        class="wat-duck"
-        src="${DUCK_IMAGE}"
-        alt="Duck target"
-        draggable="false"
-      >
-    `;
-
-
-    clearTimeout(
-      hideTimer
-    );
-
-
-    hideTimer =
-      setTimeout(
-        () => {
-
-          if (
-            hole.dataset.active ===
-              "true"
-          ) {
-
-            hole.innerHTML =
-              "";
-          }
-
-
-          hole.dataset.active =
-            "false";
-
-        },
-        MOLE_VISIBLE_MS
-      );
-
-
-    moleTimer =
-      setTimeout(
-        spawnMole,
-        MOLE_INTERVAL_MS
-      );
-  }
-
-
-  /* =========================================================
-     CLOCK
-     ========================================================= */
-
-  function startClock() {
-
-    clearInterval(
-      gameTimer
-    );
-
-
-    secondsLeft =
-      GAME_DURATION;
-
-
-    $("#wat-time",
-      game.panel
-    ).textContent =
-      secondsLeft;
-
-
-    gameTimer =
-      setInterval(
-        () => {
-
-          if (!active) {
-            return;
-          }
-
-
-          secondsLeft--;
-
-
-          $("#wat-time",
-            game.panel
-          ).textContent =
-            secondsLeft;
-
-
-          if (
-            secondsLeft <= 0
-          ) {
-
-            finish(false);
-          }
-
-        },
-        1000
-      );
-  }
-
-
-  /* =========================================================
-     FINISH
-     ========================================================= */
-
-  function finish(won) {
-
-    if (!active) {
-      return;
-    }
-
-
-    active =
-      false;
-
-
-    clearTimeout(
-      moleTimer
-    );
-
-    clearTimeout(
-      hideTimer
-    );
-
-    clearInterval(
-      gameTimer
-    );
-
-
-    hideMoles();
-
-
-    if (!won) {
-
-      game.status.textContent =
-        "The track survived. Try again!";
-
-      return;
-    }
-
-
-    const songId =
-      getCurrentSongId();
-
-
-    const songNumber =
-      getCurrentSongNumber();
-
-
-    /*
-     * SAVE THE TRACK PERMANENTLY.
-     */
-    const savedId =
-      saveWhackedTrack(
-        songId
-      );
-
-
-    /*
-     * CLOSE THE ROAD.
-     */
-    const roadClosed =
-      closeRoad(
-        songNumber,
-        songId
-      );
+    timerEl.textContent =
+      timeLeft;
 
 
     if (
-      roadClosed &&
-      savedId
+      timeLeft <= 0
     ) {
 
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
+      finishGame(false);
 
-    } else if (
-      roadClosed
-    ) {
-
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
-
-    } else {
-
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>Could not locate Song ${
-          songNumber || "?"
-        }.</small>`;
-    }
-  }
-
-
-  /* =========================================================
-     CLOSE GAME
-     ========================================================= */
-
-  function closeGame() {
-
-    active =
-      false;
-
-
-    clearTimeout(
-      moleTimer
-    );
-
-    clearTimeout(
-      hideTimer
-    );
-
-    clearInterval(
-      gameTimer
-    );
-
-
-    if (game) {
-
-      game.panel.hidden =
-        true;
-    }
-  }
-
-
-  /* =========================================================
-     START GAME
-     ========================================================= */
-
-  function startGame(event) {
-
-    event?.preventDefault();
-    event?.stopImmediatePropagation();
-
-
-    game =
-      createGame();
-
-
-    clearTimeout(
-      moleTimer
-    );
-
-    clearTimeout(
-      hideTimer
-    );
-
-    clearInterval(
-      gameTimer
-    );
-
-
-    $("#wat-refresh",
-      game.panel
-    ).hidden =
-      true;
-
-
-    game.panel.hidden =
-      false;
-
-
-    if (!playing()) {
-
-      active =
-        false;
-
-
-      game.status.textContent =
-        "Play a track to start the game.";
-
-
-      game.panel.scrollIntoView({
-        behavior:
-          "smooth",
-
-        block:
-          "start"
-      });
-
-
-      return;
     }
 
+  }, 1000);
 
-    const songNumber =
-      getCurrentSongNumber();
-
-
-    const songId =
-      getCurrentSongId();
-
-
-    /*
-     * Don't allow a road-closed track
-     * to be whacked again.
-     */
-    if (
-      isTrackRemembered(
-        songId
-      )
-    ) {
-
-      active =
-        false;
+}
+/* =========================================================
+END GAME
+========================================================= */
+function endGame() {
+if (!gameActive) {
+  return;
+}
 
 
-      const row =
-        findSongRow(
-          songNumber
-        );
+gameActive =
+  false;
 
 
-      applyRoadworkToRow(
-        row
-      );
+clearInterval(timer);
+clearInterval(moleTimer);
 
 
-      game.status.innerHTML =
-        `🚧 ROAD CLOSED<br>` +
-        `<small>This track is already closed for roadwork.</small>`;
+timer =
+  null;
+
+moleTimer =
+  null;
 
 
-      game.panel.scrollIntoView({
-        behavior:
-          "smooth",
-
-        block:
-          "start"
-      });
+clearActiveHole();
 
 
-      return;
-    }
+statusEl.textContent =
+  "Game ended.";
 
 
-    trackHealth =
-      TRACK_HEALTH;
+gameTrackIndex =
+  null;
+
+}
+/* =========================================================
+FINISH GAME
+========================================================= */
+function finishGame(defeated) {
+gameActive =
+  false;
 
 
-    active =
-      true;
+clearInterval(timer);
+clearInterval(moleTimer);
 
 
-    $("#wat-health",
-      game.panel
-    ).value =
-      trackHealth;
+timer =
+  null;
+
+moleTimer =
+  null;
 
 
-    hideMoles();
+clearActiveHole();
 
 
-    game.status.innerHTML =
-      `🎵 ROAD OPEN<br>` +
-      `<small>Song ${
-        songNumber || "?"
-      } · ${
-        songId || "unknown"
-      }</small><br>` +
-      `<small>Whack every duck before the clock runs out!</small>`;
+if (defeated) {
 
+  /*
+     Save the track as whacked.
+  */
 
-    startClock();
-    spawnMole();
-
-
-    game.panel.scrollIntoView({
-      behavior:
-        "smooth",
-
-      block:
-        "start"
-    });
-  }
-
-
-  /* =========================================================
-     INIT
-     ========================================================= */
-
-  function init() {
-
-    setupToolbar();
-
-
-    /*
-     * Restore all previously closed roads
-     * from localStorage.
-     */
-    loadSavedRoadwork();
-
-
-    const button =
-      $("#whack-track");
-
-
-    if (
-      !button ||
-      button.dataset.whackGameBound ===
-        "true"
-    ) {
-      return;
-    }
-
-
-    button.dataset.whackGameBound =
-      "true";
-
-
-    Object.assign(
-      button.style,
-      {
-        cursor:
-          "pointer"
-      }
-    );
-
-
-    button.addEventListener(
-      "click",
-      startGame
-    );
-  }
+  const tracks =
+    getWhackedTracks();
 
 
   if (
-    document.readyState ===
-    "loading"
+    gameTrackIndex !== null &&
+    !tracks.includes(
+      gameTrackIndex
+    )
   ) {
 
-    document.addEventListener(
-      "DOMContentLoaded",
-      init,
-      { once: true }
+    tracks.push(
+      gameTrackIndex
     );
 
-  } else {
-
-    init();
+    saveWhackedTracks(
+      tracks
+    );
   }
 
+
+  statusEl.textContent =
+    "🚧 TRACK WHACKED! Road closed!";
+
+
+  markWhackedRows();
+
+
+  /*
+     Stop the YouTube song.
+  */
+
+  if (
+    window.rizneyPlayer &&
+    typeof
+      window.rizneyPlayer.stopVideo ===
+      "function"
+  ) {
+
+    window.rizneyPlayer.stopVideo();
+
+  }
+
+
+} else {
+
+  statusEl.textContent =
+    "Time's up! The track survived.";
+}
+
+
+gameTrackIndex =
+  null;
+
+}
+/* =========================================================
+MARK WHACKED SONGS
+========================================================= */
+function markWhackedRows() {
+const whacked =
+  getWhackedTracks();
+
+
+const rows =
+  document.querySelectorAll(
+    "#song-list .song"
+  );
+
+
+rows.forEach(
+  (row, index) => {
+
+    const button =
+      row.querySelector(
+        ".play"
+      );
+
+
+    if (
+      whacked.includes(index)
+    ) {
+
+      row.classList.add(
+        "wat-whacked-row"
+      );
+
+
+      if (button) {
+
+        button.disabled =
+          true;
+
+        button.textContent =
+          "🚧 WHACKED!";
+
+      }
+
+
+      let label =
+        row.querySelector(
+          ".wat-road-closed"
+        );
+
+
+      if (!label) {
+
+        label =
+          document.createElement(
+            "span"
+          );
+
+        label.className =
+          "wat-road-closed";
+
+        label.textContent =
+          "ROAD CLOSED";
+
+        const title =
+          row.querySelector(
+            ".song-title"
+          );
+
+        if (title) {
+          title.appendChild(
+            label
+          );
+        }
+
+      }
+
+    }
+
+  }
+);
+
+}
+/* =========================================================
+PROTECT PLAY BUTTONS FOR WHACKED TRACKS
+========================================================= */
+document.addEventListener(
+"click",
+e => {
+  const button =
+    e.target.closest(
+      "#song-list .play"
+    );
+
+
+  if (!button) {
+    return;
+  }
+
+
+  const row =
+    button.closest(
+      ".song"
+    );
+
+
+  if (!row) {
+    return;
+  }
+
+
+  const rows =
+    Array.from(
+      document.querySelectorAll(
+        "#song-list .song"
+      )
+    );
+
+
+  const index =
+    rows.indexOf(row);
+
+
+  if (
+    isTrackWhacked(index)
+  ) {
+
+    e.preventDefault();
+    e.stopImmediatePropagation();
+
+  }
+
+},
+true
+
+);
+/* =========================================================
+INITIALIZE
+========================================================= */
+if (
+document.readyState ===
+"loading"
+) {
+document.addEventListener(
+  "DOMContentLoaded",
+  createGame
+);
+
+} else {
+createGame();
+
+}
 })();
