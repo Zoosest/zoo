@@ -1,1127 +1,772 @@
-/* =========================================================
-   RIZNEY MUSIC ARCHIVE
-   Animal Icons + Music Reading + Search Icon
-   ========================================================= */
-
+/* Animal icons for song rows + shuffled Music Reading cards. */
 (() => {
   "use strict";
 
-  /* =========================================================
-     CONFIG
-     ========================================================= */
-
   const API_URL =
-    "https://api.github.com/repos/the-zeusest/waltrizney-/contents/assets/animal-icons?ref=main";
+    "https://api.github.com/repos/zoosest/zoo/contents/assets/animal-icons?ref=main";
 
   const RAW_PREFIX =
-    "https://raw.githubusercontent.com/the-zeusest/waltrizney-/main/assets/animal-icons/";
+    "https://raw.githubusercontent.com/zoosest/zoo/main/assets/animal-icons/";
 
-  const FALLBACK_ICON =
-    "🐾";
+  const FALLBACK_ICON = "🐾";
 
-  const SEARCH_ICON =
-    "./assets/search.png";
-
-
-  /* =========================================================
-     HELPERS
-     ========================================================= */
-
-  const $ = selector =>
-    document.querySelector(selector);
-
-
-  /* =========================================================
-     STYLES
-     ========================================================= */
+  let iconFiles = [];
+  let updatingCards = false;
+  let scrollScheduled = false;
 
   function addStyles() {
+    if (document.getElementById("animal-icon-styles")) return;
 
-    if (document.getElementById("rizney-main-js-styles")) {
-      return;
-    }
-
-    const style =
-      document.createElement("style");
-
-    style.id =
-      "rizney-main-js-styles";
+    const style = document.createElement("style");
+    style.id = "animal-icon-styles";
 
     style.textContent = `
 
-      /* =====================================================
-         SONG ROW
-         ===================================================== */
-
-      .song {
-        position:relative;
-        display:grid !important;
-        grid-template-columns:minmax(0,1fr) 62px !important;
-        align-items:center;
-        gap:10px;
-        width:calc(100% - 58px);
-        margin-left:58px;
-        padding:2px 10px !important;
+      #song-list .song {
+        position: relative;
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 62px;
+        gap: 10px;
+        width: calc(100% - 58px);
+        min-width: 0;
+        margin-left: 58px;
+        align-items: center;
+        padding-top: 2px;
+        padding-bottom: 2px;
+        padding-left: 10px;
+        padding-right: 10px;
+        box-sizing: border-box;
       }
 
-
-      /* =====================================================
-         SONG NUMBER
-         ===================================================== */
-
-      .song-number {
-        position:absolute;
-        left:-58px;
-        top:50%;
-        transform:translateY(-50%);
-
-        width:58px;
-        min-width:58px;
-
-        display:flex;
-        align-items:center;
-        justify-content:center;
-
-        color:var(--gold);
-
-        text-decoration:none !important;
-        -webkit-text-decoration:none !important;
-
-        cursor:pointer;
+      #song-list .song-number {
+        position: absolute;
+        left: calc(
+          -1 * (
+            (
+              (100vw - min(100vw - 24px, 900px)) / 2 + 58px
+            ) / 2
+          ) - 29px
+        );
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 58px;
+        color: var(--gold, #d4af37);
+        background: transparent;
+        border: 0;
+        outline: 0;
+        box-shadow: none;
+        font-weight: 700;
+        font-size: 1rem;
+        line-height: 1;
+        padding: 0;
+        margin: 0;
+        text-align: center;
+        white-space: nowrap;
+        cursor: pointer;
+        z-index: 0 !important;
+        box-sizing: border-box;
       }
 
-      .song-number:hover,
-      .song-number:focus,
-      .song-number:active {
-        color:var(--bright-gold);
-
-        text-decoration:none !important;
-        -webkit-text-decoration:none !important;
+      #song-list .song-number:hover,
+      #song-list .song-number:focus {
+        color: var(--bright-gold, #f5d76e);
       }
 
-
-      /* =====================================================
-         ANIMAL BUTTON
-         ===================================================== */
-
-      .animal-button {
-        width:62px;
-        height:62px;
-
-        min-width:62px;
-        min-height:62px;
-
-        padding:0 !important;
-        margin:0;
-
-        display:flex;
-        align-items:center;
-        justify-content:center;
-
-        border:1px solid var(--gold);
-        border-radius:50%;
-
-        background:#000;
-
-        overflow:hidden;
-
-        cursor:pointer;
+      #song-list .song .play {
+        display: none;
       }
 
-      .animal-button:hover {
-        background:#21102e;
+      #song-list .song-title {
+        min-width: 0;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-self: stretch;
+        text-align: left;
+        box-sizing: border-box;
+        line-height: 1.2;
       }
 
-      .animal-button img {
-        display:block;
-
-        width:58px;
-        height:58px;
-
-        object-fit:contain;
-        object-position:center;
-
-        border:0;
-        margin:0;
-        padding:0;
-
-        background:#000;
+      #song-list .song-title small {
+        display: block;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-top: 3px;
+        line-height: 1.2;
       }
 
-
-      /* =====================================================
-         SEARCH ICON
-         ===================================================== */
-
-      .search-magnifying-glass-column {
-        width:58px;
-        min-width:58px;
-
-        display:flex;
-        align-items:center;
-        justify-content:center;
-
-        padding:0;
-        margin:0;
-
-        background:transparent;
-        border:0;
-        outline:0;
-        box-shadow:none;
-
-        color:transparent;
-
-        text-decoration:none !important;
-        -webkit-text-decoration:none !important;
-
-        box-sizing:border-box;
+      #song-list .animal-button {
+        width: 62px;
+        height: 62px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0;
+        margin: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+        box-sizing: border-box;
       }
 
-      .search-magnifying-glass-column img,
-      .custom-search-icon {
-        display:block;
-
-        width:40px;
-        height:40px;
-
-        object-fit:contain;
-        object-position:center;
-
-        padding:0;
-        margin:0;
-
-        border:0;
-
-        background:transparent;
-
-        box-sizing:border-box;
+      #song-list .animal-button img {
+        display: block;
+        width: 58px;
+        height: 58px;
+        object-fit: contain;
+        object-position: center;
+        border: 0;
+        background: transparent;
+        box-sizing: border-box;
       }
-
-
-      /* =====================================================
-         MUSIC READING CARDS
-         ===================================================== */
 
       #cards {
-        display:grid;
-        grid-template-columns:repeat(3,minmax(0,1fr));
-        gap:9px;
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 9px;
+        margin: 0 0 22px;
       }
 
-      .music-reading-card {
-        position:relative;
+      #cards .card {
+        min-width: 0;
+        min-height: 0;
+        box-sizing: border-box;
+        padding: 9px 6px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+        color: var(--bright-purple, #e0aaff);
+        background: linear-gradient(145deg, #21102e, #090509);
+        border: 2px solid var(--gold, #d4af37);
+        border-radius: 12px;
+        text-align: center;
+        cursor: pointer;
+        font: inherit;
+        transition:
+          transform .12s ease,
+          background .12s ease,
+          border-color .12s ease;
+        -webkit-tap-highlight-color: transparent;
+      }
 
-        min-height:150px;
+      #cards .card:hover {
+        background: linear-gradient(145deg, #2b1540, #100817);
+        border-color: var(--bright-gold, #f5d76e);
+        transform: translateY(-2px);
+      }
 
-        padding:12px 8px;
+      #cards .card:active {
+        transform: translateY(0);
+      }
 
-        color:var(--bright-purple);
+      #cards .card:focus-visible {
+        outline: 2px solid var(--bright-gold, #f5d76e);
+        outline-offset: 3px;
+      }
 
-        background:
-          linear-gradient(
-            145deg,
-            #21102e,
-            #090509
+      #cards .card .symbol,
+      #cards .card strong,
+      #cards .card a {
+        display: none !important;
+      }
+
+      #cards .card-animal-icon {
+        display: block;
+        width: 104px;
+        height: 104px;
+        margin: 0 auto 5px;
+        object-fit: contain;
+        object-position: center;
+        border: 0;
+        background: transparent;
+        box-sizing: border-box;
+        flex: 0 0 auto;
+      }
+
+      #cards .card-animal-name {
+        display: block;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        color: var(--bright-gold, #f5d76e);
+        font-family: Georgia, "Times New Roman", serif;
+        font-size: .78rem;
+        font-weight: 700;
+        line-height: 1.1;
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+
+      @media (max-width: 700px) {
+        #song-list .song {
+          grid-template-columns: minmax(0, 1fr) 54px;
+          gap: 8px;
+          width: calc(100% - 42px);
+          margin-left: 42px;
+          padding-top: 1px;
+          padding-bottom: 1px;
+          padding-left: 8px;
+          padding-right: 8px;
+        }
+
+        #song-list .song-number {
+          left: calc(
+            -1 * (
+              (
+                (100vw - min(100vw - 24px, 900px)) / 2 + 42px
+              ) / 2
+            ) - 21px
           );
-
-        border:2px solid var(--gold);
-        border-radius:12px;
-
-        text-align:center;
-
-        cursor:pointer;
-      }
-
-      .music-reading-card:hover {
-        background:
-          linear-gradient(
-            145deg,
-            #321547,
-            #090509
-          );
-      }
-
-      .music-reading-animal {
-        display:block;
-
-        width:104px;
-        height:104px;
-
-        margin:0 auto 8px;
-
-        object-fit:contain;
-        object-position:center;
-
-        background:#000;
-
-        border-radius:8px;
-      }
-
-      .music-reading-animal-name {
-        display:block;
-
-        color:var(--bright-gold);
-
-        font-size:.78rem;
-        font-weight:bold;
-      }
-
-
-      /* =====================================================
-         HIDDEN PLAY BUTTONS
-         ===================================================== */
-
-      .song .play {
-        display:none !important;
-      }
-
-
-      /* =====================================================
-         MOBILE
-         ===================================================== */
-
-      @media(max-width:700px) {
-
-        .song {
-          grid-template-columns:minmax(0,1fr) 54px !important;
-
-          width:calc(100% - 42px);
-
-          margin-left:42px;
-
-          gap:8px;
-
-          padding:1px 8px !important;
+          width: 42px;
+          font-size: .9rem;
+          z-index: 0 !important;
         }
 
-
-        .song-number {
-          left:-42px;
-
-          width:42px;
-          min-width:42px;
+        #song-list .animal-button {
+          width: 54px;
+          height: 54px;
         }
 
-
-        .animal-button {
-          width:54px;
-          height:54px;
-
-          min-width:54px;
-          min-height:54px;
+        #song-list .animal-button img {
+          width: 50px;
+          height: 50px;
         }
-
-        .animal-button img {
-          width:50px;
-          height:50px;
-        }
-
-
-        .search-magnifying-glass-column {
-          width:42px;
-          min-width:42px;
-        }
-
-        .search-magnifying-glass-column img,
-        .custom-search-icon {
-          width:30px;
-          height:30px;
-        }
-
 
         #cards {
-          grid-template-columns:repeat(2,minmax(0,1fr));
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 7px;
+          margin-top: 0;
+          margin-bottom: 18px;
         }
 
-        .music-reading-card {
-          min-height:130px;
+        #cards .card {
+          padding: 6px 4px;
+          border-radius: 10px;
         }
 
-        .music-reading-animal {
-          width:76px;
-          height:76px;
+        #cards .card-animal-icon {
+          width: 76px;
+          height: 76px;
+          margin-bottom: 4px;
+        }
+
+        #cards .card-animal-name {
+          font-size: .65rem;
         }
       }
 
-
-      @media(max-width:380px) {
-
-        .music-reading-animal {
-          width:66px;
-          height:66px;
+      @media (max-width: 380px) {
+        #cards {
+          gap: 5px;
         }
 
-      }
+        #cards .card {
+          padding: 5px 3px;
+        }
 
+        #cards .card-animal-icon {
+          width: 66px;
+          height: 66px;
+        }
+
+        #cards .card-animal-name {
+          font-size: .59rem;
+        }
+      }
     `;
 
     document.head.appendChild(style);
   }
 
-
-  /* =========================================================
-     CUSTOM SEARCH ICON
-     
-     IMPORTANT:
-     This does NOT create a search bar.
-     
-     It only replaces the old 🔎 emoji if another part
-     of the site creates the search column.
-     ========================================================= */
-
-  function installSearchIcon() {
-
-    const columns =
-      document.querySelectorAll(
-        ".search-magnifying-glass-column"
-      );
-
-    columns.forEach(column => {
-
-      /*
-         If our image is already there,
-         leave it alone.
-      */
-
-      if (
-        column.querySelector(
-          ".custom-search-icon"
-        )
-      ) {
-        return;
-      }
-
-
-      /*
-         Remove the old emoji/text.
-      */
-
-      column.textContent = "";
-
-
-      /*
-         Create the real image.
-      */
-
-      const img =
-        document.createElement("img");
-
-      img.src =
-        SEARCH_ICON;
-
-      img.alt =
-        "Search";
-
-      img.title =
-        "Search";
-
-      img.loading =
-        "lazy";
-
-      img.decoding =
-        "async";
-
-      img.className =
-        "custom-search-icon";
-
-
-      column.appendChild(img);
-
-    });
+  function iconLabel(filename) {
+    return filename
+      .replace(/\.[^/.]+$/, "")
+      .replace(/[-_]+/g, " ")
+      .replace(/\b\w/g, c => c.toUpperCase());
   }
 
+  function fallback() {
+    const span = document.createElement("span");
 
-  /* =========================================================
-     WATCH FOR SEARCH ICON BEING CREATED
-     
-     Some older code creates the search bar after the page
-     loads. This watches for that without creating a second
-     search bar.
-     ========================================================= */
+    span.textContent = FALLBACK_ICON;
 
-  function watchForSearchIcon() {
+    span.style.display = "flex";
+    span.style.alignItems = "center";
+    span.style.justifyContent = "center";
+    span.style.fontSize = "2rem";
+    span.style.lineHeight = "1";
 
-    installSearchIcon();
-
-    const observer =
-      new MutationObserver(() => {
-
-        installSearchIcon();
-
-      });
-
-    observer.observe(
-      document.body,
-      {
-        childList:true,
-        subtree:true
-      }
-    );
+    return span;
   }
-
-
-  /* =========================================================
-     ANIMAL IMAGE
-     ========================================================= */
 
   function makeImage(filename) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "animal-button";
 
-    const button =
-      document.createElement("button");
+    const label = iconLabel(filename);
 
-    button.type =
-      "button";
+    button.title = label;
+    button.setAttribute("aria-label", label);
 
-    button.className =
-      "animal-button";
+    const img = document.createElement("img");
 
-    button.title =
-      filename.replace(
-        /\.[^/.]+$/,
-        ""
-      );
+    img.className = "animal-icon";
+    img.alt = label;
+    img.loading = "lazy";
+    img.decoding = "async";
 
-
-    const img =
-      document.createElement("img");
-
-    img.src =
-      RAW_PREFIX + filename;
-
-    img.alt =
-      button.title;
-
-    img.loading =
-      "lazy";
-
-    img.decoding =
-      "async";
-
+    img.src = RAW_PREFIX + encodeURIComponent(filename);
 
     img.onerror = () => {
-
-      img.remove();
-
-      button.textContent =
-        FALLBACK_ICON;
-
+      img.replaceWith(fallback());
     };
-
 
     button.appendChild(img);
 
     return button;
   }
 
+  function songRows() {
+    return Array.from(
+      document.querySelectorAll("#song-list .song")
+    );
+  }
 
-  /* =========================================================
-     SONG NUMBER
-     ========================================================= */
+  function playSongFromRow(row) {
+    if (!row) return;
 
-  function makeSongNumber(
-    row,
-    index
-  ) {
+    const playButton = row.querySelector(".play");
 
-    const oldNumber =
-      row.querySelector(
-        ".song-number"
-      );
+    if (playButton) {
+      playButton.click();
+    }
+  }
 
-    if (!oldNumber) {
+  function makeSongNumber(row, index) {
+    const oldNumber = row.querySelector(".song-number");
+
+    if (!oldNumber) return;
+
+    if (oldNumber.tagName === "A") {
       return;
     }
 
+    const numberLink = document.createElement("a");
 
-    /*
-       Don't rebuild it if it is already a link.
-    */
+    numberLink.className = "song-number";
+    numberLink.href = "#";
+    numberLink.textContent = oldNumber.textContent.trim();
 
-    if (
-      oldNumber.tagName === "A"
-    ) {
-      return;
-    }
+    numberLink.setAttribute(
+      "aria-label",
+      `Play song ${index + 1}`
+    );
 
+    numberLink.addEventListener("click", event => {
+      event.preventDefault();
+      playSongFromRow(row);
+    });
 
-    const number =
-      document.createElement("a");
+    oldNumber.replaceWith(numberLink);
+  }
 
-    number.className =
-      "song-number";
+  function putIcons() {
+    const rows = songRows();
 
-    number.href =
-      "#";
-
-
-    number.textContent =
-      index + 1;
-
-
-    number.onclick = e => {
-
-      e.preventDefault();
-
-      const playButton =
-        row.querySelector(
-          ".play"
-        );
-
-      if (playButton) {
-        playButton.click();
+    rows.forEach((row, index) => {
+      if (row.querySelector(".animal-button")) {
+        return;
       }
 
-    };
+      const filename =
+        iconFiles[index % iconFiles.length];
 
+      if (!filename) return;
 
-    oldNumber.replaceWith(
-      number
-    );
-  }
+      const icon = makeImage(filename);
 
+      row.appendChild(icon);
 
-  /* =========================================================
-     ADD ANIMAL TO SONG ROW
-     ========================================================= */
-
-  function putIcons(
-    iconFiles
-  ) {
-
-    const rows =
-      document.querySelectorAll(
-        "#song-list .song"
-      );
-
-
-    rows.forEach(
-      (row, index) => {
-
-        /*
-           Avoid duplicate icons.
-        */
-
-        if (
-          row.querySelector(
-            ".animal-button"
-          )
-        ) {
-          makeSongNumber(
-            row,
-            index
-          );
-
-          return;
-        }
-
-
-        const filename =
-          iconFiles[
-            index %
-            iconFiles.length
-          ];
-
-
-        if (!filename) {
-          return;
-        }
-
-
-        const animal =
-          makeImage(filename);
-
-
-        row.appendChild(
-          animal
-        );
-
-
-        makeSongNumber(
-          row,
-          index
-        );
-
-      }
-    );
-  }
-
-
-  /* =========================================================
-     ANIMAL NAME
-     ========================================================= */
-
-  function animalName(
-    filename
-  ) {
-
-    return filename
-      .replace(
-        /\.[^/.]+$/,
-        ""
-      )
-      .replace(
-        /[-_]+/g,
-        " "
-      )
-      .replace(
-        /\b\w/g,
-        letter =>
-          letter.toUpperCase()
-      );
-  }
-
-
-  /* =========================================================
-     ADD ANIMAL TO MUSIC READING CARD
-     ========================================================= */
-
-  function addAnimalToCard(
-    card,
-    filename
-  ) {
-
-    if (
-      card.querySelector(
-        ".music-reading-animal"
-      )
-    ) {
-      return;
-    }
-
-
-    const img =
-      document.createElement("img");
-
-    img.className =
-      "music-reading-animal";
-
-    img.src =
-      RAW_PREFIX + filename;
-
-    img.alt =
-      animalName(filename);
-
-    img.loading =
-      "lazy";
-
-    img.decoding =
-      "async";
-
-
-    img.onerror = () => {
-
-      img.remove();
-
-    };
-
-
-    const name =
-      document.createElement("span");
-
-    name.className =
-      "music-reading-animal-name";
-
-    name.textContent =
-      animalName(filename);
-
-
-    card.prepend(
-      name
-    );
-
-    card.prepend(
-      img
-    );
-  }
-
-
-  /* =========================================================
-     MAKE CARD CLICKABLE
-     ========================================================= */
-
-  function makeCardClickable(
-    card,
-    position
-  ) {
-
-    if (
-      card.dataset.rizneyClickable ===
-      "true"
-    ) {
-      return;
-    }
-
-
-    card.dataset.rizneyClickable =
-      "true";
-
-
-    card.addEventListener(
-      "click",
-      e => {
-
-        /*
-           Don't interfere with an existing
-           link or button inside the card.
-        */
-
-        if (
-          e.target.closest(
-            "a, button"
-          )
-        ) {
-          return;
-        }
-
-
-        const link =
-          card.querySelector(
-            "a"
-          );
-
-        if (link) {
-          link.click();
-        }
-
-      }
-    );
-  }
-
-
-  /* =========================================================
-     WATCH MUSIC READING CARDS
-     ========================================================= */
-
-  function setupCardWatching(
-    iconFiles
-  ) {
-
-    const cards =
-      document.getElementById(
-        "cards"
-      );
-
-    if (!cards) {
-      return;
-    }
-
-
-    const observer =
-      new MutationObserver(() => {
-
-        const cardElements =
-          cards.children;
-
-
-        Array.from(
-          cardElements
-        ).forEach(
-          (card, position) => {
-
-            if (
-              !iconFiles[position]
-            ) {
-              return;
-            }
-
-
-            addAnimalToCard(
-              card,
-              iconFiles[position]
-            );
-
-
-            makeCardClickable(
-              card,
-              position
-            );
-
-          }
-        );
-
+      icon.addEventListener("click", event => {
+        event.preventDefault();
+        event.stopPropagation();
+        playSongFromRow(row);
       });
 
+      makeSongNumber(row, index);
+    });
+  }
+
+  function getCardSongIndex(card) {
+    const link = card.querySelector("a");
+
+    if (!link) return -1;
+
+    const match = link.textContent.match(/(\d+)/);
+
+    if (!match) return -1;
+
+    const songNumber = Number(match[1]);
+
+    if (
+      !Number.isInteger(songNumber) ||
+      songNumber < 1
+    ) {
+      return -1;
+    }
+
+    return songNumber - 1;
+  }
+
+  function playCard(card) {
+    if (!card) return;
+
+    const link = card.querySelector("a");
+
+    if (!link) return;
+
+    if (typeof link.onclick === "function") {
+      link.onclick({
+        preventDefault() {},
+        stopPropagation() {}
+      });
+
+      return;
+    }
+
+    const songIndex = getCardSongIndex(card);
+
+    if (
+      songIndex >= 0 &&
+      typeof window.play === "function"
+    ) {
+      window.play(songIndex);
+    }
+  }
+
+  function makeCardClickable(card) {
+    if (!card) return;
+
+    if (
+      card.dataset.animalCardReady === "true"
+    ) {
+      return;
+    }
+
+    card.addEventListener("click", event => {
+      event.preventDefault();
+      event.stopPropagation();
+      playCard(card);
+    });
+
+    card.addEventListener("keydown", event => {
+      if (
+        event.key === "Enter" ||
+        event.key === " "
+      ) {
+        event.preventDefault();
+        event.stopPropagation();
+        playCard(card);
+      }
+    });
+
+    card.setAttribute("role", "button");
+    card.setAttribute("tabindex", "0");
+    card.setAttribute(
+      "aria-label",
+      "Play this music reading card"
+    );
+
+    card.dataset.animalCardReady = "true";
+  }
+
+  function addAnimalToCard(card) {
+    if (!card) return;
+
+    const songIndex = getCardSongIndex(card);
+
+    if (songIndex < 0) return;
+
+    const animalFile = iconFiles[songIndex];
+
+    if (!animalFile) return;
+
+    const animalName = iconLabel(animalFile);
+
+    if (
+      card.querySelector(".card-animal-icon")
+    ) {
+      makeCardClickable(card);
+      return;
+    }
+
+    const symbol = card.querySelector(".symbol");
+    const strong = card.querySelector("strong");
+    const link = card.querySelector("a");
+
+    if (symbol) {
+      symbol.style.display = "none";
+    }
+
+    if (strong) {
+      strong.style.display = "none";
+    }
+
+    if (link) {
+      link.style.display = "none";
+    }
+
+    const img = document.createElement("img");
+
+    img.className = "card-animal-icon";
+
+    img.src =
+      RAW_PREFIX +
+      encodeURIComponent(animalFile);
+
+    img.alt = animalName;
+    img.title = animalName;
+    img.loading = "lazy";
+    img.decoding = "async";
+
+    img.dataset.songIndex =
+      String(songIndex);
+
+    img.onerror = () => {
+      img.replaceWith(fallback());
+    };
+
+    const name = document.createElement("span");
+
+    name.className = "card-animal-name";
+    name.textContent = animalName;
+
+    name.dataset.songIndex =
+      String(songIndex);
+
+    card.appendChild(img);
+    card.appendChild(name);
+
+    makeCardClickable(card);
+  }
+
+  function addCardIcons() {
+    if (updatingCards) return;
+
+    updatingCards = true;
+
+    try {
+      const cardElements =
+        document.querySelectorAll("#cards .card");
+
+      cardElements.forEach(
+        card => addAnimalToCard(card)
+      );
+
+    } finally {
+      updatingCards = false;
+    }
+  }
+
+  function positionReading() {
+    const reading =
+      document.getElementById("reading");
+
+    if (!reading) return;
+
+    const readingRect =
+      reading.getBoundingClientRect();
+
+    const readingDocumentTop =
+      window.scrollY +
+      readingRect.top;
+
+    const readingHeight =
+      readingRect.height;
+
+    const viewportHeight =
+      window.innerHeight;
+
+    const dock =
+      document.querySelector(".player-dock");
+
+    const dockHeight =
+      dock
+        ? dock.getBoundingClientRect().height
+        : 0;
+
+    const usableHeight =
+      viewportHeight - dockHeight;
+
+    const targetY =
+      readingDocumentTop -
+      dockHeight -
+      (usableHeight - readingHeight) / 2;
+
+    window.scrollTo({
+      top: Math.max(0, targetY),
+      behavior: "smooth"
+    });
+  }
+
+  function scheduleReadingScroll() {
+    if (scrollScheduled) return;
+
+    scrollScheduled = true;
+
+    requestAnimationFrame(() => {
+      scrollScheduled = false;
+
+      requestAnimationFrame(() => {
+        addCardIcons();
+        positionReading();
+      });
+    });
+  }
+
+  function setupCardWatching() {
+    const cards =
+      document.getElementById("cards");
+
+    if (!cards) return;
+
+    const observer =
+      new MutationObserver(
+        mutations => {
+
+          let newCards = false;
+
+          for (const mutation of mutations) {
+            if (
+              mutation.type === "childList" &&
+              mutation.addedNodes.length
+            ) {
+              newCards = true;
+              break;
+            }
+          }
+
+          if (!newCards) return;
+
+          if (!updatingCards) {
+            addCardIcons();
+            scheduleReadingScroll();
+          }
+        }
+      );
 
     observer.observe(
       cards,
       {
-        childList:true,
-        subtree:true
+        childList: true,
+        subtree: true
       }
     );
 
+    addCardIcons();
   }
-
-
-  /* =========================================================
-     MUSIC READING POSITION
-     ========================================================= */
-
-  function positionReading() {
-
-    const reading =
-      document.getElementById(
-        "reading"
-      );
-
-    if (!reading) {
-      return;
-    }
-
-
-    if (
-      !reading.hidden
-    ) {
-
-      const dock =
-        document.querySelector(
-          ".player-dock"
-        );
-
-
-      const controls =
-        document.querySelector(
-          ".controls"
-        );
-
-
-      const offset =
-        (
-          dock?.offsetHeight || 0
-        ) +
-        (
-          controls?.offsetHeight || 0
-        ) +
-        12;
-
-
-      const top =
-        reading.getBoundingClientRect()
-          .top +
-        window.scrollY -
-        offset;
-
-
-      window.scrollTo({
-        top:Math.max(0, top),
-        behavior:"smooth"
-      });
-
-    }
-
-  }
-
-
-  /* =========================================================
-     SCHEDULE READING SCROLL
-     ========================================================= */
-
-  function scheduleReadingScroll() {
-
-    const reading =
-      document.getElementById(
-        "reading"
-      );
-
-    if (!reading) {
-      return;
-    }
-
-
-    const observer =
-      new MutationObserver(() => {
-
-        if (
-          !reading.hidden
-        ) {
-
-          setTimeout(
-            positionReading,
-            50
-          );
-
-        }
-
-      });
-
-
-    observer.observe(
-      reading,
-      {
-        attributes:true,
-        attributeFilter:[
-          "hidden"
-        ]
-      }
-    );
-
-  }
-
-
-  /* =========================================================
-     GET ANIMAL FILES
-     ========================================================= */
 
   async function getAnimalFiles() {
-
     try {
-
       const response =
         await fetch(
           API_URL,
           {
-            cache:"no-store"
+            headers: {
+              Accept:
+                "application/vnd.github+json"
+            }
           }
         );
 
-
-      if (
-        !response.ok
-      ) {
-
+      if (!response.ok) {
         throw new Error(
-          `GitHub returned ${response.status}`
+          `GitHub API error: ${response.status}`
         );
-
       }
 
-
-      const files =
+      const data =
         await response.json();
 
+      if (!Array.isArray(data)) {
+        throw new Error(
+          "Unexpected GitHub API response."
+        );
+      }
 
-      return files
-
+      return data
         .filter(
-          file =>
-            file.type === "file" &&
-            /\.(png|jpg|jpeg|webp|gif)$/i.test(
-              file.name
-            )
+          item =>
+            item &&
+            item.type === "file"
         )
-
         .map(
-          file =>
-            file.name
+          item =>
+            item.name
         )
-
-        .sort(
-          (a,b) =>
-            a.localeCompare(
-              b,
-              undefined,
-              {
-                numeric:true,
-                sensitivity:"base"
-              }
+        .filter(
+          name =>
+            /\.(png|jpg|jpeg|webp|gif)$/i.test(
+              name
             )
+        )
+        .sort(
+          (a, b) =>
+            a.localeCompare(b)
         );
 
     } catch (error) {
-
       console.error(
-        "Rizney animal icon loading error:",
+        "Unable to load animal icons:",
         error
       );
 
       return [];
-
     }
-
   }
 
-
-  /* =========================================================
-     INITIALIZE
-     ========================================================= */
-
   async function init() {
-
     addStyles();
 
+    setupCardWatching();
 
-    /*
-       Deal with the mysterious ghost 🔎.
-       We only replace it if another script creates it.
-    */
-
-    watchForSearchIcon();
-
-
-    const iconFiles =
+    iconFiles =
       await getAnimalFiles();
 
-
-    if (
-      iconFiles.length === 0
-    ) {
-
+    if (!iconFiles.length) {
       console.warn(
-        "No animal icons were found."
+        "No animal icon files were found."
       );
 
       return;
     }
 
-
-    /*
-       Give the chronological song list
-       its animal icons.
-    */
-
-    putIcons(
-      iconFiles
-    );
-
-
-    /*
-       Watch for CARDS being generated.
-    */
-
-    setupCardWatching(
-      iconFiles
-    );
-
-
-    /*
-       Watch for Music Reading
-       opening/closing.
-    */
-
-    scheduleReadingScroll();
-
-
-    /*
-       If CARDS are already visible,
-       position them correctly.
-    */
-
-    setTimeout(
-      positionReading,
-      100
-    );
-
+    putIcons();
+    addCardIcons();
   }
-
-
-  /* =========================================================
-     START
-     ========================================================= */
 
   if (
     document.readyState ===
     "loading"
   ) {
-
     document.addEventListener(
       "DOMContentLoaded",
-      init
+      init,
+      { once: true }
     );
-
   } else {
-
     init();
-
   }
 
 })();
