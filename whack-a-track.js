@@ -1120,6 +1120,14 @@
   function finish(won) {
     if (!active) return;
 
+    /*
+       Remember exactly where the player
+       is standing before advancing.
+    */
+
+    const savedScrollPosition =
+      window.scrollY;
+
     active = false;
 
     clearTimeout(
@@ -1169,11 +1177,19 @@
       "TRACK BANISHED! 🚫";
 
     /*
-       Immediately move to the next
-       song/card in the current playlist.
+       Advance to the next song/card,
+       then immediately restore the
+       exact scroll position.
     */
 
     next();
+
+    requestAnimationFrame(() => {
+      window.scrollTo({
+        top: savedScrollPosition,
+        behavior: "instant"
+      });
+    });
   }
 
   function closeGame() {
