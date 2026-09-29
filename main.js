@@ -452,6 +452,17 @@
         box-sizing: border-box;
         line-height: 1.2;
         color: var(--bright-purple, #e0aaff);
+        cursor: pointer;
+      }
+
+      #song-list .song-title:hover {
+        color: var(--bright-gold, #f5d76e);
+      }
+
+      #song-list .song-title:focus-visible {
+        outline: 2px solid var(--bright-gold, #f5d76e);
+        outline-offset: 3px;
+        border-radius: 4px;
       }
 
       #song-list .song-title small {
@@ -466,6 +477,10 @@
         font-family: Georgia, "Times New Roman", serif;
         font-size: .72rem;
         font-style: italic;
+      }
+
+      #song-list .song-title:hover small {
+        color: var(--bright-gold, #f5d76e);
       }
 
       #song-list .animal-button {
@@ -1091,6 +1106,49 @@
 
         titleElement.appendChild(
           keyword
+        );
+
+        /*
+          Make the entire purple song-title area
+          clickable without changing the existing
+          play mechanism.
+        */
+        titleElement.setAttribute(
+          "role",
+          "button"
+        );
+
+        titleElement.setAttribute(
+          "tabindex",
+          "0"
+        );
+
+        titleElement.setAttribute(
+          "aria-label",
+          `Play ${info[0]}`
+        );
+
+        titleElement.addEventListener(
+          "click",
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+            playSongFromRow(row);
+          }
+        );
+
+        titleElement.addEventListener(
+          "keydown",
+          event => {
+            if (
+              event.key === "Enter" ||
+              event.key === " "
+            ) {
+              event.preventDefault();
+              event.stopPropagation();
+              playSongFromRow(row);
+            }
+          }
         );
       }
     );
