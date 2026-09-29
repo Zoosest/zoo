@@ -1236,6 +1236,28 @@
 
     $('#draw-cards').onclick = () => {
 
+      /*
+         CARDS is a toggle.
+
+         If the Music Reading is already open,
+         pressing CARDS closes it.
+
+         Pressing CARDS again while closed
+         creates a brand-new 6-song reading.
+      */
+
+      if (!reading.hidden) {
+
+        reading.hidden = true;
+
+        cardPlaylist = null;
+        cardPosition = 0;
+
+        updateButtons();
+
+        return;
+      }
+
       introTransitionPending = false;
 
       cardPlaylist =
