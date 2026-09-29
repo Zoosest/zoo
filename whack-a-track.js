@@ -122,19 +122,19 @@
       }
 
       /*
-       * COMIC BOOK "QUACK!" FLOATING POP ANIMATION (WITH SLOW ROTATION)
+       * COMIC BOOK "QUACK!" FLOATING POP ANIMATION (DYNAMICALLY ROTATED VIA JS)
        */
       @keyframes quackPop {
         0% {
-          transform: scale(0.3) rotate(-6deg);
+          transform: scale(0.3) var(--base-rot);
           opacity: 0;
         }
         50% {
-          transform: scale(1.25) rotate(3deg);
+          transform: scale(1.25) var(--mid-rot);
           opacity: 1;
         }
         100% {
-          transform: scale(1.1) rotate(10deg);
+          transform: scale(1.1) var(--end-rot);
           opacity: 0;
         }
       }
@@ -747,14 +747,25 @@
             `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" />`; 
           hole.style.zIndex = "3";
 
-          /* Create and float the rotating QUACK! pop on the board layer outside the hole */
+          /* Create and float the randomized, offset rotating QUACK! pop */
           const quackPop = document.createElement("img");
           quackPop.src = "assets/quack.png";
           quackPop.alt = "QUACK!";
           quackPop.className = "wat-quack-pop";
 
-          quackPop.style.left = `${hole.offsetLeft + (hole.offsetWidth / 2) - 36}px`;
-          quackPop.style.top = `${hole.offsetTop + (hole.offsetHeight / 2) - 36}px`;
+          // Randomize horizontal/vertical offset and rotation angles (left or right)
+          const offsetX = (Math.random() - 0.5) * 44; // Random offset left/right
+          const offsetY = -16 + (Math.random() - 0.5) * 16; // Floats slightly upward
+          const baseRot = -15 + Math.random() * 10;
+          const midRot = -5 + Math.random() * 20;
+          const endRot = 5 + Math.random() * 20 * (Math.random() < 0.5 ? 1 : -1);
+
+          quackPop.style.setProperty("--base-rot", `rotate(${baseRot}deg)`);
+          quackPop.style.setProperty("--mid-rot", `rotate(${midRot}deg)`);
+          quackPop.style.setProperty("--end-rot", `rotate(${endRot}deg)`);
+
+          quackPop.style.left = `${hole.offsetLeft + (hole.offsetWidth / 2) - 36 + offsetX}px`;
+          quackPop.style.top = `${hole.offsetTop + (hole.offsetHeight / 2) - 36 + offsetY}px`;
 
           board.appendChild(quackPop);
 
