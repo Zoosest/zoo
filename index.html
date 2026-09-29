@@ -224,35 +224,54 @@
       border-radius:8px;
     }
 
-    .song-number {
+    /*
+       SONG NUMBERS
+
+       The numbers are clickable links created by main.js.
+       Keep them clickable, but remove the browser's underline.
+    */
+
+    #song-list .song-number {
       color:var(--gold);
       text-align:center;
-    }
-
-    /* Song numbers are clickable, but should look like plain numbers. */
-    .song-number a,
-    .song-number a:visited,
-    .song-number a:hover,
-    .song-number a:active {
-      color:var(--gold);
       text-decoration:none;
+      -webkit-text-decoration:none;
     }
 
-    /* Replace the 🔎 search character with the custom search.png icon. */
+    #song-list .song-number:hover,
+    #song-list .song-number:focus,
+    #song-list .song-number:active,
+    #song-list .song-number:visited {
+      text-decoration:none;
+      -webkit-text-decoration:none;
+    }
+
+    /*
+       CUSTOM SEARCH ICON
+
+       main.js still contains the old 🔎 character as the
+       text content of the search column.
+
+       Make that text invisible while leaving the custom
+       search.png image visible.
+    */
+
     .search-magnifying-glass-column {
+      color:transparent;
       font-size:0;
+      text-decoration:none;
+      display:flex;
+      align-items:center;
+      justify-content:center;
     }
 
-    .search-magnifying-glass-column::before {
-      content:"";
+    .search-magnifying-glass-column img {
       display:block;
-      width:28px;
-      height:28px;
-      margin:auto;
-      background-image:url("./assets/search.png");
-      background-repeat:no-repeat;
-      background-position:center;
-      background-size:contain;
+      width:38px;
+      height:38px;
+      max-width:100%;
+      object-fit:contain;
+      font-size:initial;
     }
 
     .song-title {
@@ -429,9 +448,13 @@
         font-size:.82rem;
       }
 
-      .search-magnifying-glass-column::before {
-        width:24px;
-        height:24px;
+      /*
+         Keep the custom search icon compact on phones.
+      */
+
+      .search-magnifying-glass-column img {
+        width:30px;
+        height:30px;
       }
 
       footer img {
@@ -924,22 +947,13 @@
     let player = null;
     let currentIndex = -1;
 
-    /*
-       INTRO TRANSITION PROTECTION
-
-       When NEXT is manually pressed during the intro,
-       the YouTube player can send a stale ENDED event
-       from the intro while Song #1 is being loaded.
-
-       This flag belongs ONLY to that one transition.
-    */
-
     let introTransitionPending = false;
 
     let cardPlaylist = null;
     let cardPosition = 0;
 
     const titleFor = i => {
+
       if (i === -1) {
         return "MEGA MIX'N'MOJO Intro";
       }
@@ -1078,10 +1092,6 @@
         return;
       }
 
-      /*
-         INTRO → SONG #1
-      */
-
       if (currentIndex === -1) {
 
         play(0);
@@ -1161,11 +1171,6 @@
             },
 
             onStateChange: e => {
-
-              /*
-                 When Song #1 actually begins playing,
-                 the special intro transition is finished.
-              */
 
               if (
                 e.data ===
