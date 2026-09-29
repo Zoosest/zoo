@@ -95,19 +95,18 @@
       } 
 
       /*
-       * ANIMATED LAKE RIPPLES
+       * SOLID LAKE COLOR & DENSER RIPPLES
        */
       @keyframes lakeRipplePan {
-        0% { background-position: 0px 0px, 0% 50%; }
-        100% { background-position: 120px 60px, 100% 50%; }
+        0% { background-position: 0px 0px; }
+        100% { background-position: 80px 40px; }
       }
 
       #wat-board {
-        background-image: 
-          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='60' viewBox='0 0 120 60'><path d='M 0 30 Q 30 15, 60 30 T 120 30' fill='none' stroke='rgba(255,255,255,0.18)' stroke-width='2'/><path d='M 0 45 Q 30 30, 60 45 T 120 45' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1.5'/></svg>"),
-          linear-gradient(135deg, #16385c, #1d4f82, #0f2744, #123d66) !important;
-        background-size: 120px 60px, 300% 300% !important;
-        animation: lakeRipplePan 7s linear infinite !important;
+        background-color: #1d5b87 !important;
+        background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='80' height='40' viewBox='0 0 80 40'><path d='M 0 10 Q 20 4, 40 10 T 80 10' fill='none' stroke='rgba(255,255,255,0.22)' stroke-width='1.5'/><path d='M 0 22 Q 20 16, 40 22 T 80 22' fill='none' stroke='rgba(255,255,255,0.16)' stroke-width='1.2'/><path d='M 0 34 Q 20 28, 40 34 T 80 34' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1'/></svg>") !important;
+        background-size: 80px 40px !important;
+        animation: lakeRipplePan 6s linear infinite !important;
       }
 
       /*
