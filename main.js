@@ -1674,7 +1674,12 @@
         "cards"
       );
 
-    if (!button || !cards) {
+    const reading =
+      document.getElementById(
+        "reading"
+      );
+
+    if (!button || !cards || !reading) {
       return;
     }
 
@@ -1696,10 +1701,12 @@
       () => {
         /*
           SECOND PRESS:
-          Close the cards.
+          Close the entire Music Reading section.
         */
         if (cardsToggleOpen) {
           cardsToggleOpen = false;
+
+          reading.hidden = true;
 
           cards.style.display =
             "none";
@@ -1714,11 +1721,13 @@
 
         /*
           FIRST / THIRD / NEXT OPEN PRESS:
-          Let the existing CARDS code finish
-          generating the reading first, then
-          show the card grid.
+          Show the Music Reading section,
+          then let the existing CARDS code
+          generate the reading.
         */
         cardsToggleOpen = true;
+
+        reading.hidden = false;
 
         button.setAttribute(
           "aria-expanded",
