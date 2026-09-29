@@ -29,7 +29,7 @@
 
 
   /* =========================================================
-     AUDIO & PHONE VIBRATION
+     AUDIO & SHARP PHONE VIBRATION HAPTICS
      ========================================================= */ 
 
   function playQuackSound() {
@@ -44,13 +44,13 @@
     }
   }
 
-  function vibrate(duration) {
+  function vibrate(pattern) {
     if (
       typeof navigator !== "undefined" &&
       typeof navigator.vibrate === "function"
     ) {
       try {
-        navigator.vibrate(duration);
+        navigator.vibrate(pattern);
       } catch (error) {
         /* Vibration is optional. */
       }
@@ -814,9 +814,11 @@
           if (
             trackHealth <= 0
           ) {
-            vibrate(180);
+            /* Triumphant heavy finish vibration */
+            vibrate([40, 30, 80]);
           } else {
-            vibrate(100);
+            /* Sharp, snappy arcade pop vibration: [short buzz, tiny pause, snap] */
+            vibrate([15, 30, 45]);
           } 
 
           playQuackSound();
