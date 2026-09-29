@@ -617,7 +617,7 @@
       hole.type = "button";
       hole.className =
         "wat-hole";
-      hole.textContent =
+      hole.innerHTML =
         "";
       hole.dataset.active =
         "false"; 
@@ -626,7 +626,7 @@
         hole.style,
         {
           minHeight: "76px",
-          padding: "8px",
+          padding: "4px",
           fontSize: "2rem",
           cursor: "crosshair",
           background: "transparent",
@@ -760,7 +760,7 @@
         hole.dataset.active =
           "false"; 
 
-        hole.textContent =
+        hole.innerHTML =
           "";
         hole.style.zIndex = "1";
       });
@@ -790,8 +790,8 @@
     hole.dataset.active =
       "true"; 
 
-    hole.textContent =
-      "🐭"; 
+    hole.innerHTML =
+      `<img src="assets/duck.png" alt="" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: block;" />`; 
     hole.style.zIndex = "3";
 
     clearTimeout(
@@ -805,7 +805,7 @@
             hole.dataset.active ===
             "true"
           ) {
-            hole.textContent =
+            hole.innerHTML =
               "";
             hole.style.zIndex = "1";
           } 
@@ -1051,7 +1051,7 @@
       } · ${
         songId || "unknown"
       }</small><br>` +
-      `<small>Whack every mouse before the clock runs out!</small>`; 
+      `<small>Whack every duck before the clock runs out!</small>`; 
 
     startClock();
     spawnMole(); 
