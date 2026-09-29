@@ -11,11 +11,6 @@
 
   const FALLBACK_ICON = "🐾";
 
-  /*
-    Song information is kept in chronological order.
-    The first entry [index 0] is your intro track, followed by your animal-icon songs.
-  */
-
   const SONG_INFO = [
     ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
     ["Unfinished Business", "Transformation", "skull.png"],
@@ -308,6 +303,8 @@
         align-items: center;
         justify-content: center;
         width: 58px;
+        height: 58px;
+        object-fit: contain;
         color: var(--gold, #d4af37);
         font-size: 1.1rem;
         line-height: 1;
@@ -578,6 +575,7 @@
             ) - 21px
           );
           width: 42px;
+          height: 42px;
           font-size: 1rem;
         }
 
@@ -776,9 +774,11 @@
     const wrapper = document.createElement("div");
     wrapper.id = "archive-search-wrapper";
 
-    const icon = document.createElement("span");
+    // Custom magnifying glass image
+    const icon = document.createElement("img");
     icon.className = "search-magnifying-glass-column";
-    icon.textContent = "🔎";
+    icon.src = "assets/search.png";
+    icon.alt = "";
 
     const input = document.createElement("input");
     input.type = "text";
