@@ -1038,7 +1038,9 @@
                 "wat-duck-hiding"
               );
 
-              triggerSplash(hole);
+              triggerSplash(
+                hole
+              );
 
               setTimeout(() => {
                 if (
@@ -1159,23 +1161,8 @@
       ).hidden = false;
     }
 
-    if (
-      roadClosed &&
-      savedId
-    ) {
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
-    } else if (
-      roadClosed
-    ) {
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!<br>` +
-        `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
-    } else {
-      game.status.innerHTML =
-        `💥 TRACK WHACKED!`;
-    }
+    game.status.textContent =
+      "TRACK BANISHED! 🚫";
   }
 
   function closeGame() {
