@@ -910,9 +910,32 @@
     let cardPlaylist = null;
     let cardPosition = 0;
 
+    /*
+      Return the real song title from the chronological
+      song row instead of "Song 2", "Song 3", etc.
+    */
     const titleFor = i => {
       if (i === -1) {
         return "MEGA MIX'N'MOJO Intro";
+      }
+
+      const row =
+        document.querySelectorAll(
+          '#song-list .song'
+        )[i];
+
+      if (row) {
+        const titleElement =
+          row.querySelector('.song-title');
+
+        if (
+          titleElement &&
+          titleElement.firstChild
+        ) {
+          return titleElement.firstChild.textContent
+            .trim()
+            .replace(/^♫\s*/, '');
+        }
       }
 
       return `Song ${i + 1}`;
