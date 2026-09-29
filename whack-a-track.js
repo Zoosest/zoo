@@ -27,11 +27,6 @@
   let hideTimer;
   let gameTimer;
 
-
-  /* =========================================================
-     AUDIO & VIBRATION
-     ========================================================= */
-
   function playQuackSound() {
     try {
       const sound = new Audio("assets/quack.mp3");
@@ -50,11 +45,6 @@
       } catch (error) {}
     }
   }
-
-
-  /* =========================================================
-     TOOLBAR
-     ========================================================= */
 
   function setToolbarHidden(hidden) {
     controls()?.classList.toggle(
@@ -241,11 +231,6 @@
         animation: duckFallAndWobble 0.4s ease-in forwards;
       }
 
-
-      /* =====================================================
-         WHACKED SONG ROW
-         ===================================================== */
-
       #song-list .song.rizney-roadwork {
         opacity: .72;
       }
@@ -284,13 +269,7 @@
         pointer-events: none;
       }
 
-
-      /* =====================================================
-         MOBILE
-         ===================================================== */
-
       @media (max-width: 640px) {
-
         #whack-a-track-game {
           width: 100%;
           margin-top: 4px;
@@ -339,11 +318,6 @@
     setToolbarHidden(false);
   }
 
-
-  /* =========================================================
-     YOUTUBE
-     ========================================================= */
-
   const playing = () => {
     const player = youtube();
 
@@ -356,7 +330,6 @@
         YT.PlayerState.PLAYING
     );
   };
-
 
   function getCurrentSongId() {
     const player = youtube();
@@ -383,12 +356,10 @@
       return String(
         data.video_id
       );
-
     } catch (error) {
       return null;
     }
   }
-
 
   function getCurrentSongNumber() {
     const nowPlaying =
@@ -409,7 +380,6 @@
 
     return Number(match[1]);
   }
-
 
   function getSongIdForNumber(songNumber) {
     if (
@@ -433,11 +403,6 @@
     return null;
   }
 
-
-  /* =========================================================
-     PERSISTENT ROADWORK
-     ========================================================= */
-
   function getWhackedTracks() {
     try {
       const raw =
@@ -453,12 +418,10 @@
       return Array.isArray(parsed)
         ? parsed
         : [];
-
     } catch (error) {
       return [];
     }
   }
-
 
   function saveWhackedTrack(songId) {
     if (!songId) {
@@ -481,12 +444,10 @@
       }
 
       return songId;
-
     } catch (error) {
       return null;
     }
   }
-
 
   function isTrackRemembered(songId) {
     if (!songId) {
@@ -497,7 +458,6 @@
       .includes(songId);
   }
 
-
   function findSongRow(songNumber) {
     if (!songNumber) {
       return null;
@@ -507,7 +467,6 @@
       `#song-list .song[data-song-index="${songNumber}"]`
     );
   }
-
 
   function applyRoadworkToRow(row) {
     if (!row) {
@@ -536,7 +495,6 @@
     return true;
   }
 
-
   function closeRoad(
     songNumber,
     songId
@@ -564,7 +522,6 @@
     );
   }
 
-
   function loadSavedRoadwork() {
     const saved =
       new Set(
@@ -580,7 +537,6 @@
         "#song-list .song"
       )
       .forEach(row => {
-
         const songNumber =
           Number(
             row.dataset.songIndex
@@ -610,11 +566,6 @@
         }
       });
   }
-
-
-  /* =========================================================
-     CREATE GAME
-     ========================================================= */
 
   function createGame() {
     if (game) return game;
@@ -755,7 +706,6 @@
     );
 
     for (let i = 0; i < 6; i++) {
-
       const hole =
         document.createElement(
           "button"
@@ -764,10 +714,8 @@
       hole.type = "button";
       hole.className =
         "wat-hole";
-
       hole.innerHTML =
         "";
-
       hole.dataset.active =
         "false";
 
@@ -790,7 +738,6 @@
       hole.addEventListener(
         "click",
         () => {
-
           if (
             !active ||
             hole.dataset.active !==
@@ -826,7 +773,8 @@
           hole.innerHTML =
             `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" style="--duck-flip: ${duckFlip};" />`;
 
-          hole.style.zIndex = "3";
+          hole.style.zIndex =
+            "3";
 
           triggerSplash(hole);
 
@@ -909,18 +857,15 @@
           }, 400);
 
           setTimeout(() => {
-
             if (
               hole.dataset.active ===
               "hit"
             ) {
               hole.innerHTML =
                 "";
-
               hole.style.zIndex =
                 "1";
             }
-
           }, 400);
 
           if (
@@ -943,9 +888,7 @@
       $("#wat-refresh", panel);
 
     [closeBtn, refreshBtn].forEach(btn => {
-
       if (btn) {
-
         Object.assign(btn.style, {
           backgroundColor: "#000000",
           color: "#f5d76e",
@@ -956,9 +899,7 @@
           fontWeight: "bold",
           marginTop: "8px"
         });
-
       }
-
     });
 
     closeBtn.addEventListener(
@@ -969,11 +910,9 @@
     refreshBtn.addEventListener(
       "click",
       () => {
-
         localStorage.removeItem(
           REMOVED_TRACKS_KEY
         );
-
         window.location.reload();
       }
     );
@@ -1014,11 +953,6 @@
     return game;
   }
 
-
-  /* =========================================================
-     SPLASH
-     ========================================================= */
-
   function triggerSplash(hole) {
     const ripple =
       document.createElement(
@@ -1037,37 +971,22 @@
     }, 320);
   }
 
-
-  /* =========================================================
-     HIDE MOLES
-     ========================================================= */
-
   function hideMoles() {
-
     game.board
       .querySelectorAll(
         ".wat-hole"
       )
       .forEach(hole => {
-
         hole.dataset.active =
           "false";
-
         hole.innerHTML =
           "";
-
         hole.style.zIndex =
           "1";
       });
   }
 
-
-  /* =========================================================
-     SPAWN MOLE
-     ========================================================= */
-
   function spawnMole() {
-
     if (!active) return;
 
     const holes = [
@@ -1096,9 +1015,7 @@
     hole.style.zIndex =
       "3";
 
-    triggerSplash(
-      hole
-    );
+    triggerSplash(hole);
 
     clearTimeout(
       hideTimer
@@ -1107,63 +1024,47 @@
     hideTimer =
       setTimeout(
         () => {
-
           if (
             hole.dataset.active ===
             "true"
           ) {
-
             const duckImg =
               hole.querySelector(
                 ".wat-duck"
               );
 
             if (duckImg) {
-
               duckImg.classList.add(
                 "wat-duck-hiding"
               );
 
-              triggerSplash(
-                hole
-              );
+              triggerSplash(hole);
 
               setTimeout(() => {
-
                 if (
                   hole.dataset.active ===
                   "true"
                 ) {
                   hole.innerHTML =
                     "";
-
                   hole.style.zIndex =
                     "1";
-
                   hole.dataset.active =
                     "false";
                 }
-
               }, 180);
-
             } else {
-
               hole.innerHTML =
                 "";
-
               hole.style.zIndex =
                 "1";
-
               hole.dataset.active =
                 "false";
             }
-
           } else {
-
             hole.dataset.active =
               "false";
           }
-
         },
         MOLE_VISIBLE_MS
       );
@@ -1175,13 +1076,7 @@
       );
   }
 
-
-  /* =========================================================
-     CLOCK
-     ========================================================= */
-
   function startClock() {
-
     clearInterval(
       gameTimer
     );
@@ -1197,7 +1092,6 @@
     gameTimer =
       setInterval(
         () => {
-
           if (!active) return;
 
           secondsLeft--;
@@ -1212,19 +1106,12 @@
           ) {
             finish(false);
           }
-
         },
         1000
       );
   }
 
-
-  /* =========================================================
-     FINISH
-     ========================================================= */
-
   function finish(won) {
-
     if (!active) return;
 
     active = false;
@@ -1244,10 +1131,8 @@
     hideMoles();
 
     if (!won) {
-
       game.status.textContent =
         "The track survived. Try again!";
-
       return;
     }
 
@@ -1269,7 +1154,6 @@
       );
 
     if (roadClosed) {
-
       $("#wat-refresh",
         game.panel
       ).hidden = false;
@@ -1279,33 +1163,22 @@
       roadClosed &&
       savedId
     ) {
-
       game.status.innerHTML =
         `💥 TRACK WHACKED!<br>` +
         `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
-
     } else if (
       roadClosed
     ) {
-
       game.status.innerHTML =
         `💥 TRACK WHACKED!<br>` +
         `<small>🚧 ROAD CLOSED FOR ROADWORK</small>`;
-
     } else {
-
       game.status.innerHTML =
         `💥 TRACK WHACKED!`;
     }
   }
 
-
-  /* =========================================================
-     CLOSE GAME
-     ========================================================= */
-
   function closeGame() {
-
     active = false;
 
     clearTimeout(
@@ -1321,19 +1194,12 @@
     );
 
     if (game) {
-
       game.panel.hidden =
         true;
     }
   }
 
-
-  /* =========================================================
-     START GAME
-     ========================================================= */
-
   function startGame(event) {
-
     event?.preventDefault();
     event?.stopImmediatePropagation();
 
@@ -1361,7 +1227,6 @@
       false;
 
     if (!playing()) {
-
       active = false;
 
       game.status.textContent =
@@ -1386,7 +1251,6 @@
         songId
       )
     ) {
-
       active = false;
 
       const row =
@@ -1422,17 +1286,8 @@
 
     hideMoles();
 
-    /*
-       CLEAN GAME START MESSAGE.
-
-       No testing/debug information.
-       No song number.
-       No YouTube ID.
-       No "ROAD OPEN".
-    */
-
     game.status.textContent =
-      "Whack the ducks!";
+      "Whack the ducks to banish the track!";
 
     startClock();
 
@@ -1444,13 +1299,7 @@
     });
   }
 
-
-  /* =========================================================
-     INIT
-     ========================================================= */
-
   function init() {
-
     setupToolbar();
 
     loadSavedRoadwork();
@@ -1482,20 +1331,16 @@
     );
   }
 
-
   if (
     document.readyState ===
     "loading"
   ) {
-
     document.addEventListener(
       "DOMContentLoaded",
       init,
       { once: true }
     );
-
   } else {
-
     init();
   }
 
