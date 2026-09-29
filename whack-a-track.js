@@ -110,6 +110,36 @@
       }
 
       /*
+       * COMIC BOOK "QUACK!" POP ANIMATION
+       */
+      @keyframes quackPop {
+        0% {
+          transform: scale(0.4) rotate(-15deg);
+          opacity: 0;
+        }
+        50% {
+          transform: scale(1.25) rotate(8deg);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1) rotate(4deg);
+          opacity: 0;
+        }
+      }
+
+      .wat-quack-pop {
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        width: 54px;
+        height: 54px;
+        object-fit: contain;
+        pointer-events: none;
+        z-index: 5;
+        animation: quackPop 0.35s ease-out forwards;
+      }
+
+      /*
        * ROADWORK ROW
        */ 
 
@@ -652,16 +682,8 @@
           hole.dataset.active =
             "hit"; 
 
-          /* Show the hit face instantly, then follow with the explosion */
-          hole.innerHTML =
-            `<img src="assets/duck-hit.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />`; 
-          hole.style.zIndex = "3";
-
           trackHealth--; 
 
-          /*
-           * STRONGER LITTLE PHYSICAL FEEDBACK.
-           */
           if (
             trackHealth <= 0
           ) {
@@ -673,6 +695,12 @@
           $("#wat-health", panel)
             .value =
             trackHealth; 
+
+          /* Show hit duck + comic QUACK pop effect */
+          hole.innerHTML =
+            `<img src="assets/duck-hit.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />` +
+            `<img src="assets/quack.png" alt="QUACK!" class="wat-quack-pop" />`; 
+          hole.style.zIndex = "3";
 
           setTimeout(() => {
             if (hole.dataset.active === "hit") {
