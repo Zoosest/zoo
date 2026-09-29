@@ -770,13 +770,7 @@
 
   function setupSearch() {
     const songListContainer = document.getElementById("song-list");
-
-    if (
-      !songListContainer ||
-      document.getElementById("archive-search-container")
-    ) {
-      return;
-    }
+    if (!songListContainer || document.getElementById("archive-search-container")) return;
 
     const container = document.createElement("div");
     container.id = "archive-search-container";
@@ -789,10 +783,8 @@
     icon.className = "search-magnifying-glass-column";
 
     const searchImg = document.createElement("img");
-
     searchImg.src =
       "https://raw.githubusercontent.com/zoosest/zoo/main/assets/search.png";
-
     searchImg.alt = "Search";
     searchImg.loading = "eager";
     searchImg.decoding = "async";
@@ -803,11 +795,9 @@
     icon.appendChild(searchImg);
 
     const input = document.createElement("input");
-
     input.type = "text";
     input.id = "archive-search";
-    input.placeholder =
-      "Search songs, keywords, or animals...";
+    input.placeholder = "Search songs, keywords, or animals...";
     input.setAttribute("autocomplete", "off");
 
     const dropdown = document.createElement("div");
@@ -815,19 +805,13 @@
 
     wrapper.appendChild(icon);
     wrapper.appendChild(input);
-
     container.appendChild(wrapper);
     container.appendChild(dropdown);
 
-    songListContainer.parentNode.insertBefore(
-      container,
-      songListContainer
-    );
+    songListContainer.parentNode.insertBefore(container, songListContainer);
 
     input.addEventListener("input", () => {
-      const query =
-        input.value.toLowerCase().trim();
-
+      const query = input.value.toLowerCase().trim();
       dropdown.innerHTML = "";
 
       if (query.length === 0) {
@@ -838,12 +822,8 @@
       const matches = [];
 
       SONG_INFO.forEach((info, index) => {
-        const title =
-          info[0].toLowerCase();
-
-        const keyword =
-          info[1].toLowerCase();
-
+        const title = info[0].toLowerCase();
+        const keyword = info[1].toLowerCase();
         const animal =
           iconLabel(
             iconFilename(info[2])
@@ -866,86 +846,50 @@
       });
 
       if (matches.length === 0) {
-        const noResult =
-          document.createElement("div");
-
-        noResult.className =
-          "search-result-item";
-
-        noResult.style.justifyContent =
-          "center";
-
-        noResult.style.fontStyle =
-          "italic";
-
-        noResult.textContent =
-          "No matching songs found";
-
+        const noResult = document.createElement("div");
+        noResult.className = "search-result-item";
+        noResult.style.justifyContent = "center";
+        noResult.style.fontStyle = "italic";
+        noResult.textContent = "No matching songs found";
         dropdown.appendChild(noResult);
-
         dropdown.classList.add("active");
-
         return;
       }
 
       matches.slice(0, 15).forEach(match => {
-        const item =
-          document.createElement("a");
-
-        item.className =
-          "search-result-item";
-
+        const item = document.createElement("a");
+        item.className = "search-result-item";
         item.href = "#";
 
-        const textSpan =
-          document.createElement("span");
+        const textSpan = document.createElement("span");
+        textSpan.className = "search-result-text";
+        textSpan.textContent = `♫ ${match.title}`;
 
-        textSpan.className =
-          "search-result-text";
-
-        textSpan.textContent =
-          `♫ ${match.title}`;
-
-        const metaSpan =
-          document.createElement("span");
-
-        metaSpan.className =
-          "search-result-meta";
-
+        const metaSpan = document.createElement("span");
+        metaSpan.className = "search-result-meta";
         metaSpan.textContent =
           `${match.animal} • ${match.keyword}`;
 
         item.appendChild(textSpan);
         item.appendChild(metaSpan);
 
-        item.addEventListener(
-          "click",
-          event => {
-            event.preventDefault();
+        item.addEventListener("click", event => {
+          event.preventDefault();
+          dropdown.classList.remove("active");
+          input.value = "";
 
-            dropdown.classList.remove(
-              "active"
-            );
+          const rows = songRows();
+          const targetRow = rows[match.index - 1];
 
-            input.value = "";
+          if (targetRow) {
+            targetRow.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
 
-            const rows = songRows();
-
-            const targetRow =
-              rows[match.index - 1];
-
-            if (targetRow) {
-              targetRow.scrollIntoView({
-                behavior: "smooth",
-                block: "center"
-              });
-
-              playSongFromRow(
-                targetRow
-              );
-            }
+            playSongFromRow(targetRow);
           }
-        );
+        });
 
         dropdown.appendChild(item);
       });
@@ -953,16 +897,11 @@
       dropdown.classList.add("active");
     });
 
-    document.addEventListener(
-      "click",
-      event => {
-        if (!container.contains(event.target)) {
-          dropdown.classList.remove(
-            "active"
-          );
-        }
+    document.addEventListener("click", event => {
+      if (!container.contains(event.target)) {
+        dropdown.classList.remove("active");
       }
-    );
+    });
   }
 
 
@@ -983,11 +922,8 @@
     const numberLink =
       document.createElement("a");
 
-    numberLink.className =
-      "song-number";
-
+    numberLink.className = "song-number";
     numberLink.href = "#";
-
     numberLink.textContent =
       oldNumber.textContent.trim();
 
@@ -1004,9 +940,7 @@
       }
     );
 
-    oldNumber.replaceWith(
-      numberLink
-    );
+    oldNumber.replaceWith(numberLink);
   }
 
 
@@ -1018,8 +952,7 @@
     const rows = songRows();
 
     rows.forEach((row, index) => {
-      const info =
-        SONG_INFO[index + 1];
+      const info = SONG_INFO[index + 1];
 
       if (!info) return;
 
@@ -1038,16 +971,10 @@
       const keyword =
         document.createElement("small");
 
-      keyword.textContent =
-        info[1];
+      keyword.textContent = info[1];
 
-      titleElement.appendChild(
-        titleText
-      );
-
-      titleElement.appendChild(
-        keyword
-      );
+      titleElement.appendChild(titleText);
+      titleElement.appendChild(keyword);
     });
   }
 
@@ -1060,21 +987,15 @@
     const rows = songRows();
 
     rows.forEach((row, index) => {
-      if (
-        row.querySelector(
-          ".animal-button"
-        )
-      ) {
+      if (row.querySelector(".animal-button")) {
         return;
       }
 
-      const info =
-        SONG_INFO[index + 1];
+      const info = SONG_INFO[index + 1];
 
       if (!info) return;
 
-      const filename =
-        info[2];
+      const filename = info[2];
 
       if (!filename) return;
 
@@ -1088,15 +1009,11 @@
         event => {
           event.preventDefault();
           event.stopPropagation();
-
           playSongFromRow(row);
         }
       );
 
-      makeSongNumber(
-        row,
-        index
-      );
+      makeSongNumber(row, index);
     });
   }
 
@@ -1106,8 +1023,7 @@
      ========================================================= */
 
   function getCardSongIndex(card) {
-    const link =
-      card.querySelector("a");
+    const link = card.querySelector("a");
 
     if (!link) return -1;
 
@@ -1138,10 +1054,7 @@
 
     if (!link) return;
 
-    if (
-      typeof link.onclick ===
-      "function"
-    ) {
+    if (typeof link.onclick === "function") {
       link.onclick({
         preventDefault() {},
         stopPropagation() {}
@@ -1155,8 +1068,7 @@
 
     if (
       songIndex >= 0 &&
-      typeof window.play ===
-      "function"
+      typeof window.play === "function"
     ) {
       window.play(songIndex);
     }
@@ -1167,8 +1079,7 @@
     if (!card) return;
 
     if (
-      card.dataset.animalCardReady ===
-      "true"
+      card.dataset.animalCardReady === "true"
     ) {
       return;
     }
@@ -1178,7 +1089,6 @@
       event => {
         event.preventDefault();
         event.stopPropagation();
-
         playCard(card);
       }
     );
@@ -1192,7 +1102,6 @@
         ) {
           event.preventDefault();
           event.stopPropagation();
-
           playCard(card);
         }
       }
@@ -1261,18 +1170,15 @@
       card.querySelector("a");
 
     if (symbol) {
-      symbol.style.display =
-        "none";
+      symbol.style.display = "none";
     }
 
     if (strong) {
-      strong.style.display =
-        "none";
+      strong.style.display = "none";
     }
 
     if (link) {
-      link.style.display =
-        "none";
+      link.style.display = "none";
     }
 
     const img =
@@ -1303,9 +1209,7 @@
       String(songIndex);
 
     img.onerror = () => {
-      img.replaceWith(
-        fallback()
-      );
+      img.replaceWith(fallback());
     };
 
     const name =
@@ -1341,8 +1245,7 @@
         );
 
       cardElements.forEach(
-        card =>
-          addAnimalToCard(card)
+        card => addAnimalToCard(card)
       );
 
     } finally {
@@ -1385,8 +1288,7 @@
 
     const dockHeight =
       dock
-        ? dock.getBoundingClientRect()
-            .height
+        ? dock.getBoundingClientRect().height
         : 0;
 
     const usableHeight =
@@ -1423,80 +1325,6 @@
         positionReading();
       });
     });
-  }
-
-
-  /* =========================================================
-     CARDS BUTTON TOGGLE
-     ========================================================= */
-
-  function setupCardsToggle() {
-    const cardsButton =
-      document.getElementById(
-        "draw-cards"
-      );
-
-    const cards =
-      document.getElementById(
-        "cards"
-      );
-
-    if (!cardsButton || !cards) {
-      return;
-    }
-
-    let cardsOpen = false;
-
-    cardsButton.addEventListener(
-      "click",
-      () => {
-        /*
-          The existing CARDS button code handles
-          generating/showing the new music reading.
-
-          We only take control on subsequent presses.
-        */
-
-        if (!cardsOpen) {
-          cardsOpen = true;
-          return;
-        }
-
-        cards.style.display =
-          "none";
-
-        cardsOpen = false;
-      }
-    );
-
-    /*
-      Watch the cards container. If another part
-      of the page creates/shows a new reading,
-      recognize that as the open state.
-    */
-
-    const observer =
-      new MutationObserver(() => {
-        if (
-          cards.style.display !==
-          "none"
-        ) {
-          cardsOpen = true;
-        }
-      });
-
-    observer.observe(
-      cards,
-      {
-        childList: true,
-        subtree: true,
-        attributes: true,
-        attributeFilter: [
-          "style",
-          "class"
-        ]
-      }
-    );
   }
 
 
@@ -1558,14 +1386,11 @@
 
   function init() {
     addStyles();
-
     setupSearch();
 
     updateSongRows();
 
     putIcons();
-
-    setupCardsToggle();
 
     setupCardWatching();
 
