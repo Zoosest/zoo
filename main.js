@@ -1049,6 +1049,17 @@
 
     rows.forEach(
       (row, index) => {
+        /*
+          Whack-A-Track uses this data attribute
+          to find the correct song row after a win.
+
+          index 0 = Song 1
+          index 1 = Song 2
+          etc.
+        */
+        row.dataset.songIndex =
+          String(index + 1);
+
         const info =
           SONG_INFO[index + 1];
 
@@ -1095,6 +1106,13 @@
 
     rows.forEach(
       (row, index) => {
+        /*
+          Keep the Whack-A-Track row number
+          attached even if the icon already exists.
+        */
+        row.dataset.songIndex =
+          String(index + 1);
+
         if (
           row.querySelector(
             ".animal-button"
