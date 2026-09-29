@@ -110,6 +110,28 @@
       }
 
       /*
+       * COMIC QUACK POP ANIMATION
+       */
+      @keyframes comicQuackPop {
+        0% {
+          transform: scale(0.4) rotate(-18deg) translate(-10px, -10px);
+          opacity: 0;
+        }
+        60% {
+          transform: scale(1.15) rotate(12deg) translate(6px, -4px);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(1) rotate(8deg) translate(4px, -2px);
+          opacity: 1;
+        }
+      }
+
+      .comic-quack {
+        animation: comicQuackPop 0.22s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      /*
        * ROADWORK ROW
        */ 
 
@@ -634,7 +656,7 @@
           boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
           position: "relative",
           zIndex: "1",
-          overflow: "hidden"
+          overflow: "visible"
         }
       ); 
 
@@ -650,10 +672,11 @@
           } 
 
           hole.dataset.active =
-            "false"; 
+            "hit"; 
 
+          /* Show the hit face instantly */
           hole.innerHTML =
-            `<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem;">💥</span>`; 
+            `<img src="assets/duck-hit.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />`; 
           hole.style.zIndex = "3";
 
           trackHealth--; 
@@ -672,6 +695,13 @@
           $("#wat-health", panel)
             .value =
             trackHealth; 
+
+          setTimeout(() => {
+            if (hole.dataset.active === "hit") {
+              hole.innerHTML =
+                `<img src="assets/quack.png" alt="" class="comic-quack" style="position: absolute; top: -14px; left: -14px; width: calc(100% + 28px); height: calc(100% + 28px); object-fit: contain; pointer-events: none; display: block; z-index: 10;" />`;
+            }
+          }, 180);
 
           if (
             trackHealth <= 0
@@ -845,7 +875,7 @@
 
           secondsLeft--; 
 
-          $("#wat-time",
+-          $("#wat-time",
             game.panel
           ).textContent =
             secondsLeft; 
