@@ -95,6 +95,21 @@
       } 
 
       /*
+       * LAKE WATER ANIMATION
+       */
+      @keyframes lakeRipple {
+        0% { background-position: 0% 50%; }
+        50% { background-position: 100% 50%; }
+        100% { background-position: 0% 50%; }
+      }
+
+      #wat-board {
+        background: linear-gradient(135deg, #16385c, #1d4f82, #0f2744, #123d66) !important;
+        background-size: 300% 300% !important;
+        animation: lakeRipple 12s ease infinite !important;
+      }
+
+      /*
        * ROADWORK ROW
        */ 
 
@@ -584,28 +599,13 @@
           "repeat(3, minmax(0, 1fr))",
         gap: "10px",
         margin: "18px auto",
-        background: "#2a1b3d",
         padding: "12px",
         borderRadius: "10px",
         border: "1px solid #d4af37",
-        position: "relative"
+        position: "relative",
+        overflow: "hidden"
       }
     ); 
-
-    const overlay = document.createElement("img");
-    overlay.src = "assets/holes.png";
-    overlay.alt = "";
-    Object.assign(overlay.style, {
-      position: "absolute",
-      inset: "0",
-      width: "100%",
-      height: "100%",
-      objectFit: "fill",
-      pointerEvents: "none",
-      zIndex: "2",
-      borderRadius: "10px"
-    });
-    board.appendChild(overlay);
 
     for (let i = 0; i < 6; i++) {
       const hole =
@@ -628,9 +628,10 @@
           width: "100%",
           padding: "0",
           cursor: "crosshair",
-          background: "transparent",
-          border: "none",
-          boxShadow: "none",
+          background: "rgba(255, 255, 255, 0.04)",
+          border: "1px dashed rgba(255, 255, 255, 0.15)",
+          borderRadius: "50%",
+          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
           position: "relative",
           zIndex: "1",
           overflow: "hidden"
