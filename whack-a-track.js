@@ -361,27 +361,48 @@
     }
   }
 
+  /*
+   * FIX:
+   * Identify the current song from the actual
+   * YouTube video ID instead of looking for
+   * "Song 5" inside the Now Playing text.
+   */
   function getCurrentSongNumber() {
-    const nowPlaying =
-      $("#now-playing");
+    const currentId =
+      getCurrentSongId();
 
-    if (!nowPlaying) {
+    if (!currentId) {
       return null;
     }
 
-    const match =
-      nowPlaying.textContent.match(
-        /Song\s+(\d+)/i
+    const songIds =
+      Array.isArray(
+        window.rizneySongIds
+      )
+        ? window.rizneySongIds
+        : [];
+
+    const index =
+      songIds.indexOf(
+        currentId
       );
 
-    if (!match) {
+    if (index < 0) {
       return null;
     }
 
-    return Number(match[1]);
+    return index + 1;
   }
 
-  function getSongIdForNumber(songNumber) {
+  /*
+   * FIX:
+   * Song #1 is ids[0].
+   * Song #2 is ids[1].
+   * Song #3 is ids[2].
+   */
+  function getSongIdForNumber(
+    songNumber
+  ) {
     if (
       !songNumber ||
       !Number.isInteger(songNumber)
@@ -389,18 +410,25 @@
       return null;
     }
 
-    try {
-      if (
-        typeof ids !== "undefined" &&
-        ids[songNumber]
-      ) {
-        return String(
-          ids[songNumber]
-        );
-      }
-    } catch (error) {}
+    const songIds =
+      Array.isArray(
+        window.rizneySongIds
+      )
+        ? window.rizneySongIds
+        : [];
 
-    return null;
+    const songId =
+      songIds[
+        songNumber - 1
+      ];
+
+    if (!songId) {
+      return null;
+    }
+
+    return String(
+      songId
+    );
   }
 
   function getWhackedTracks() {
@@ -1120,11 +1148,6 @@
   function finish(won) {
     if (!active) return;
 
-    /*
-       Remember exactly where the player
-       is standing before advancing.
-    */
-
     const savedScrollPosition =
       window.scrollY;
 
@@ -1175,12 +1198,6 @@
 
     game.status.textContent =
       "TRACK BANISHED! 🚫";
-
-    /*
-       Advance to the next song/card,
-       then immediately restore the
-       exact scroll position.
-    */
 
     next();
 
