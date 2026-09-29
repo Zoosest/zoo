@@ -122,16 +122,16 @@
       }
 
       /*
-       * WATER SPLASH / RIPPLE EFFECT
+       * SMALLER & LOWER WATER SPLASH / RIPPLE EFFECT
        */
       @keyframes watSplashRing {
         0% {
-          transform: scale(0.2);
-          opacity: 0.9;
-          border-width: 3px;
+          transform: scale(0.15);
+          opacity: 0.85;
+          border-width: 2.5px;
         }
         100% {
-          transform: scale(1.65);
+          transform: scale(1.1);
           opacity: 0;
           border-width: 1px;
         }
@@ -139,16 +139,16 @@
 
       .wat-ripple {
         position: absolute;
-        top: 50%;
+        bottom: 8px;
         left: 50%;
-        width: 48px;
-        height: 48px;
-        margin: -24px 0 0 -24px;
-        border: 2px solid rgba(255, 255, 255, 0.75);
+        width: 32px;
+        height: 18px;
+        margin-left: -16px;
+        border: 2px solid rgba(255, 255, 255, 0.7);
         border-radius: 50%;
         pointer-events: none;
         z-index: 2;
-        animation: watSplashRing 0.35s ease-out forwards;
+        animation: watSplashRing 0.3s ease-out forwards;
       }
 
       /*
@@ -952,7 +952,7 @@
     hole.appendChild(ripple);
     setTimeout(() => {
       ripple.remove();
-    }, 350);
+    }, 300);
   }
 
 
