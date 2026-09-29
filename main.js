@@ -11,6 +11,11 @@
 
   const FALLBACK_ICON = "🐾";
 
+  /*
+    Song information is kept in chronological order.
+    The first entry [index 0] is your intro track, followed by your animal-icon songs.
+  */
+
   const SONG_INFO = [
     ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
     ["Unfinished Business", "Transformation", "skull.png"],
@@ -303,8 +308,6 @@
         align-items: center;
         justify-content: center;
         width: 58px;
-        height: 58px;
-        object-fit: contain;
         color: var(--gold, #d4af37);
         font-size: 1.1rem;
         line-height: 1;
@@ -415,11 +418,13 @@
         cursor: pointer;
         z-index: 0 !important;
         box-sizing: border-box;
+        text-decoration: none;
       }
 
       #song-list .song-number:hover,
       #song-list .song-number:focus {
         color: var(--bright-gold, #f5d76e);
+        text-decoration: none;
       }
 
       #song-list .song .play {
@@ -575,7 +580,6 @@
             ) - 21px
           );
           width: 42px;
-          height: 42px;
           font-size: 1rem;
         }
 
@@ -774,11 +778,21 @@
     const wrapper = document.createElement("div");
     wrapper.id = "archive-search-wrapper";
 
-    // Custom magnifying glass image
-    const icon = document.createElement("img");
+    // Custom search image placed in the outer left number column
+    const icon = document.createElement("span");
     icon.className = "search-magnifying-glass-column";
-    icon.src = "assets/search.png";
-    icon.alt = "";
+
+    const searchImg = document.createElement("img");
+    searchImg.src =
+      "https://raw.githubusercontent.com/zoosest/zoo/main/assets/search.png";
+    searchImg.alt = "Search";
+    searchImg.loading = "eager";
+    searchImg.decoding = "async";
+    searchImg.style.width = "20px";
+    searchImg.style.height = "20px";
+    searchImg.style.objectFit = "contain";
+
+    icon.appendChild(searchImg);
 
     const input = document.createElement("input");
     input.type = "text";
@@ -806,17 +820,27 @@
       }
 
       const matches = [];
+
       SONG_INFO.forEach((info, index) => {
         const title = info[0].toLowerCase();
         const keyword = info[1].toLowerCase();
-        const animal = iconLabel(iconFilename(info[2])).toLowerCase();
+        const animal =
+          iconLabel(
+            iconFilename(info[2])
+          ).toLowerCase();
 
-        if (title.includes(query) || keyword.includes(query) || animal.includes(query)) {
+        if (
+          title.includes(query) ||
+          keyword.includes(query) ||
+          animal.includes(query)
+        ) {
           matches.push({
             index,
             title: info[0],
             keyword: info[1],
-            animal: iconLabel(iconFilename(info[2]))
+            animal: iconLabel(
+              iconFilename(info[2])
+            )
           });
         }
       });
@@ -843,7 +867,8 @@
 
         const metaSpan = document.createElement("span");
         metaSpan.className = "search-result-meta";
-        metaSpan.textContent = `${match.animal} • ${match.keyword}`;
+        metaSpan.textContent =
+          `${match.animal} • ${match.keyword}`;
 
         item.appendChild(textSpan);
         item.appendChild(metaSpan);
@@ -1356,36 +1381,6 @@
 
 
   /* =========================================================
-     CARDS BUTTON TOGGLE
-     ========================================================= */
-
-  function setupCardsToggle() {
-    const cardsButton =
-      document.getElementById("draw-cards");
-
-    const reading =
-      document.getElementById("reading");
-
-    if (!cardsButton || !reading) return;
-
-    cardsButton.addEventListener("click", () => {
-      setTimeout(() => {
-        const isOpen =
-          reading.dataset.cardsOpen === "true";
-
-        if (isOpen) {
-          reading.style.display = "none";
-          reading.dataset.cardsOpen = "false";
-        } else {
-          reading.style.display = "";
-          reading.dataset.cardsOpen = "true";
-        }
-      }, 0);
-    });
-  }
-
-
-  /* =========================================================
      INITIALIZATION
      ========================================================= */
 
@@ -1400,8 +1395,6 @@
     setupCardWatching();
 
     addCardIcons();
-
-    setupCardsToggle();
   }
 
 
