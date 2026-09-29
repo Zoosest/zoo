@@ -29,8 +29,20 @@
 
 
   /* =========================================================
-     PHONE VIBRATION
+     AUDIO & PHONE VIBRATION
      ========================================================= */ 
+
+  function playQuackSound() {
+    try {
+      const sound = new Audio("assets/quack.mp3");
+      sound.volume = 0.8;
+      sound.play().catch(() => {
+        /* Browser autoplay policy fallback */
+      });
+    } catch (error) {
+      /* Audio optional */
+    }
+  }
 
   function vibrate(duration) {
     if (
@@ -689,6 +701,8 @@
           } else {
             vibrate(100);
           } 
+
+          playQuackSound();
 
           $("#wat-health", panel)
             .value =
