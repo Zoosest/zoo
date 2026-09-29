@@ -252,7 +252,6 @@
     ["Divine Comedy (outro)", "Discovery", "aardvark.png"]
   ];
 
-
   /* =========================================================
      STYLES
      ========================================================= */
@@ -704,7 +703,6 @@
     document.head.appendChild(style);
   }
 
-
   /* =========================================================
      WHACK-A-TRACK ROADWORK RESTORATION
      ========================================================= */
@@ -729,7 +727,6 @@
     }
   }
 
-
   function getSongIdForNumber(songNumber) {
     if (
       !songNumber ||
@@ -751,7 +748,6 @@
 
     return null;
   }
-
 
   function restoreRoadworkRows() {
     const saved =
@@ -800,7 +796,6 @@
         }
       });
   }
-
 
   function setupRoadworkWatching() {
     const songList =
@@ -858,7 +853,6 @@
     restoreRoadworkRows();
   }
 
-
   /*
     This only makes sure the row numbers are
     available for Whack-A-Track restoration.
@@ -875,7 +869,6 @@
     );
   }
 
-
   /* =========================================================
      HELPERS
      ========================================================= */
@@ -886,7 +879,6 @@
       .replace(/[-_]+/g, " ")
       .replace(/\b\w/g, c => c.toUpperCase());
   }
-
 
   function iconFilename(filename) {
     if (filename === "cidada.png") {
@@ -899,7 +891,6 @@
 
     return filename;
   }
-
 
   function fallback() {
     const span = document.createElement("span");
@@ -914,7 +905,6 @@
 
     return span;
   }
-
 
   function makeImage(filename) {
     const button = document.createElement("button");
@@ -948,13 +938,11 @@
     return button;
   }
 
-
   function songRows() {
     return Array.from(
       document.querySelectorAll("#song-list .song")
     );
   }
-
 
   function playSongFromRow(row) {
     if (!row) return;
@@ -965,7 +953,6 @@
       playButton.click();
     }
   }
-
 
   /* =========================================================
      SEARCH BAR CREATION & LOGIC
@@ -1019,17 +1006,27 @@
     input.type = "text";
     input.id = "archive-search";
     input.name = "archive-search";
-
     input.placeholder =
       "Search songs, keywords, or animals...";
 
-    /*
-      Prevent the phone/browser from treating
-      the search box like a form/autofill field.
-    */
     input.setAttribute(
       "autocomplete",
-      "new-password"
+      "nope"
+    );
+
+    input.setAttribute(
+      "inputmode",
+      "search"
+    );
+
+    input.setAttribute(
+      "data-lpignore",
+      "true"
+    );
+
+    input.setAttribute(
+      "data-form-type",
+      "other"
     );
 
     input.setAttribute(
@@ -1212,7 +1209,6 @@
     );
   }
 
-
   /* =========================================================
      SONG NUMBERS
      ========================================================= */
@@ -1253,7 +1249,6 @@
 
     oldNumber.replaceWith(numberLink);
   }
-
 
   /* =========================================================
      SONG TITLES + KEYWORDS
@@ -1360,7 +1355,6 @@
     restoreRoadworkRows();
   }
 
-
   /* =========================================================
      ANIMAL ICONS ON SONG ROWS
      ========================================================= */
@@ -1422,7 +1416,6 @@
     restoreRoadworkRows();
   }
 
-
   /* =========================================================
      MUSIC READING CARDS
      ========================================================= */
@@ -1452,7 +1445,6 @@
 
     return songNumber;
   }
-
 
   function playCard(card) {
     if (!card) return;
@@ -1485,7 +1477,6 @@
       window.play(songIndex);
     }
   }
-
 
   function makeCardClickable(card) {
     if (!card) return;
@@ -1538,7 +1529,6 @@
     card.dataset.animalCardReady =
       "true";
   }
-
 
   function addAnimalToCard(card) {
     if (!card) return;
@@ -1654,7 +1644,6 @@
     makeCardClickable(card);
   }
 
-
   let updatingCards = false;
 
   function addCardIcons() {
@@ -1674,310 +1663,4 @@
         }
       );
     } finally {
-      updatingCards = false;
-    }
-  }
-
-
-  /* =========================================================
-     CARDS BUTTON OPEN / CLOSE TOGGLE
-     ========================================================= */
-
-  let cardsToggleOpen = false;
-
-  function setupCardsToggle() {
-    const button =
-      document.getElementById(
-        "draw-cards"
-      );
-
-    const cards =
-      document.getElementById(
-        "cards"
-      );
-
-    const reading =
-      document.getElementById(
-        "reading"
-      );
-
-    if (!button || !cards || !reading) {
-      return;
-    }
-
-    /*
-      If cards already exist when the page loads,
-      consider them open. Otherwise the first press
-      of CARDS will open them.
-    */
-    cardsToggleOpen =
-      !!cards.querySelector(".card");
-
-    button.setAttribute(
-      "aria-expanded",
-      String(cardsToggleOpen)
-    );
-
-    button.addEventListener(
-      "click",
-      () => {
-        /*
-          SECOND PRESS:
-          Close the entire Music Reading section.
-        */
-        if (cardsToggleOpen) {
-          cardsToggleOpen = false;
-
-          reading.hidden = true;
-
-          cards.style.display =
-            "none";
-
-          button.setAttribute(
-            "aria-expanded",
-            "false"
-          );
-
-          return;
-        }
-
-        /*
-          FIRST / THIRD / NEXT OPEN PRESS:
-          Show the Music Reading section,
-          then let the existing CARDS code
-          generate the reading.
-        */
-        cardsToggleOpen = true;
-
-        reading.hidden = false;
-
-        button.setAttribute(
-          "aria-expanded",
-          "true"
-        );
-
-        requestAnimationFrame(
-          () => {
-            if (!cardsToggleOpen) {
-              return;
-            }
-
-            cards.style.display =
-              "grid";
-
-            addCardIcons();
-            scheduleReadingScroll();
-          }
-        );
-      }
-    );
-  }
-
-
-  /* =========================================================
-     MUSIC READING POSITIONING
-     ========================================================= */
-
-  let scrollScheduled = false;
-
-  function positionReading() {
-    const reading =
-      document.getElementById(
-        "reading"
-      );
-
-    if (!reading) return;
-
-    const cards =
-      document.getElementById(
-        "cards"
-      );
-
-    if (
-      cards &&
-      !cardsToggleOpen
-    ) {
-      return;
-    }
-
-    const readingRect =
-      reading.getBoundingClientRect();
-
-    const readingDocumentTop =
-      window.scrollY +
-      readingRect.top;
-
-    const readingHeight =
-      readingRect.height;
-
-    const viewportHeight =
-      window.innerHeight;
-
-    const dock =
-      document.querySelector(
-        ".player-dock"
-      );
-
-    const dockHeight =
-      dock
-        ? dock.getBoundingClientRect()
-            .height
-        : 0;
-
-    const usableHeight =
-      viewportHeight -
-      dockHeight;
-
-    const targetY =
-      readingDocumentTop -
-      dockHeight -
-      (usableHeight -
-        readingHeight) /
-        2;
-
-    window.scrollTo({
-      top: Math.max(
-        0,
-        targetY
-      ),
-      behavior: "smooth"
-    });
-  }
-
-
-  function scheduleReadingScroll() {
-    if (scrollScheduled) {
-      return;
-    }
-
-    scrollScheduled = true;
-
-    requestAnimationFrame(
-      () => {
-        scrollScheduled = false;
-
-        requestAnimationFrame(
-          () => {
-            addCardIcons();
-
-            if (cardsToggleOpen) {
-              positionReading();
-            }
-          }
-        );
-      }
-    );
-  }
-
-
-  /* =========================================================
-     WATCH FOR NEW MUSIC READING CARDS
-     ========================================================= */
-
-  function setupCardWatching() {
-    const cards =
-      document.getElementById(
-        "cards"
-      );
-
-    if (!cards) return;
-
-    const observer =
-      new MutationObserver(
-        mutations => {
-          let newCards = false;
-
-          for (
-            const mutation of mutations
-          ) {
-            if (
-              mutation.type ===
-                "childList" &&
-              mutation.addedNodes.length
-            ) {
-              newCards = true;
-              break;
-            }
-          }
-
-          if (!newCards) {
-            return;
-          }
-
-          if (!updatingCards) {
-            addCardIcons();
-
-            /*
-              Only reposition the page when
-              the CARDS section is actually open.
-            */
-            if (cardsToggleOpen) {
-              scheduleReadingScroll();
-            }
-          }
-        }
-      );
-
-    observer.observe(
-      cards,
-      {
-        childList: true,
-        subtree: true
-      }
-    );
-
-    addCardIcons();
-  }
-
-
-  /* =========================================================
-     INITIALIZATION
-     ========================================================= */
-
-  function init() {
-    addStyles();
-
-    setupSearch();
-
-    updateSongRows();
-
-    putIcons();
-
-    /*
-      Watch the song list so Whack-A-Track
-      roadwork survives any row rebuild.
-    */
-    setupRoadworkWatching();
-
-    /*
-      Set up the CARDS toggle before the
-      MutationObserver begins watching for cards.
-    */
-    setupCardsToggle();
-
-    setupCardWatching();
-
-    addCardIcons();
-
-    /*
-      Final roadwork pass after everything
-      else has initialized.
-    */
-    restoreRoadworkRows();
-  }
-
-
-  if (
-    document.readyState ===
-    "loading"
-  ) {
-    document.addEventListener(
-      "DOMContentLoaded",
-      init,
-      { once: true }
-    );
-  } else {
-    init();
-  }
-
-})();
+      updatingCards = false
