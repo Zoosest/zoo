@@ -1018,11 +1018,33 @@
 
     input.type = "text";
     input.id = "archive-search";
+    input.name = "archive-search";
+
     input.placeholder =
       "Search songs, keywords, or animals...";
+
+    /*
+      Prevent the phone/browser from treating
+      the search box like a form/autofill field.
+    */
     input.setAttribute(
       "autocomplete",
+      "new-password"
+    );
+
+    input.setAttribute(
+      "autocorrect",
       "off"
+    );
+
+    input.setAttribute(
+      "autocapitalize",
+      "none"
+    );
+
+    input.setAttribute(
+      "spellcheck",
+      "false"
     );
 
     const dropdown =
