@@ -150,6 +150,40 @@
       }
 
       /*
+       * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK
+       */
+      @keyframes duckFallAndWobble {
+        0% {
+          transform: translateY(0) rotate(0deg);
+          opacity: 1;
+        }
+        25% {
+          transform: translateY(8px) rotate(-14deg);
+        }
+        50% {
+          transform: translateY(18px) rotate(16deg);
+        }
+        75% {
+          transform: translateY(28px) rotate(-10deg);
+        }
+        100% {
+          transform: translateY(45px) rotate(22deg);
+          opacity: 0;
+        }
+      }
+
+      .wat-duck-hit {
+        position: absolute;
+        inset: 4px;
+        width: calc(100% - 8px);
+        height: calc(100% - 8px);
+        object-fit: contain;
+        pointer-events: none;
+        display: block;
+        animation: duckFallAndWobble 0.4s ease-in forwards;
+      }
+
+      /*
        * ROADWORK ROW
        */ 
 
@@ -708,9 +742,9 @@
             .value =
             trackHealth; 
 
-          /* Show the hit duck inside the button hole */
+          /* Show the hit duck with the dizzy wobbling fall animation */
           hole.innerHTML =
-            `<img src="assets/duck-hit.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />`; 
+            `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" />`; 
           hole.style.zIndex = "3";
 
           /* Create and float the rotating QUACK! pop on the board layer outside the hole */
@@ -730,10 +764,10 @@
 
           setTimeout(() => {
             if (hole.dataset.active === "hit") {
-              hole.innerHTML =
-                `<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem;">💥</span>`;
+              hole.innerHTML = "";
+              hole.style.zIndex = "1";
             }
-          }, 180);
+          }, 400);
 
           if (
             trackHealth <= 0
