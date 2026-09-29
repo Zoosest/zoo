@@ -3,10 +3,10 @@
   "use strict";
 
   const API_URL =
-    "https://api.github.com/repos/the-zeusest/waltrizney-/contents/assets/animal-icons?ref=main";
+    "https://api.github.com/repos/zoosest/zoo/contents/assets/animal-icons?ref=main";
 
   const RAW_PREFIX =
-    "https://raw.githubusercontent.com/the-zeusest/waltrizney-/main/assets/animal-icons/";
+    "https://raw.githubusercontent.com/zoosest/zoo/main/assets/animal-icons/";
 
   const FALLBACK_ICON = "🐾";
 
