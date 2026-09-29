@@ -594,7 +594,7 @@
     ); 
 
     const overlay = document.createElement("img");
-    overlay.src = "holes.png";
+    overlay.src = "assets/holes.png";
     overlay.alt = "";
     Object.assign(overlay.style, {
       position: "absolute",
