@@ -584,7 +584,11 @@
         gridTemplateColumns:
           "repeat(3, minmax(0, 1fr))",
         gap: "10px",
-        margin: "18px auto"
+        margin: "18px auto",
+        background: "#2a1b3d",
+        padding: "12px",
+        borderRadius: "10px",
+        border: "1px solid #d4af37"
       }
     ); 
 
@@ -608,7 +612,11 @@
           minHeight: "76px",
           padding: "8px",
           fontSize: "2rem",
-          cursor: "crosshair"
+          cursor: "crosshair",
+          backgroundColor: "#000000",
+          color: "#ffffff",
+          border: "1px solid #d4af37",
+          borderRadius: "8px"
         }
       ); 
 
@@ -659,18 +667,34 @@
       );
     } 
 
-    $("#wat-close", panel)
-      .addEventListener(
-        "click",
-        closeGame
-      ); 
+    const closeBtn = $("#wat-close", panel);
+    const refreshBtn = $("#wat-refresh", panel);
 
-    $("#wat-refresh", panel)
-      .addEventListener(
-        "click",
-        () =>
-          window.location.reload()
-      ); 
+    [closeBtn, refreshBtn].forEach(btn => {
+      if (btn) {
+        Object.assign(btn.style, {
+          backgroundColor: "#000000",
+          color: "#f5d76e",
+          border: "1px solid #d4af37",
+          borderRadius: "8px",
+          padding: "8px 16px",
+          cursor: "pointer",
+          fontWeight: "bold",
+          marginTop: "8px"
+        });
+      }
+    });
+
+    closeBtn.addEventListener(
+      "click",
+      closeGame
+    ); 
+
+    refreshBtn.addEventListener(
+      "click",
+      () =>
+        window.location.reload()
+    ); 
 
     (
       $(".player-dock") ||
