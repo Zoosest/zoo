@@ -61,14 +61,15 @@
       cursor:pointer;
     }
 
+    /* FINISHING TOUCH: slightly smaller logo, same header height */
     .logo-img {
       position:absolute;
       top:2px;
       right:0;
       left:auto;
       transform:none;
-      width:140px;
-      height:75px;
+      width:125px;
+      height:68px;
       object-fit:contain;
       object-position:right top;
     }
@@ -248,10 +249,24 @@
       font-size:.78rem;
     }
 
+    /* FINISHING TOUCH:
+       Keep curse.png exactly where it is,
+       but visually move the gold line upward
+       toward the bottom of the last song row. */
     footer {
+      position:relative;
       margin-top:10px;
       padding:3px 0 5px;
       text-align:center;
+      border-top:0;
+    }
+
+    footer::before {
+      content:"";
+      position:absolute;
+      left:0;
+      right:0;
+      top:-50px;
       border-top:1px solid var(--gold);
     }
 
@@ -357,13 +372,14 @@
         left:75px;
       }
 
+      /* Slightly smaller mobile logo */
       .logo-img {
         top:2px;
         right:0;
         left:auto;
         transform:none;
-        width:120px;
-        height:68px;
+        width:108px;
+        height:62px;
         object-position:right top;
       }
 
@@ -456,9 +472,6 @@
     </div>
 
   </section>
-
-  <!-- BUTTON ORDER INTENTIONALLY CHANGED:
-       Previous → CARDS → Whack-A-Track → Random → Next -->
 
   <nav class="controls" aria-label="Music controls">
 
@@ -874,7 +887,7 @@
     const ids = songs
       .map(url =>
         url.match(
-          /(?:youtu\.be\/|shorts\/|watch\?v=)([^?&/]+)/
+          /(?:youtu\.be\/|shorts\/|watch\?v=)([^?&]+)/
         )?.[1]
       )
       .filter(Boolean);
@@ -891,16 +904,6 @@
 
     let player = null;
     let currentIndex = -1;
-
-    /*
-       INTRO TRANSITION PROTECTION
-
-       When NEXT is manually pressed during the intro,
-       the YouTube player can send a stale ENDED event
-       from the intro while Song #1 is being loaded.
-
-       This flag belongs ONLY to that one transition.
-    */
 
     let introTransitionPending = false;
 
@@ -1046,10 +1049,6 @@
         return;
       }
 
-      /*
-         INTRO → SONG #1
-      */
-
       if (currentIndex === -1) {
 
         play(0);
@@ -1129,11 +1128,6 @@
             },
 
             onStateChange: e => {
-
-              /*
-                 When Song #1 actually begins playing,
-                 the special intro transition is finished.
-              */
 
               if (
                 e.data ===
