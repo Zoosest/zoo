@@ -150,6 +150,38 @@
       }
 
       /*
+       * CARTOON SQUASH & STRETCH POP-UP ANIMATION FOR DUCK
+       */
+      @keyframes duckSquashPop {
+        0% {
+          transform: scale(0.3, 1.6) translateY(36px);
+          opacity: 0;
+        }
+        35% {
+          transform: scale(1.22, 0.78) translateY(-8px);
+          opacity: 1;
+        }
+        65% {
+          transform: scale(0.94, 1.06) translateY(3px);
+        }
+        100% {
+          transform: scale(1, 1) translateY(0);
+          opacity: 1;
+        }
+      }
+
+      .wat-duck {
+        position: absolute;
+        inset: 4px;
+        width: calc(100% - 8px);
+        height: calc(100% - 8px);
+        object-fit: contain;
+        pointer-events: none;
+        display: block;
+        animation: duckSquashPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
+      /*
        * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK (SUPPORTS RANDOM HORIZONTAL FLIP)
        */
       @keyframes duckFallAndWobble {
@@ -742,7 +774,6 @@
             .value =
             trackHealth; 
 
-          /* Randomize horizontal flip (-1 for left tilt/flipped, 1 for normal right tilt) */
           const duckFlip = Math.random() < 0.5 ? -1 : 1;
 
           /* Show the hit duck with randomized horizontal flip and dizzy wobbling fall */
@@ -900,8 +931,9 @@
     hole.dataset.active =
       "true"; 
 
+    /* Duck with squash-and-stretch cartoon spring-up animation */
     hole.innerHTML =
-      `<img src="assets/duck.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />`; 
+      `<img src="assets/duck.png" alt="" class="wat-duck" />`; 
     hole.style.zIndex = "3";
 
     clearTimeout(
