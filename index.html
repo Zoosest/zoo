@@ -250,13 +250,12 @@
     }
 
     /* FINISHING TOUCH:
-       Keep curse.png exactly where it is,
-       but visually move the gold line upward
-       toward the bottom of the last song row. */
+       Tight footer spacing while keeping curse.png
+       the same size. */
     footer {
       position:relative;
-      margin-top:10px;
-      padding:3px 0 5px;
+      margin-top:4px;
+      padding:2px 0 4px;
       text-align:center;
       border-top:0;
     }
@@ -266,7 +265,7 @@
       position:absolute;
       left:0;
       right:0;
-      top:-50px;
+      top:-12px;
       border-top:1px solid var(--gold);
     }
 
@@ -275,7 +274,7 @@
       width:200px;
       height:200px;
       max-width:85%;
-      margin:2px auto 0;
+      margin:0 auto;
       object-fit:contain;
     }
 
@@ -418,10 +417,20 @@
         font-size:.82rem;
       }
 
+      footer {
+        margin-top:3px;
+        padding:2px 0 3px;
+      }
+
+      footer::before {
+        top:-10px;
+      }
+
       footer img {
         width:180px;
         height:180px;
         max-width:85%;
+        margin:0 auto;
       }
 
       #context-overlay {
@@ -620,7 +629,6 @@
         </p>
 
         <p>
-
           The songs are arranged in reverse chronological order — the newest songs I composed are first and the earliest songs last
         </p>
 
