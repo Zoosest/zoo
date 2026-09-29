@@ -122,6 +122,36 @@
       }
 
       /*
+       * WATER SPLASH / RIPPLE EFFECT
+       */
+      @keyframes watSplashRing {
+        0% {
+          transform: scale(0.2);
+          opacity: 0.9;
+          border-width: 3px;
+        }
+        100% {
+          transform: scale(1.65);
+          opacity: 0;
+          border-width: 1px;
+        }
+      }
+
+      .wat-ripple {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 48px;
+        height: 48px;
+        margin: -24px 0 0 -24px;
+        border: 2px solid rgba(255, 255, 255, 0.75);
+        border-radius: 50%;
+        pointer-events: none;
+        z-index: 2;
+        animation: watSplashRing 0.35s ease-out forwards;
+      }
+
+      /*
        * COMIC BOOK "QUACK!" FLOATING POP ANIMATION (DYNAMICALLY ROTATED VIA JS)
        */
       @keyframes quackPop {
@@ -802,6 +832,9 @@
             `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" style="--duck-flip: ${duckFlip};" />`; 
           hole.style.zIndex = "3";
 
+          /* Trigger splash on whack */
+          triggerSplash(hole);
+
           /* Create and float the randomized, offset rotating QUACK! pop */
           const quackPop = document.createElement("img");
           quackPop.src = "assets/quack.png";
@@ -913,6 +946,16 @@
   }
 
 
+  function triggerSplash(hole) {
+    const ripple = document.createElement("div");
+    ripple.className = "wat-ripple";
+    hole.appendChild(ripple);
+    setTimeout(() => {
+      ripple.remove();
+    }, 350);
+  }
+
+
   function hideMoles() {
     game.board
       .querySelectorAll(
@@ -952,10 +995,11 @@
     hole.dataset.active =
       "true"; 
 
-    /* Duck with squash-and-stretch cartoon spring-up animation */
+    /* Duck with squash-and-stretch cartoon spring-up animation & water splash ripple */
     hole.innerHTML =
       `<img src="assets/duck.png" alt="" class="wat-duck" />`; 
     hole.style.zIndex = "3";
+    triggerSplash(hole);
 
     clearTimeout(
       hideTimer
@@ -970,8 +1014,9 @@
           ) {
             const duckImg = hole.querySelector(".wat-duck");
             if (duckImg) {
-              /* Trigger smooth squash-and-stretch retreat dive back down */
+              /* Trigger smooth squash-and-stretch retreat dive back down & splash */
               duckImg.classList.add("wat-duck-hiding");
+              triggerSplash(hole);
               setTimeout(() => {
                 if (hole.dataset.active === "true") {
                   hole.innerHTML = "";
