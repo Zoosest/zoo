@@ -9,6 +9,9 @@
   const RAW_PREFIX =
     "https://raw.githubusercontent.com/zoosest/zoo/main/assets/animal-icons/";
 
+  const SEARCH_ICON =
+    "https://raw.githubusercontent.com/zoosest/zoo/main/assets/search.png";
+
   const FALLBACK_ICON = "🐾";
 
   /*
@@ -314,6 +317,13 @@
         pointer-events: none;
         z-index: 0 !important;
         box-sizing: border-box;
+      }
+
+      .search-magnifying-glass-column img {
+        display: block;
+        width: 20px;
+        height: 20px;
+        object-fit: contain;
       }
 
       #search-dropdown {
@@ -769,139 +779,222 @@
      ========================================================= */
 
   function setupSearch() {
-    const songListContainer = document.getElementById("song-list");
-    if (!songListContainer || document.getElementById("archive-search-container")) return;
+    const songListContainer =
+      document.getElementById("song-list");
 
-    const container = document.createElement("div");
-    container.id = "archive-search-container";
+    if (
+      !songListContainer ||
+      document.getElementById("archive-search-container")
+    ) {
+      return;
+    }
 
-    const wrapper = document.createElement("div");
-    wrapper.id = "archive-search-wrapper";
+    const container =
+      document.createElement("div");
 
-    // Custom search image placed in the outer left number column
-    const icon = document.createElement("span");
-    icon.className = "search-magnifying-glass-column";
+    container.id =
+      "archive-search-container";
 
-    const searchImg = document.createElement("img");
-    searchImg.src =
-      "https://raw.githubusercontent.com/zoosest/zoo/main/assets/search.png";
-    searchImg.alt = "Search";
-    searchImg.loading = "eager";
-    searchImg.decoding = "async";
-    searchImg.style.width = "20px";
-    searchImg.style.height = "20px";
-    searchImg.style.objectFit = "contain";
+    const wrapper =
+      document.createElement("div");
 
-    icon.appendChild(searchImg);
+    wrapper.id =
+      "archive-search-wrapper";
 
-    const input = document.createElement("input");
+    /* Custom search icon */
+    const icon =
+      document.createElement("span");
+
+    icon.className =
+      "search-magnifying-glass-column";
+
+    const iconImage =
+      document.createElement("img");
+
+    iconImage.src = SEARCH_ICON;
+    iconImage.alt = "";
+    iconImage.width = 20;
+    iconImage.height = 20;
+    iconImage.loading = "lazy";
+    iconImage.decoding = "async";
+
+    icon.appendChild(iconImage);
+
+    const input =
+      document.createElement("input");
+
     input.type = "text";
     input.id = "archive-search";
-    input.placeholder = "Search songs, keywords, or animals...";
-    input.setAttribute("autocomplete", "off");
+    input.placeholder =
+      "Search songs, keywords, or animals...";
+    input.setAttribute(
+      "autocomplete",
+      "off"
+    );
 
-    const dropdown = document.createElement("div");
-    dropdown.id = "search-dropdown";
+    const dropdown =
+      document.createElement("div");
+
+    dropdown.id =
+      "search-dropdown";
 
     wrapper.appendChild(icon);
     wrapper.appendChild(input);
+
     container.appendChild(wrapper);
     container.appendChild(dropdown);
 
-    songListContainer.parentNode.insertBefore(container, songListContainer);
+    songListContainer.parentNode.insertBefore(
+      container,
+      songListContainer
+    );
 
-    input.addEventListener("input", () => {
-      const query = input.value.toLowerCase().trim();
-      dropdown.innerHTML = "";
+    input.addEventListener(
+      "input",
+      () => {
+        const query =
+          input.value.toLowerCase().trim();
 
-      if (query.length === 0) {
-        dropdown.classList.remove("active");
-        return;
-      }
+        dropdown.innerHTML = "";
 
-      const matches = [];
-
-      SONG_INFO.forEach((info, index) => {
-        const title = info[0].toLowerCase();
-        const keyword = info[1].toLowerCase();
-        const animal =
-          iconLabel(
-            iconFilename(info[2])
-          ).toLowerCase();
-
-        if (
-          title.includes(query) ||
-          keyword.includes(query) ||
-          animal.includes(query)
-        ) {
-          matches.push({
-            index,
-            title: info[0],
-            keyword: info[1],
-            animal: iconLabel(
-              iconFilename(info[2])
-            )
-          });
-        }
-      });
-
-      if (matches.length === 0) {
-        const noResult = document.createElement("div");
-        noResult.className = "search-result-item";
-        noResult.style.justifyContent = "center";
-        noResult.style.fontStyle = "italic";
-        noResult.textContent = "No matching songs found";
-        dropdown.appendChild(noResult);
-        dropdown.classList.add("active");
-        return;
-      }
-
-      matches.slice(0, 15).forEach(match => {
-        const item = document.createElement("a");
-        item.className = "search-result-item";
-        item.href = "#";
-
-        const textSpan = document.createElement("span");
-        textSpan.className = "search-result-text";
-        textSpan.textContent = `♫ ${match.title}`;
-
-        const metaSpan = document.createElement("span");
-        metaSpan.className = "search-result-meta";
-        metaSpan.textContent =
-          `${match.animal} • ${match.keyword}`;
-
-        item.appendChild(textSpan);
-        item.appendChild(metaSpan);
-
-        item.addEventListener("click", event => {
-          event.preventDefault();
+        if (query.length === 0) {
           dropdown.classList.remove("active");
-          input.value = "";
+          return;
+        }
 
-          const rows = songRows();
-          const targetRow = rows[match.index - 1];
+        const matches = [];
 
-          if (targetRow) {
-            targetRow.scrollIntoView({
-              behavior: "smooth",
-              block: "center"
-            });
+        SONG_INFO.forEach(
+          (info, index) => {
+            const title =
+              info[0].toLowerCase();
 
-            playSongFromRow(targetRow);
+            const keyword =
+              info[1].toLowerCase();
+
+            const animal =
+              iconLabel(
+                iconFilename(info[2])
+              ).toLowerCase();
+
+            if (
+              title.includes(query) ||
+              keyword.includes(query) ||
+              animal.includes(query)
+            ) {
+              matches.push({
+                index,
+                title: info[0],
+                keyword: info[1],
+                animal:
+                  iconLabel(
+                    iconFilename(info[2])
+                  )
+              });
+            }
           }
-        });
+        );
 
-        dropdown.appendChild(item);
-      });
+        if (matches.length === 0) {
+          const noResult =
+            document.createElement("div");
 
-      dropdown.classList.add("active");
-    });
+          noResult.className =
+            "search-result-item";
 
-    document.addEventListener("click", event => {
-      if (!container.contains(event.target)) {
-        dropdown.classList.remove("active");
+          noResult.style.justifyContent =
+            "center";
+
+          noResult.style.fontStyle =
+            "italic";
+
+          noResult.textContent =
+            "No matching songs found";
+
+          dropdown.appendChild(noResult);
+          dropdown.classList.add("active");
+
+          return;
+        }
+
+        matches
+          .slice(0, 15)
+          .forEach(match => {
+            const item =
+              document.createElement("a");
+
+            item.className =
+              "search-result-item";
+
+            item.href = "#";
+
+            const textSpan =
+              document.createElement("span");
+
+            textSpan.className =
+              "search-result-text";
+
+            textSpan.textContent =
+              `♫ ${match.title}`;
+
+            const metaSpan =
+              document.createElement("span");
+
+            metaSpan.className =
+              "search-result-meta";
+
+            metaSpan.textContent =
+              `${match.animal} • ${match.keyword}`;
+
+            item.appendChild(textSpan);
+            item.appendChild(metaSpan);
+
+            item.addEventListener(
+              "click",
+              event => {
+                event.preventDefault();
+
+                dropdown.classList.remove(
+                  "active"
+                );
+
+                input.value = "";
+
+                const rows = songRows();
+
+                const targetRow =
+                  rows[match.index - 1];
+
+                if (targetRow) {
+                  targetRow.scrollIntoView({
+                    behavior: "smooth",
+                    block: "center"
+                  });
+
+                  playSongFromRow(
+                    targetRow
+                  );
+                }
+              }
+            );
+
+            dropdown.appendChild(item);
+          });
+
+        dropdown.classList.add("active");
       }
-    });
+    );
+
+    document.addEventListener(
+      "click",
+      event => {
+        if (!container.contains(event.target)) {
+          dropdown.classList.remove(
+            "active"
+          );
+        }
+      }
+    );
   }
 
 
@@ -922,8 +1015,11 @@
     const numberLink =
       document.createElement("a");
 
-    numberLink.className = "song-number";
+    numberLink.className =
+      "song-number";
+
     numberLink.href = "#";
+
     numberLink.textContent =
       oldNumber.textContent.trim();
 
@@ -951,31 +1047,42 @@
   function updateSongRows() {
     const rows = songRows();
 
-    rows.forEach((row, index) => {
-      const info = SONG_INFO[index + 1];
+    rows.forEach(
+      (row, index) => {
+        const info =
+          SONG_INFO[index + 1];
 
-      if (!info) return;
+        if (!info) return;
 
-      const titleElement =
-        row.querySelector(".song-title");
+        const titleElement =
+          row.querySelector(
+            ".song-title"
+          );
 
-      if (!titleElement) return;
+        if (!titleElement) return;
 
-      titleElement.innerHTML = "";
+        titleElement.innerHTML = "";
 
-      const titleText =
-        document.createTextNode(
-          `♫ ${info[0]}`
+        const titleText =
+          document.createTextNode(
+            `♫ ${info[0]}`
+          );
+
+        const keyword =
+          document.createElement("small");
+
+        keyword.textContent =
+          info[1];
+
+        titleElement.appendChild(
+          titleText
         );
 
-      const keyword =
-        document.createElement("small");
-
-      keyword.textContent = info[1];
-
-      titleElement.appendChild(titleText);
-      titleElement.appendChild(keyword);
-    });
+        titleElement.appendChild(
+          keyword
+        );
+      }
+    );
   }
 
 
@@ -986,35 +1093,46 @@
   function putIcons() {
     const rows = songRows();
 
-    rows.forEach((row, index) => {
-      if (row.querySelector(".animal-button")) {
-        return;
-      }
-
-      const info = SONG_INFO[index + 1];
-
-      if (!info) return;
-
-      const filename = info[2];
-
-      if (!filename) return;
-
-      const icon =
-        makeImage(filename);
-
-      row.appendChild(icon);
-
-      icon.addEventListener(
-        "click",
-        event => {
-          event.preventDefault();
-          event.stopPropagation();
-          playSongFromRow(row);
+    rows.forEach(
+      (row, index) => {
+        if (
+          row.querySelector(
+            ".animal-button"
+          )
+        ) {
+          return;
         }
-      );
 
-      makeSongNumber(row, index);
-    });
+        const info =
+          SONG_INFO[index + 1];
+
+        if (!info) return;
+
+        const filename =
+          info[2];
+
+        if (!filename) return;
+
+        const icon =
+          makeImage(filename);
+
+        row.appendChild(icon);
+
+        icon.addEventListener(
+          "click",
+          event => {
+            event.preventDefault();
+            event.stopPropagation();
+            playSongFromRow(row);
+          }
+        );
+
+        makeSongNumber(
+          row,
+          index
+        );
+      }
+    );
   }
 
 
@@ -1023,12 +1141,15 @@
      ========================================================= */
 
   function getCardSongIndex(card) {
-    const link = card.querySelector("a");
+    const link =
+      card.querySelector("a");
 
     if (!link) return -1;
 
     const match =
-      link.textContent.match(/(\d+)/);
+      link.textContent.match(
+        /(\d+)/
+      );
 
     if (!match) return -1;
 
@@ -1054,7 +1175,10 @@
 
     if (!link) return;
 
-    if (typeof link.onclick === "function") {
+    if (
+      typeof link.onclick ===
+      "function"
+    ) {
       link.onclick({
         preventDefault() {},
         stopPropagation() {}
@@ -1068,7 +1192,8 @@
 
     if (
       songIndex >= 0 &&
-      typeof window.play === "function"
+      typeof window.play ===
+        "function"
     ) {
       window.play(songIndex);
     }
@@ -1079,7 +1204,8 @@
     if (!card) return;
 
     if (
-      card.dataset.animalCardReady === "true"
+      card.dataset.animalCardReady ===
+      "true"
     ) {
       return;
     }
@@ -1161,24 +1287,31 @@
     }
 
     const symbol =
-      card.querySelector(".symbol");
+      card.querySelector(
+        ".symbol"
+      );
 
     const strong =
-      card.querySelector("strong");
+      card.querySelector(
+        "strong"
+      );
 
     const link =
       card.querySelector("a");
 
     if (symbol) {
-      symbol.style.display = "none";
+      symbol.style.display =
+        "none";
     }
 
     if (strong) {
-      strong.style.display = "none";
+      strong.style.display =
+        "none";
     }
 
     if (link) {
-      link.style.display = "none";
+      link.style.display =
+        "none";
     }
 
     const img =
@@ -1209,11 +1342,15 @@
       String(songIndex);
 
     img.onerror = () => {
-      img.replaceWith(fallback());
+      img.replaceWith(
+        fallback()
+      );
     };
 
     const name =
-      document.createElement("span");
+      document.createElement(
+        "span"
+      );
 
     name.className =
       "card-animal-name";
@@ -1245,12 +1382,99 @@
         );
 
       cardElements.forEach(
-        card => addAnimalToCard(card)
+        card => {
+          addAnimalToCard(card);
+        }
       );
-
     } finally {
       updatingCards = false;
     }
+  }
+
+
+  /* =========================================================
+     CARDS BUTTON OPEN / CLOSE TOGGLE
+     ========================================================= */
+
+  let cardsToggleOpen = false;
+
+  function setupCardsToggle() {
+    const button =
+      document.getElementById(
+        "draw-cards"
+      );
+
+    const cards =
+      document.getElementById(
+        "cards"
+      );
+
+    if (!button || !cards) {
+      return;
+    }
+
+    /*
+      If cards already exist when the page loads,
+      consider them open. Otherwise the first press
+      of CARDS will open them.
+    */
+    cardsToggleOpen =
+      !!cards.querySelector(".card");
+
+    button.setAttribute(
+      "aria-expanded",
+      String(cardsToggleOpen)
+    );
+
+    button.addEventListener(
+      "click",
+      () => {
+        /*
+          SECOND PRESS:
+          Close the cards.
+        */
+        if (cardsToggleOpen) {
+          cardsToggleOpen = false;
+
+          cards.style.display =
+            "none";
+
+          button.setAttribute(
+            "aria-expanded",
+            "false"
+          );
+
+          return;
+        }
+
+        /*
+          FIRST / THIRD / NEXT OPEN PRESS:
+          Let the existing CARDS code finish
+          generating the reading first, then
+          show the card grid.
+        */
+        cardsToggleOpen = true;
+
+        button.setAttribute(
+          "aria-expanded",
+          "true"
+        );
+
+        requestAnimationFrame(
+          () => {
+            if (!cardsToggleOpen) {
+              return;
+            }
+
+            cards.style.display =
+              "grid";
+
+            addCardIcons();
+            scheduleReadingScroll();
+          }
+        );
+      }
+    );
   }
 
 
@@ -1267,6 +1491,18 @@
       );
 
     if (!reading) return;
+
+    const cards =
+      document.getElementById(
+        "cards"
+      );
+
+    if (
+      cards &&
+      !cardsToggleOpen
+    ) {
+      return;
+    }
 
     const readingRect =
       reading.getBoundingClientRect();
@@ -1288,7 +1524,8 @@
 
     const dockHeight =
       dock
-        ? dock.getBoundingClientRect().height
+        ? dock.getBoundingClientRect()
+            .height
         : 0;
 
     const usableHeight =
@@ -1313,18 +1550,27 @@
 
 
   function scheduleReadingScroll() {
-    if (scrollScheduled) return;
+    if (scrollScheduled) {
+      return;
+    }
 
     scrollScheduled = true;
 
-    requestAnimationFrame(() => {
-      scrollScheduled = false;
+    requestAnimationFrame(
+      () => {
+        scrollScheduled = false;
 
-      requestAnimationFrame(() => {
-        addCardIcons();
-        positionReading();
-      });
-    });
+        requestAnimationFrame(
+          () => {
+            addCardIcons();
+
+            if (cardsToggleOpen) {
+              positionReading();
+            }
+          }
+        );
+      }
+    );
   }
 
 
@@ -1343,7 +1589,6 @@
     const observer =
       new MutationObserver(
         mutations => {
-
           let newCards = false;
 
           for (
@@ -1359,11 +1604,20 @@
             }
           }
 
-          if (!newCards) return;
+          if (!newCards) {
+            return;
+          }
 
           if (!updatingCards) {
             addCardIcons();
-            scheduleReadingScroll();
+
+            /*
+              Only reposition the page when
+              the CARDS section is actually open.
+            */
+            if (cardsToggleOpen) {
+              scheduleReadingScroll();
+            }
           }
         }
       );
@@ -1386,11 +1640,18 @@
 
   function init() {
     addStyles();
+
     setupSearch();
 
     updateSongRows();
 
     putIcons();
+
+    /*
+      Set up the CARDS toggle before the
+      MutationObserver begins watching for cards.
+    */
+    setupCardsToggle();
 
     setupCardWatching();
 
