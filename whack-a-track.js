@@ -39,6 +39,14 @@
     } catch (error) {}
   }
 
+  function playHissSound() {
+    try {
+      const sound = new Audio("assets/hiss.mp3");
+      sound.volume = 0.8;
+      sound.play().catch(() => {});
+    } catch (error) {}
+  }
+
   function vibrate(pattern) {
     if (
       typeof navigator !== "undefined" &&
@@ -792,6 +800,8 @@
               panel
             ).value =
               secondsLeft;
+
+            playHissSound();
 
             vibrate([25, 30, 25]);
 
