@@ -4,7 +4,7 @@
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 360;
+  const MOLE_VISIBLE_MS = 660;
   const MOLE_INTERVAL_MS = 1400; 
 
   const REMOVED_TRACKS_KEY =
@@ -106,9 +106,6 @@
           calc(var(--player-dock-height, 0px) + 8px);
       } 
 
-      /*
-       * SOLID LAKE COLOR & DENSER RIPPLES
-       */
       @keyframes lakeRipplePan {
         0% { background-position: 0px 0px; }
         100% { background-position: 80px 40px; }
@@ -121,9 +118,6 @@
         animation: lakeRipplePan 6s linear infinite !important;
       }
 
-      /*
-       * LOWER, LARGER, & BOLDER WATER SPLASH / RIPPLE EFFECT
-       */
       @keyframes watSplashRing {
         0% {
           transform: scale(0.2);
@@ -151,9 +145,6 @@
         animation: watSplashRing 0.32s ease-out forwards;
       }
 
-      /*
-       * COMIC BOOK "QUACK!" FLOATING POP ANIMATION (DYNAMICALLY ROTATED VIA JS)
-       */
       @keyframes quackPop {
         0% {
           transform: scale(0.3) var(--base-rot);
@@ -179,9 +170,6 @@
         animation: quackPop 0.4s ease-out forwards;
       }
 
-      /*
-       * CARTOON SQUASH & STRETCH POP-UP ANIMATION FOR DUCK
-       */
       @keyframes duckSquashPop {
         0% {
           transform: scale(0.3, 1.6) translateY(36px);
@@ -211,9 +199,6 @@
         animation: duckSquashPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
 
-      /*
-       * CARTOON SQUASH & STRETCH RETREAT ANIMATION (DIVING BACK DOWN)
-       */
       @keyframes duckRetreat {
         0% {
           transform: scale(1, 1) translateY(0);
@@ -233,9 +218,6 @@
         animation: duckRetreat 0.18s ease-in forwards !important;
       }
 
-      /*
-       * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK (SUPPORTS RANDOM HORIZONTAL FLIP)
-       */
       @keyframes duckFallAndWobble {
         0% {
           transform: scaleX(var(--duck-flip, 1)) translateY(0) rotate(0deg);
@@ -266,10 +248,6 @@
         display: block;
         animation: duckFallAndWobble 0.4s ease-in forwards;
       }
-
-      /*
-       * ROADWORK ROW
-       */ 
 
       #song-list .song.rizney-roadwork {
         opacity: .72;
@@ -814,10 +792,8 @@
           if (
             trackHealth <= 0
           ) {
-            /* Triumphant heavy finish vibration */
             vibrate([40, 30, 80]);
           } else {
-            /* Sharp, snappy arcade pop vibration: [short buzz, tiny pause, snap] */
             vibrate([15, 30, 45]);
           } 
 
@@ -829,15 +805,12 @@
 
           const duckFlip = Math.random() < 0.5 ? -1 : 1;
 
-          /* Show the hit duck with randomized horizontal flip and dizzy wobbling fall */
           hole.innerHTML =
             `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" style="--duck-flip: ${duckFlip};" />`; 
           hole.style.zIndex = "3";
 
-          /* Trigger splash on whack */
           triggerSplash(hole);
 
-          /* Create and float the randomized, offset rotating QUACK! pop */
           const quackPop = document.createElement("img");
           quackPop.src = "assets/quack.png";
           quackPop.alt = "QUACK!";
@@ -907,8 +880,13 @@
 
     refreshBtn.addEventListener(
       "click",
-      () =>
-        window.location.reload()
+      () => {
+        localStorage.removeItem(
+          REMOVED_TRACKS_KEY
+        );
+
+        window.location.reload();
+      }
     ); 
 
     (
@@ -997,7 +975,6 @@
     hole.dataset.active =
       "true"; 
 
-    /* Duck with squash-and-stretch cartoon spring-up animation & water splash ripple */
     hole.innerHTML =
       `<img src="assets/duck.png" alt="" class="wat-duck" />`; 
     hole.style.zIndex = "3";
@@ -1016,7 +993,6 @@
           ) {
             const duckImg = hole.querySelector(".wat-duck");
             if (duckImg) {
-              /* Trigger smooth squash-and-stretch retreat dive back down & splash */
               duckImg.classList.add("wat-duck-hiding");
               triggerSplash(hole);
               setTimeout(() => {
@@ -1114,22 +1090,26 @@
     const songNumber =
       getCurrentSongNumber(); 
 
-    /*
-     * SAVE THE TRACK PERMANENTLY.
-     */
     const savedId =
       saveWhackedTrack(
         songId
       ); 
 
-    /*
-     * CLOSE THE ROAD.
-     */
     const roadClosed =
       closeRoad(
         songNumber,
         songId
       ); 
+
+    /*
+     * SHOW THE REFRESH BUTTON
+     * once a track has been successfully whacked.
+     */
+    if (roadClosed) {
+      $("#wat-refresh",
+        game.panel
+      ).hidden = false;
+    }
 
     if (
       roadClosed &&
@@ -1195,9 +1175,14 @@
       gameTimer
     ); 
 
+    /*
+     * Keep Refresh playlist available if
+     * there are already saved whacked tracks.
+     */
     $("#wat-refresh",
       game.panel
-    ).hidden = true; 
+    ).hidden =
+      getWhackedTracks().length === 0; 
 
     game.panel.hidden =
       false; 
@@ -1222,10 +1207,6 @@
     const songId =
       getCurrentSongId(); 
 
-    /*
-     * Don't allow a road-closed track
-     * to be whacked again.
-     */
     if (
       isTrackRemembered(
         songId
@@ -1292,10 +1273,6 @@
   function init() {
     setupToolbar(); 
 
-    /*
-     * Restore all previously closed roads
-     * from localStorage.
-     */
     loadSavedRoadwork(); 
 
     const button =
