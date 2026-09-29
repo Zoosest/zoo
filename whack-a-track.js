@@ -150,24 +150,24 @@
       }
 
       /*
-       * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK
+       * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK (SUPPORTS RANDOM HORIZONTAL FLIP)
        */
       @keyframes duckFallAndWobble {
         0% {
-          transform: translateY(0) rotate(0deg);
+          transform: scaleX(var(--duck-flip, 1)) translateY(0) rotate(0deg);
           opacity: 1;
         }
         25% {
-          transform: translateY(8px) rotate(-14deg);
+          transform: scaleX(var(--duck-flip, 1)) translateY(8px) rotate(-14deg);
         }
         50% {
-          transform: translateY(18px) rotate(16deg);
+          transform: scaleX(var(--duck-flip, 1)) translateY(18px) rotate(16deg);
         }
         75% {
-          transform: translateY(28px) rotate(-10deg);
+          transform: scaleX(var(--duck-flip, 1)) translateY(28px) rotate(-10deg);
         }
         100% {
-          transform: translateY(45px) rotate(22deg);
+          transform: scaleX(var(--duck-flip, 1)) translateY(45px) rotate(22deg);
           opacity: 0;
         }
       }
@@ -742,9 +742,12 @@
             .value =
             trackHealth; 
 
-          /* Show the hit duck with the dizzy wobbling fall animation */
+          /* Randomize horizontal flip (-1 for left tilt/flipped, 1 for normal right tilt) */
+          const duckFlip = Math.random() < 0.5 ? -1 : 1;
+
+          /* Show the hit duck with randomized horizontal flip and dizzy wobbling fall */
           hole.innerHTML =
-            `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" />`; 
+            `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" style="--duck-flip: ${duckFlip};" />`; 
           hole.style.zIndex = "3";
 
           /* Create and float the randomized, offset rotating QUACK! pop */
@@ -753,9 +756,8 @@
           quackPop.alt = "QUACK!";
           quackPop.className = "wat-quack-pop";
 
-          // Randomize horizontal/vertical offset and rotation angles (left or right)
-          const offsetX = (Math.random() - 0.5) * 44; // Random offset left/right
-          const offsetY = -16 + (Math.random() - 0.5) * 16; // Floats slightly upward
+          const offsetX = (Math.random() - 0.5) * 44; 
+          const offsetY = -16 + (Math.random() - 0.5) * 16; 
           const baseRot = -15 + Math.random() * 10;
           const midRot = -5 + Math.random() * 20;
           const endRot = 5 + Math.random() * 20 * (Math.random() < 0.5 ? 1 : -1);
