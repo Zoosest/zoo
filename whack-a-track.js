@@ -1,23 +1,23 @@
 /* Whack-a-Track mini-game for the Rizney Music Archive. */
 (() => {
-  "use strict";
+  "use strict"; 
 
   const TRACK_HEALTH = 24;
   const GAME_DURATION = 80;
-  const MOLE_VISIBLE_MS = 360;
-  const MOLE_INTERVAL_MS = 1400;
+  const MOLE_VISIBLE_MS = 660;
+  const MOLE_INTERVAL_MS = 1400; 
 
   const REMOVED_TRACKS_KEY =
-    "rizneyWhackedTracks";
+    "rizneyWhackedTracks"; 
 
   const youtube = () =>
-    window.rizneyPlayer || window.player || null;
+    window.rizneyPlayer || window.player || null; 
 
   const $ = (selector, root = document) =>
-    root.querySelector(selector);
+    root.querySelector(selector); 
 
   const controls = () =>
-    $(".controls");
+    $(".controls"); 
 
   let game;
   let active = false;
@@ -30,7 +30,7 @@
 
   /* =========================================================
      AUDIO & SHARP PHONE VIBRATION HAPTICS
-     ========================================================= */
+     ========================================================= */ 
 
   function playQuackSound() {
     try {
@@ -43,7 +43,6 @@
       /* Audio optional */
     }
   }
-
 
   function vibrate(pattern) {
     if (
@@ -61,7 +60,7 @@
 
   /* =========================================================
      TOOLBAR
-     ========================================================= */
+     ========================================================= */ 
 
   function setToolbarHidden(hidden) {
     controls()?.classList.toggle(
@@ -72,7 +71,7 @@
 
 
   function positionToolbar() {
-    const dock = $(".player-dock");
+    const dock = $(".player-dock"); 
 
     if (dock) {
       document.documentElement.style.setProperty(
@@ -85,7 +84,7 @@
 
   function setupToolbar() {
     const style =
-      document.createElement("style");
+      document.createElement("style"); 
 
     style.textContent = `
       .controls {
@@ -93,19 +92,19 @@
         top: var(--player-dock-height, 0px);
         z-index: 90;
         transition: opacity .18s ease, visibility .18s ease;
-      }
+      } 
 
       .controls.toolbar-hidden {
         visibility: hidden;
         opacity: 0;
         pointer-events: none;
-      }
+      } 
 
       #reading,
       #whack-a-track-game {
         scroll-margin-top:
           calc(var(--player-dock-height, 0px) + 8px);
-      }
+      } 
 
       /*
        * SOLID LAKE COLOR & DENSER RIPPLES
@@ -153,7 +152,7 @@
       }
 
       /*
-       * COMIC BOOK "QUACK!" FLOATING POP ANIMATION
+       * COMIC BOOK "QUACK!" FLOATING POP ANIMATION (DYNAMICALLY ROTATED VIA JS)
        */
       @keyframes quackPop {
         0% {
@@ -213,7 +212,7 @@
       }
 
       /*
-       * CARTOON SQUASH & STRETCH RETREAT ANIMATION
+       * CARTOON SQUASH & STRETCH RETREAT ANIMATION (DIVING BACK DOWN)
        */
       @keyframes duckRetreat {
         0% {
@@ -235,7 +234,7 @@
       }
 
       /*
-       * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK
+       * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK (SUPPORTS RANDOM HORIZONTAL FLIP)
        */
       @keyframes duckFallAndWobble {
         0% {
@@ -270,11 +269,11 @@
 
       /*
        * ROADWORK ROW
-       */
+       */ 
 
       #song-list .song.rizney-roadwork {
         opacity: .72;
-      }
+      } 
 
       #song-list .song.rizney-roadwork::after {
         content: "🚧 WHACKED!";
@@ -289,19 +288,19 @@
         background: #120b18;
         border: 1px solid #d4af37;
         border-radius: 8px;
-      }
+      } 
 
       #song-list .song.rizney-roadwork .animal-button {
         cursor: not-allowed;
         opacity: .45;
         pointer-events: none;
-      }
+      } 
 
       #song-list .song.rizney-roadwork .song-number {
         cursor: not-allowed;
         opacity: .45;
         pointer-events: none;
-      }
+      } 
 
       @media (max-width: 640px) {
         #whack-a-track-game {
@@ -309,39 +308,39 @@
           margin-top: 4px;
           margin-bottom: 12px;
           padding: 8px 10px 10px;
-        }
+        } 
 
         #whack-a-track-game #wat-board {
           gap: 6px;
           margin: 10px auto;
-        }
+        } 
 
         #whack-a-track-game .wat-hole {
           height: 58px !important;
           min-height: 58px !important;
         }
       }
-    `;
+    `; 
 
-    document.head.appendChild(style);
+    document.head.appendChild(style); 
 
-    positionToolbar();
+    positionToolbar(); 
 
     window.addEventListener(
       "resize",
       positionToolbar,
       { passive: true }
-    );
+    ); 
 
     if (window.ResizeObserver) {
-      const dock = $(".player-dock");
+      const dock = $(".player-dock"); 
 
       if (dock) {
         new ResizeObserver(
           positionToolbar
         ).observe(dock);
       }
-    }
+    } 
 
     setToolbarHidden(false);
   }
@@ -349,10 +348,10 @@
 
   /* =========================================================
      YOUTUBE
-     ========================================================= */
+     ========================================================= */ 
 
   const playing = () => {
-    const player = youtube();
+    const player = youtube(); 
 
     return (
       player &&
@@ -367,10 +366,10 @@
 
   /* =========================================================
      CURRENT SONG
-     ========================================================= */
+     ========================================================= */ 
 
   function getCurrentSongId() {
-    const player = youtube();
+    const player = youtube(); 
 
     if (
       !player ||
@@ -378,22 +377,22 @@
         "function"
     ) {
       return null;
-    }
+    } 
 
     try {
       const data =
-        player.getVideoData();
+        player.getVideoData(); 
 
       if (
         !data ||
         !data.video_id
       ) {
         return null;
-      }
+      } 
 
       return String(
         data.video_id
-      );
+      ); 
 
     } catch (error) {
       return null;
@@ -403,20 +402,20 @@
 
   function getCurrentSongNumber() {
     const nowPlaying =
-      $("#now-playing");
+      $("#now-playing"); 
 
     if (!nowPlaying) {
       return null;
-    }
+    } 
 
     const match =
       nowPlaying.textContent.match(
         /Song\s+(\d+)/i
-      );
+      ); 
 
     if (!match) {
       return null;
-    }
+    } 
 
     return Number(match[1]);
   }
@@ -428,7 +427,7 @@
       !Number.isInteger(songNumber)
     ) {
       return null;
-    }
+    } 
 
     try {
       if (
@@ -441,7 +440,7 @@
       }
     } catch (error) {
       /* ids may not be available yet. */
-    }
+    } 
 
     return null;
   }
@@ -449,23 +448,23 @@
 
   /* =========================================================
      PERSISTENT ROADWORK
-     ========================================================= */
+     ========================================================= */ 
 
   function getWhackedTracks() {
     try {
       const raw =
         localStorage.getItem(
           REMOVED_TRACKS_KEY
-        );
+        ); 
 
       const parsed =
         JSON.parse(
           raw || "[]"
-        );
+        ); 
 
       return Array.isArray(parsed)
         ? parsed
-        : [];
+        : []; 
 
     } catch (error) {
       return [];
@@ -476,24 +475,24 @@
   function saveWhackedTrack(songId) {
     if (!songId) {
       return null;
-    }
+    } 
 
     try {
       const tracks =
-        getWhackedTracks();
+        getWhackedTracks(); 
 
       if (
         !tracks.includes(songId)
       ) {
-        tracks.push(songId);
+        tracks.push(songId); 
 
         localStorage.setItem(
           REMOVED_TRACKS_KEY,
           JSON.stringify(tracks)
         );
-      }
+      } 
 
-      return songId;
+      return songId; 
 
     } catch (error) {
       return null;
@@ -504,7 +503,7 @@
   function isTrackRemembered(songId) {
     if (!songId) {
       return false;
-    }
+    } 
 
     return getWhackedTracks()
       .includes(songId);
@@ -514,7 +513,7 @@
   function findSongRow(songNumber) {
     if (!songNumber) {
       return null;
-    }
+    } 
 
     return document.querySelector(
       `#song-list .song[data-song-index="${songNumber}"]`
@@ -525,26 +524,26 @@
   function applyRoadworkToRow(row) {
     if (!row) {
       return false;
-    }
+    } 
 
     row.classList.add(
       "rizney-roadwork"
-    );
+    ); 
 
     row.dataset.rizneyRoadwork =
-      "true";
+      "true"; 
 
     const playButton =
-      row.querySelector(".play");
+      row.querySelector(".play"); 
 
     if (playButton) {
-      playButton.disabled = true;
+      playButton.disabled = true; 
 
       playButton.setAttribute(
         "aria-label",
         "Song closed for roadwork"
       );
-    }
+    } 
 
     return true;
   }
@@ -559,18 +558,18 @@
       !songId
     ) {
       return false;
-    }
+    } 
 
     const row =
-      findSongRow(songNumber);
+      findSongRow(songNumber); 
 
     if (!row) {
       return false;
-    }
+    } 
 
     if (songId) {
       saveWhackedTrack(songId);
-    }
+    } 
 
     return applyRoadworkToRow(
       row
@@ -582,11 +581,11 @@
     const saved =
       new Set(
         getWhackedTracks()
-      );
+      ); 
 
     if (!saved.size) {
       return;
-    }
+    } 
 
     document
       .querySelectorAll(
@@ -596,7 +595,7 @@
         const songNumber =
           Number(
             row.dataset.songIndex
-          );
+          ); 
 
         if (
           !Number.isInteger(
@@ -605,12 +604,12 @@
           songNumber < 1
         ) {
           return;
-        }
+        } 
 
         const songId =
           getSongIdForNumber(
             songNumber
-          );
+          ); 
 
         if (
           songId &&
@@ -625,93 +624,49 @@
 
 
   /* =========================================================
-     REFRESH PLAYLIST BUTTON
-     ========================================================= */
-
-  function updateRefreshButton() {
-    if (!game) {
-      return;
-    }
-
-    const refreshBtn =
-      $("#wat-refresh", game.panel);
-
-    if (!refreshBtn) {
-      return;
-    }
-
-    refreshBtn.hidden =
-      getWhackedTracks().length === 0;
-  }
-
-
-  function resetWhackedTracks() {
-    /*
-     * IMPORTANT:
-     *
-     * Only remove the Whack-a-Track
-     * saved data.
-     *
-     * Do NOT use localStorage.clear(),
-     * because that could erase unrelated
-     * site data.
-     */
-    try {
-      localStorage.removeItem(
-        REMOVED_TRACKS_KEY
-      );
-    } catch (error) {
-      /* If storage fails, do nothing. */
-    }
-
-    window.location.reload();
-  }
-
-
-  /* =========================================================
      GAME
-     ========================================================= */
+     ========================================================= */ 
 
   function createGame() {
-    if (game) return game;
+    if (game) return game; 
 
     const panel =
       document.createElement(
         "section"
-      );
+      ); 
 
     panel.id =
-      "whack-a-track-game";
+      "whack-a-track-game"; 
 
     panel.setAttribute(
       "aria-label",
       "Whack-a-Track"
-    );
+    ); 
 
     panel.innerHTML = `
-      <h2>Whack-a-Track</h2>
+      <h2>Whack-a-Track</h2> 
 
       <p id="wat-status"
-         aria-live="polite"></p>
+         aria-live="polite"></p> 
 
       <p>
         <span id="wat-time">
           ${GAME_DURATION}
         </span>s
-      </p>
+      </p> 
 
       <progress
         id="wat-health"
         max="${TRACK_HEALTH}"
         value="${TRACK_HEALTH}"
         aria-label="Track health"
-      ></progress>
+      ></progress> 
 
       <div
         id="wat-board"
         role="group"
         aria-label="Whack-a-Track board"
-      ></div>
+      ></div> 
 
       <button
         id="wat-refresh"
@@ -719,7 +674,7 @@
         hidden
       >
         Refresh playlist
-      </button>
+      </button> 
 
       <button
         id="wat-close"
@@ -727,7 +682,7 @@
       >
         Close game
       </button>
-    `;
+    `; 
 
     Object.assign(
       panel.style,
@@ -755,14 +710,14 @@
         scrollMarginTop:
           "calc(var(--player-dock-height, 0px) + 8px)"
       }
-    );
+    ); 
 
     Object.assign(
       $("h2", panel).style,
       {
         margin: "0 0 6px"
       }
-    );
+    ); 
 
     Object.assign(
       $("#wat-status", panel).style,
@@ -770,7 +725,7 @@
         margin: "0 0 4px",
         minHeight: "1.4em"
       }
-    );
+    ); 
 
     Object.assign(
       $("#wat-time", panel)
@@ -778,7 +733,7 @@
       {
         margin: "0 0 8px"
       }
-    );
+    ); 
 
     Object.assign(
       $("#wat-health", panel).style,
@@ -789,10 +744,10 @@
         margin: "8px 0 14px",
         accentColor: "#d4af37"
       }
-    );
+    ); 
 
     const board =
-      $("#wat-board", panel);
+      $("#wat-board", panel); 
 
     Object.assign(
       board.style,
@@ -808,13 +763,13 @@
         position: "relative",
         overflow: "visible"
       }
-    );
+    ); 
 
     for (let i = 0; i < 6; i++) {
       const hole =
         document.createElement(
           "button"
-        );
+        ); 
 
       hole.type = "button";
       hole.className =
@@ -822,7 +777,7 @@
       hole.innerHTML =
         "";
       hole.dataset.active =
-        "false";
+        "false"; 
 
       Object.assign(
         hole.style,
@@ -838,7 +793,7 @@
           zIndex: "1",
           overflow: "hidden"
         }
-      );
+      ); 
 
       hole.addEventListener(
         "click",
@@ -849,112 +804,66 @@
               "true"
           ) {
             return;
-          }
+          } 
 
           hole.dataset.active =
-            "hit";
+            "hit"; 
 
-          trackHealth--;
+          trackHealth--; 
 
           if (
             trackHealth <= 0
           ) {
+            /* Triumphant heavy finish vibration */
             vibrate([40, 30, 80]);
           } else {
+            /* Sharp, snappy arcade pop vibration: [short buzz, tiny pause, snap] */
             vibrate([15, 30, 45]);
-          }
+          } 
 
           playQuackSound();
 
           $("#wat-health", panel)
             .value =
-            trackHealth;
+            trackHealth; 
 
-          const duckFlip =
-            Math.random() < 0.5
-              ? -1
-              : 1;
+          const duckFlip = Math.random() < 0.5 ? -1 : 1;
 
+          /* Show the hit duck with randomized horizontal flip and dizzy wobbling fall */
           hole.innerHTML =
-            `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" style="--duck-flip: ${duckFlip};" />`;
-
+            `<img src="assets/duck-hit.png" alt="" class="wat-duck-hit" style="--duck-flip: ${duckFlip};" />`; 
           hole.style.zIndex = "3";
 
+          /* Trigger splash on whack */
           triggerSplash(hole);
 
-          const quackPop =
-            document.createElement(
-              "img"
-            );
+          /* Create and float the randomized, offset rotating QUACK! pop */
+          const quackPop = document.createElement("img");
+          quackPop.src = "assets/quack.png";
+          quackPop.alt = "QUACK!";
+          quackPop.className = "wat-quack-pop";
 
-          quackPop.src =
-            "assets/quack.png";
+          const offsetX = (Math.random() - 0.5) * 44; 
+          const offsetY = -16 + (Math.random() - 0.5) * 16; 
+          const baseRot = -15 + Math.random() * 10;
+          const midRot = -5 + Math.random() * 20;
+          const endRot = 5 + Math.random() * 20 * (Math.random() < 0.5 ? 1 : -1);
 
-          quackPop.alt =
-            "QUACK!";
+          quackPop.style.setProperty("--base-rot", `rotate(${baseRot}deg)`);
+          quackPop.style.setProperty("--mid-rot", `rotate(${midRot}deg)`);
+          quackPop.style.setProperty("--end-rot", `rotate(${endRot}deg)`);
 
-          quackPop.className =
-            "wat-quack-pop";
+          quackPop.style.left = `${hole.offsetLeft + (hole.offsetWidth / 2) - 36 + offsetX}px`;
+          quackPop.style.top = `${hole.offsetTop + (hole.offsetHeight / 2) - 36 + offsetY}px`;
 
-          const offsetX =
-            (Math.random() - 0.5) *
-            44;
-
-          const offsetY =
-            -16 +
-            (Math.random() - 0.5) *
-            16;
-
-          const baseRot =
-            -15 +
-            Math.random() * 10;
-
-          const midRot =
-            -5 +
-            Math.random() * 20;
-
-          const endRot =
-            5 +
-            Math.random() *
-              20 *
-              (Math.random() < 0.5
-                ? 1
-                : -1);
-
-          quackPop.style.setProperty(
-            "--base-rot",
-            `rotate(${baseRot}deg)`
-          );
-
-          quackPop.style.setProperty(
-            "--mid-rot",
-            `rotate(${midRot}deg)`
-          );
-
-          quackPop.style.setProperty(
-            "--end-rot",
-            `rotate(${endRot}deg)`
-          );
-
-          quackPop.style.left =
-            `${hole.offsetLeft + (hole.offsetWidth / 2) - 36 + offsetX}px`;
-
-          quackPop.style.top =
-            `${hole.offsetTop + (hole.offsetHeight / 2) - 36 + offsetY}px`;
-
-          board.appendChild(
-            quackPop
-          );
+          board.appendChild(quackPop);
 
           setTimeout(() => {
             quackPop.remove();
           }, 400);
 
           setTimeout(() => {
-            if (
-              hole.dataset.active ===
-              "hit"
-            ) {
+            if (hole.dataset.active === "hit") {
               hole.innerHTML = "";
               hole.style.zIndex = "1";
             }
@@ -966,60 +875,41 @@
             finish(true);
           }
         }
-      );
+      ); 
 
       board.appendChild(
         hole
       );
-    }
+    } 
 
-    const closeBtn =
-      $("#wat-close", panel);
+    const closeBtn = $("#wat-close", panel);
+    const refreshBtn = $("#wat-refresh", panel);
 
-    const refreshBtn =
-      $("#wat-refresh", panel);
-
-    [closeBtn, refreshBtn].forEach(
-      btn => {
-        if (btn) {
-          Object.assign(
-            btn.style,
-            {
-              backgroundColor:
-                "#000000",
-              color:
-                "#f5d76e",
-              border:
-                "1px solid #d4af37",
-              borderRadius:
-                "8px",
-              padding:
-                "8px 16px",
-              cursor:
-                "pointer",
-              fontWeight:
-                "bold",
-              marginTop:
-                "8px"
-            }
-          );
-        }
+    [closeBtn, refreshBtn].forEach(btn => {
+      if (btn) {
+        Object.assign(btn.style, {
+          backgroundColor: "#000000",
+          color: "#f5d76e",
+          border: "1px solid #d4af37",
+          borderRadius: "8px",
+          padding: "8px 16px",
+          cursor: "pointer",
+          fontWeight: "bold",
+          marginTop: "8px"
+        });
       }
-    );
+    });
 
     closeBtn.addEventListener(
       "click",
       closeGame
-    );
+    ); 
 
-    /*
-     * RESET ONLY THE WHACKED-TRACK
-     * LIST, THEN RELOAD THE PAGE.
-     */
     refreshBtn.addEventListener(
       "click",
-      resetWhackedTracks
-    );
+      () =>
+        window.location.reload()
+    ); 
 
     (
       $(".player-dock") ||
@@ -1028,9 +918,9 @@
     ).insertAdjacentElement(
       "afterend",
       panel
-    );
+    ); 
 
-    panel.hidden = true;
+    panel.hidden = true; 
 
     new MutationObserver(
       () =>
@@ -1045,39 +935,23 @@
           "hidden"
         ]
       }
-    );
+    ); 
 
     game = {
       panel,
       board,
       status:
         $("#wat-status", panel)
-    };
-
-    /*
-     * If there are already whacked tracks
-     * saved from an earlier visit, show
-     * the refresh button immediately.
-     */
-    updateRefreshButton();
+    }; 
 
     return game;
   }
 
 
   function triggerSplash(hole) {
-    const ripple =
-      document.createElement(
-        "div"
-      );
-
-    ripple.className =
-      "wat-ripple";
-
-    hole.appendChild(
-      ripple
-    );
-
+    const ripple = document.createElement("div");
+    ripple.className = "wat-ripple";
+    hole.appendChild(ripple);
     setTimeout(() => {
       ripple.remove();
     }, 320);
@@ -1091,26 +965,24 @@
       )
       .forEach(hole => {
         hole.dataset.active =
-          "false";
+          "false"; 
 
         hole.innerHTML =
           "";
-
-        hole.style.zIndex =
-          "1";
+        hole.style.zIndex = "1";
       });
   }
 
 
   function spawnMole() {
-    if (!active) return;
+    if (!active) return; 
 
     const holes = [
       ...game.board
         .querySelectorAll(
           ".wat-hole"
         )
-    ];
+    ]; 
 
     const hole =
       holes[
@@ -1118,26 +990,22 @@
           Math.random() *
             holes.length
         )
-      ];
+      ]; 
 
-    hideMoles();
+    hideMoles(); 
 
     hole.dataset.active =
-      "true";
+      "true"; 
 
+    /* Duck with squash-and-stretch cartoon spring-up animation & water splash ripple */
     hole.innerHTML =
-      `<img src="assets/duck.png" alt="" class="wat-duck" />`;
-
-    hole.style.zIndex =
-      "3";
-
-    triggerSplash(
-      hole
-    );
+      `<img src="assets/duck.png" alt="" class="wat-duck" />`; 
+    hole.style.zIndex = "3";
+    triggerSplash(hole);
 
     clearTimeout(
       hideTimer
-    );
+    ); 
 
     hideTimer =
       setTimeout(
@@ -1146,57 +1014,29 @@
             hole.dataset.active ===
             "true"
           ) {
-            const duckImg =
-              hole.querySelector(
-                ".wat-duck"
-              );
-
+            const duckImg = hole.querySelector(".wat-duck");
             if (duckImg) {
-              duckImg.classList.add(
-                "wat-duck-hiding"
-              );
-
-              triggerSplash(
-                hole
-              );
-
-              setTimeout(
-                () => {
-                  if (
-                    hole.dataset.active ===
-                    "true"
-                  ) {
-                    hole.innerHTML =
-                      "";
-
-                    hole.style.zIndex =
-                      "1";
-
-                    hole.dataset.active =
-                      "false";
-                  }
-                },
-                180
-              );
-
+              /* Trigger smooth squash-and-stretch retreat dive back down & splash */
+              duckImg.classList.add("wat-duck-hiding");
+              triggerSplash(hole);
+              setTimeout(() => {
+                if (hole.dataset.active === "true") {
+                  hole.innerHTML = "";
+                  hole.style.zIndex = "1";
+                  hole.dataset.active = "false";
+                }
+              }, 180);
             } else {
-              hole.innerHTML =
-                "";
-
-              hole.style.zIndex =
-                "1";
-
-              hole.dataset.active =
-                "false";
+              hole.innerHTML = "";
+              hole.style.zIndex = "1";
+              hole.dataset.active = "false";
             }
-
           } else {
-            hole.dataset.active =
-              "false";
+            hole.dataset.active = "false";
           }
         },
         MOLE_VISIBLE_MS
-      );
+      ); 
 
     moleTimer =
       setTimeout(
@@ -1209,27 +1049,27 @@
   function startClock() {
     clearInterval(
       gameTimer
-    );
+    ); 
 
     secondsLeft =
-      GAME_DURATION;
+      GAME_DURATION; 
 
     $("#wat-time",
       game.panel
     ).textContent =
-      secondsLeft;
+      secondsLeft; 
 
     gameTimer =
       setInterval(
         () => {
-          if (!active) return;
+          if (!active) return; 
 
-          secondsLeft--;
+          secondsLeft--; 
 
           $("#wat-time",
             game.panel
           ).textContent =
-            secondsLeft;
+            secondsLeft; 
 
           if (
             secondsLeft <= 0
@@ -1243,36 +1083,36 @@
 
 
   function finish(won) {
-    if (!active) return;
+    if (!active) return; 
 
-    active = false;
+    active = false; 
 
     clearTimeout(
       moleTimer
-    );
+    ); 
 
     clearTimeout(
       hideTimer
-    );
+    ); 
 
     clearInterval(
       gameTimer
-    );
+    ); 
 
-    hideMoles();
+    hideMoles(); 
 
     if (!won) {
       game.status.textContent =
-        "The track survived. Try again!";
+        "The track survived. Try again!"; 
 
       return;
-    }
+    } 
 
     const songId =
-      getCurrentSongId();
+      getCurrentSongId(); 
 
     const songNumber =
-      getCurrentSongNumber();
+      getCurrentSongNumber(); 
 
     /*
      * SAVE THE TRACK PERMANENTLY.
@@ -1280,7 +1120,7 @@
     const savedId =
       saveWhackedTrack(
         songId
-      );
+      ); 
 
     /*
      * CLOSE THE ROAD.
@@ -1289,14 +1129,7 @@
       closeRoad(
         songNumber,
         songId
-      );
-
-    /*
-     * MAKE THE REFRESH BUTTON
-     * AVAILABLE AFTER A SUCCESSFUL
-     * WHACK.
-     */
-    updateRefreshButton();
+      ); 
 
     if (
       roadClosed &&
@@ -1322,19 +1155,19 @@
 
 
   function closeGame() {
-    active = false;
+    active = false; 
 
     clearTimeout(
       moleTimer
-    );
+    ); 
 
     clearTimeout(
       hideTimer
-    );
+    ); 
 
     clearInterval(
       gameTimer
-    );
+    ); 
 
     if (game) {
       game.panel.hidden =
@@ -1345,53 +1178,49 @@
 
   function startGame(event) {
     event?.preventDefault();
-    event?.stopImmediatePropagation();
+    event?.stopImmediatePropagation(); 
 
     game =
-      createGame();
+      createGame(); 
 
     clearTimeout(
       moleTimer
-    );
+    ); 
 
     clearTimeout(
       hideTimer
-    );
+    ); 
 
     clearInterval(
       gameTimer
-    );
+    ); 
 
-    /*
-     * DO NOT HIDE THE REFRESH BUTTON HERE.
-     *
-     * If tracks have already been whacked,
-     * the button should remain available.
-     */
-    updateRefreshButton();
+    $("#wat-refresh",
+      game.panel
+    ).hidden = true; 
 
     game.panel.hidden =
-      false;
+      false; 
 
     if (!playing()) {
-      active = false;
+      active = false; 
 
       game.status.textContent =
-        "Play a track to start the game.";
+        "Play a track to start the game."; 
 
       game.panel.scrollIntoView({
         behavior: "smooth",
         block: "start"
-      });
+      }); 
 
       return;
-    }
+    } 
 
     const songNumber =
-      getCurrentSongNumber();
+      getCurrentSongNumber(); 
 
     const songId =
-      getCurrentSongId();
+      getCurrentSongId(); 
 
     /*
      * Don't allow a road-closed track
@@ -1402,40 +1231,40 @@
         songId
       )
     ) {
-      active = false;
+      active = false; 
 
       const row =
         findSongRow(
           songNumber
-        );
+        ); 
 
       applyRoadworkToRow(
         row
-      );
+      ); 
 
       game.status.innerHTML =
         `🚧 ROAD CLOSED<br>` +
-        `<small>This track is already closed for roadwork.</small>`;
+        `<small>This track is already closed for roadwork.</small>`; 
 
       game.panel.scrollIntoView({
         behavior: "smooth",
         block: "start"
-      });
+      }); 
 
       return;
-    }
+    } 
 
     trackHealth =
-      TRACK_HEALTH;
+      TRACK_HEALTH; 
 
-    active = true;
+    active = true; 
 
     $("#wat-health",
       game.panel
     ).value =
-      trackHealth;
+      trackHealth; 
 
-    hideMoles();
+    hideMoles(); 
 
     game.status.innerHTML =
       `🎵 ROAD OPEN<br>` +
@@ -1444,10 +1273,10 @@
       } · ${
         songId || "unknown"
       }</small><br>` +
-      `<small>Whack every duck before the clock runs out!</small>`;
+      `<small>Whack every duck before the clock runs out!</small>`; 
 
     startClock();
-    spawnMole();
+    spawnMole(); 
 
     game.panel.scrollIntoView({
       behavior: "smooth",
@@ -1458,19 +1287,19 @@
 
   /* =========================================================
      INIT
-     ========================================================= */
+     ========================================================= */ 
 
   function init() {
-    setupToolbar();
+    setupToolbar(); 
 
     /*
      * Restore all previously closed roads
      * from localStorage.
      */
-    loadSavedRoadwork();
+    loadSavedRoadwork(); 
 
     const button =
-      $("#whack-track");
+      $("#whack-track"); 
 
     if (
       !button ||
@@ -1478,17 +1307,17 @@
         "true"
     ) {
       return;
-    }
+    } 
 
     button.dataset.whackGameBound =
-      "true";
+      "true"; 
 
     Object.assign(
       button.style,
       {
         cursor: "pointer"
       }
-    );
+    ); 
 
     button.addEventListener(
       "click",
@@ -1508,6 +1337,6 @@
     );
   } else {
     init();
-  }
+  } 
 
 })();
