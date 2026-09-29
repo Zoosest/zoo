@@ -589,11 +589,12 @@
       <p id="wat-status"
          aria-live="polite"></p>
 
-      <p>
-        <span id="wat-time">
-          ${GAME_DURATION}
-        </span>s
-      </p>
+      <progress
+        id="wat-time"
+        max="${GAME_DURATION}"
+        value="${GAME_DURATION}"
+        aria-label="Time remaining"
+      ></progress>
 
       <progress
         id="wat-health"
@@ -668,10 +669,13 @@
     );
 
     Object.assign(
-      $("#wat-time", panel)
-        .parentElement.style,
+      $("#wat-time", panel).style,
       {
-        margin: "0 0 8px"
+        display: "block",
+        width: "100%",
+        height: "18px",
+        margin: "8px 0 8px",
+        accentColor: "#c084fc"
       }
     );
 
@@ -1088,7 +1092,7 @@
 
     $("#wat-time",
       game.panel
-    ).textContent =
+    ).value =
       secondsLeft;
 
     gameTimer =
@@ -1100,7 +1104,7 @@
 
           $("#wat-time",
             game.panel
-          ).textContent =
+          ).value =
             secondsLeft;
 
           if (
@@ -1163,6 +1167,13 @@
 
     game.status.textContent =
       "TRACK BANISHED! 🚫";
+
+    /*
+       Immediately move to the next
+       song/card in the current playlist.
+    */
+
+    next();
   }
 
   function closeGame() {
@@ -1270,6 +1281,11 @@
       game.panel
     ).value =
       trackHealth;
+
+    $("#wat-time",
+      game.panel
+    ).value =
+      GAME_DURATION;
 
     hideMoles();
 
