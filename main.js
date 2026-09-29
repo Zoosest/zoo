@@ -1083,7 +1083,7 @@
           document.createElement("small");
 
         keyword.textContent =
-          info[1];
+          `${iconLabel(iconFilename(info[2]))} — ${info[1]}`;
 
         titleElement.appendChild(
           titleText
