@@ -122,7 +122,7 @@
       }
 
       /*
-       * SMALLER & LOWER WATER SPLASH / RIPPLE EFFECT
+       * LOWERED & TIGHTER WATER SPLASH / RIPPLE EFFECT
        */
       @keyframes watSplashRing {
         0% {
@@ -131,7 +131,7 @@
           border-width: 2.5px;
         }
         100% {
-          transform: scale(1.1);
+          transform: scale(1.05);
           opacity: 0;
           border-width: 1px;
         }
@@ -139,12 +139,12 @@
 
       .wat-ripple {
         position: absolute;
-        bottom: 8px;
+        bottom: 3px;
         left: 50%;
-        width: 32px;
-        height: 18px;
-        margin-left: -16px;
-        border: 2px solid rgba(255, 255, 255, 0.7);
+        width: 28px;
+        height: 14px;
+        margin-left: -14px;
+        border: 2px solid rgba(255, 255, 255, 0.75);
         border-radius: 50%;
         pointer-events: none;
         z-index: 2;
