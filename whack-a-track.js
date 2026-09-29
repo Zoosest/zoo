@@ -249,36 +249,54 @@
         animation: duckFallAndWobble 0.4s ease-in forwards;
       }
 
+      /*
+         WHACKED SONG ROW
+
+         The roadwork message now lives inside the
+         existing row instead of creating another row.
+
+         The song title, keyword, number, and Play button
+         disappear. The animal icon stays on the right
+         and remains greyed out.
+      */
+
       #song-list .song.rizney-roadwork {
         opacity: .72;
-      } 
+      }
+
+      #song-list .song.rizney-roadwork .song-number,
+      #song-list .song.rizney-roadwork .song-title,
+      #song-list .song.rizney-roadwork .play {
+        display: none;
+      }
 
       #song-list .song.rizney-roadwork::after {
         content: "🚧 WHACKED!";
-        display: block;
-        grid-column: 1 / -1;
-        margin: 4px 0 4px;
-        padding: 6px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 0;
+        min-height: 62px;
+        margin: 0;
+        padding: 0 8px;
         text-align: center;
         font-weight: 800;
         letter-spacing: .08em;
         color: #f5d76e;
-        background: #120b18;
-        border: 1px solid #d4af37;
-        border-radius: 8px;
-      } 
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        grid-column: 1 / 4;
+        grid-row: 1;
+      }
 
       #song-list .song.rizney-roadwork .animal-button {
+        grid-column: 4;
+        grid-row: 1;
         cursor: not-allowed;
         opacity: .45;
         pointer-events: none;
-      } 
-
-      #song-list .song.rizney-roadwork .song-number {
-        cursor: not-allowed;
-        opacity: .45;
-        pointer-events: none;
-      } 
+      }
 
       @media (max-width: 640px) {
         #whack-a-track-game {
@@ -296,6 +314,12 @@
         #whack-a-track-game .wat-hole {
           height: 58px !important;
           min-height: 58px !important;
+        }
+
+        #song-list .song.rizney-roadwork::after {
+          min-height: 54px;
+          padding: 0 5px;
+          font-size: .78rem;
         }
       }
     `; 
@@ -1198,7 +1222,7 @@
         block: "start"
       }); 
 
-      return;
+      return; 
     } 
 
     const songNumber =
@@ -1232,7 +1256,7 @@
         block: "start"
       }); 
 
-      return;
+      return; 
     } 
 
     trackHealth =
@@ -1262,7 +1286,7 @@
     game.panel.scrollIntoView({
       behavior: "smooth",
       block: "start"
-    });
+    }); 
   }
 
 
@@ -1283,7 +1307,7 @@
       button.dataset.whackGameBound ===
         "true"
     ) {
-      return;
+      return; 
     } 
 
     button.dataset.whackGameBound =
@@ -1299,7 +1323,7 @@
     button.addEventListener(
       "click",
       startGame
-    );
+    ); 
   }
 
 
@@ -1311,9 +1335,9 @@
       "DOMContentLoaded",
       init,
       { once: true }
-    );
+    ); 
   } else {
-    init();
+    init(); 
   } 
 
 })();
