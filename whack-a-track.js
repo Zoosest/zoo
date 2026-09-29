@@ -9,7 +9,7 @@
 
   /* Snake decoy settings */
   const SNAKE_CHANCE = 0.25;
-  const SNAKE_TIME_PENALTY = 5;
+  const SNAKE_TIME_PENALTY = 10;
 
   const REMOVED_TRACKS_KEY =
     "rizneyWhackedTracks";
@@ -656,7 +656,8 @@
           "8px auto 18px",
         padding:
           "10px 14px 14px",
-        textAlign: "center",
+        textAlign:
+          "center",
         background:
           "#120b18",
         border:
@@ -801,6 +802,85 @@
               "3";
 
             triggerSplash(hole);
+
+            /* Damage pop-up: -10 seconds */
+            const damagePop =
+              document.createElement(
+                "img"
+              );
+
+            damagePop.src =
+              "assets/damage.png";
+
+            damagePop.alt =
+              "-10";
+
+            damagePop.className =
+              "wat-quack-pop";
+
+            const offsetX =
+              (Math.random() - 0.5) * 44;
+
+            const offsetY =
+              -16 +
+              (Math.random() - 0.5) * 16;
+
+            const baseRot =
+              -15 +
+              Math.random() * 10;
+
+            const midRot =
+              -5 +
+              Math.random() * 20;
+
+            const endRot =
+              5 +
+              Math.random() *
+                20 *
+                (
+                  Math.random() < 0.5
+                    ? 1
+                    : -1
+                );
+
+            damagePop.style.setProperty(
+              "--base-rot",
+              `rotate(${baseRot}deg)`
+            );
+
+            damagePop.style.setProperty(
+              "--mid-rot",
+              `rotate(${midRot}deg)`
+            );
+
+            damagePop.style.setProperty(
+              "--end-rot",
+              `rotate(${endRot}deg)`
+            );
+
+            damagePop.style.left =
+              `${
+                hole.offsetLeft +
+                (hole.offsetWidth / 2) -
+                36 +
+                offsetX
+              }px`;
+
+            damagePop.style.top =
+              `${
+                hole.offsetTop +
+                (hole.offsetHeight / 2) -
+                36 +
+                offsetY
+              }px`;
+
+            board.appendChild(
+              damagePop
+            );
+
+            setTimeout(() => {
+              damagePop.remove();
+            }, 400);
 
             setTimeout(() => {
               if (
