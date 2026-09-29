@@ -892,6 +892,9 @@
       )
       .filter(Boolean);
 
+    /* Make the song IDs available to whack-a-track.js */
+    window.rizneySongIds = ids;
+
     const $ = s => document.querySelector(s);
 
     const nowPlaying = $('#now-playing');
