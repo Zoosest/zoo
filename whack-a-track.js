@@ -95,18 +95,19 @@
       } 
 
       /*
-       * LAKE WATER ANIMATION
+       * ANIMATED LAKE RIPPLES
        */
-      @keyframes lakeRipple {
-        0% { background-position: 0% 50%; }
-        50% { background-position: 100% 50%; }
-        100% { background-position: 0% 50%; }
+      @keyframes lakeRipplePan {
+        0% { background-position: 0px 0px, 0% 50%; }
+        100% { background-position: 120px 60px, 100% 50%; }
       }
 
       #wat-board {
-        background: linear-gradient(135deg, #16385c, #1d4f82, #0f2744, #123d66) !important;
-        background-size: 300% 300% !important;
-        animation: lakeRipple 12s ease infinite !important;
+        background-image: 
+          url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='60' viewBox='0 0 120 60'><path d='M 0 30 Q 30 15, 60 30 T 120 30' fill='none' stroke='rgba(255,255,255,0.18)' stroke-width='2'/><path d='M 0 45 Q 30 30, 60 45 T 120 45' fill='none' stroke='rgba(255,255,255,0.1)' stroke-width='1.5'/></svg>"),
+          linear-gradient(135deg, #16385c, #1d4f82, #0f2744, #123d66) !important;
+        background-size: 120px 60px, 300% 300% !important;
+        animation: lakeRipplePan 7s linear infinite !important;
       }
 
       /*
