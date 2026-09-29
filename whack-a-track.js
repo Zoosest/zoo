@@ -110,33 +110,31 @@
       }
 
       /*
-       * COMIC BOOK "QUACK!" POP ANIMATION
+       * COMIC BOOK "QUACK!" FLOATING POP ANIMATION (WITH SLOW ROTATION)
        */
       @keyframes quackPop {
         0% {
-          transform: scale(0.4) rotate(-15deg);
+          transform: scale(0.3) rotate(-6deg);
           opacity: 0;
         }
         50% {
-          transform: scale(1.25) rotate(8deg);
+          transform: scale(1.25) rotate(3deg);
           opacity: 1;
         }
         100% {
-          transform: scale(1) rotate(4deg);
+          transform: scale(1.1) rotate(10deg);
           opacity: 0;
         }
       }
 
       .wat-quack-pop {
         position: absolute;
-        top: -6px;
-        right: -6px;
-        width: 54px;
-        height: 54px;
+        width: 72px;
+        height: 72px;
         object-fit: contain;
         pointer-events: none;
-        z-index: 5;
-        animation: quackPop 0.35s ease-out forwards;
+        z-index: 10;
+        animation: quackPop 0.4s ease-out forwards;
       }
 
       /*
@@ -633,7 +631,7 @@
         borderRadius: "10px",
         border: "1px solid #d4af37",
         position: "relative",
-        overflow: "hidden"
+        overflow: "visible"
       }
     ); 
 
@@ -696,11 +694,25 @@
             .value =
             trackHealth; 
 
-          /* Show hit duck + comic QUACK pop effect */
+          /* Show the hit duck inside the button hole */
           hole.innerHTML =
-            `<img src="assets/duck-hit.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />` +
-            `<img src="assets/quack.png" alt="QUACK!" class="wat-quack-pop" />`; 
+            `<img src="assets/duck-hit.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />`; 
           hole.style.zIndex = "3";
+
+          /* Create and float the rotating QUACK! pop on the board layer outside the hole */
+          const quackPop = document.createElement("img");
+          quackPop.src = "assets/quack.png";
+          quackPop.alt = "QUACK!";
+          quackPop.className = "wat-quack-pop";
+
+          quackPop.style.left = `${hole.offsetLeft + (hole.offsetWidth / 2) - 36}px`;
+          quackPop.style.top = `${hole.offsetTop + (hole.offsetHeight / 2) - 36}px`;
+
+          board.appendChild(quackPop);
+
+          setTimeout(() => {
+            quackPop.remove();
+          }, 400);
 
           setTimeout(() => {
             if (hole.dataset.active === "hit") {
