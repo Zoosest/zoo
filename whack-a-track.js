@@ -588,9 +588,25 @@
         background: "#2a1b3d",
         padding: "12px",
         borderRadius: "10px",
-        border: "1px solid #d4af37"
+        border: "1px solid #d4af37",
+        position: "relative"
       }
     ); 
+
+    const overlay = document.createElement("img");
+    overlay.src = "holes.png";
+    overlay.alt = "";
+    Object.assign(overlay.style, {
+      position: "absolute",
+      inset: "0",
+      width: "100%",
+      height: "100%",
+      objectFit: "cover",
+      pointerEvents: "none",
+      zIndex: "2",
+      borderRadius: "10px"
+    });
+    board.appendChild(overlay);
 
     for (let i = 0; i < 6; i++) {
       const hole =
@@ -602,7 +618,7 @@
       hole.className =
         "wat-hole";
       hole.textContent =
-        "🕳️";
+        "";
       hole.dataset.active =
         "false"; 
 
@@ -613,10 +629,11 @@
           padding: "8px",
           fontSize: "2rem",
           cursor: "crosshair",
-          backgroundColor: "#000000",
-          color: "#ffffff",
-          border: "1px solid #d4af37",
-          borderRadius: "8px"
+          background: "transparent",
+          border: "none",
+          boxShadow: "none",
+          position: "relative",
+          zIndex: "1"
         }
       ); 
 
@@ -636,6 +653,7 @@
 
           hole.textContent =
             "💥"; 
+          hole.style.zIndex = "3";
 
           trackHealth--; 
 
@@ -743,7 +761,8 @@
           "false"; 
 
         hole.textContent =
-          "🕳️";
+          "";
+        hole.style.zIndex = "1";
       });
   }
 
@@ -773,6 +792,7 @@
 
     hole.textContent =
       "🐭"; 
+    hole.style.zIndex = "3";
 
     clearTimeout(
       hideTimer
@@ -786,7 +806,8 @@
             "true"
           ) {
             hole.textContent =
-              "🕳️";
+              "";
+            hole.style.zIndex = "1";
           } 
 
           hole.dataset.active =
