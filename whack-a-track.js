@@ -143,9 +143,8 @@
         } 
 
         #whack-a-track-game .wat-hole {
+          height: 58px !important;
           min-height: 58px !important;
-          padding: 4px !important;
-          font-size: 1.65rem !important;
         }
       }
     `; 
@@ -625,15 +624,16 @@
       Object.assign(
         hole.style,
         {
-          minHeight: "76px",
-          padding: "4px",
-          fontSize: "2rem",
+          height: "76px",
+          width: "100%",
+          padding: "0",
           cursor: "crosshair",
           background: "transparent",
           border: "none",
           boxShadow: "none",
           position: "relative",
-          zIndex: "1"
+          zIndex: "1",
+          overflow: "hidden"
         }
       ); 
 
@@ -651,8 +651,8 @@
           hole.dataset.active =
             "false"; 
 
-          hole.textContent =
-            "💥"; 
+          hole.innerHTML =
+            `<span style="position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem;">💥</span>`; 
           hole.style.zIndex = "3";
 
           trackHealth--; 
@@ -791,7 +791,7 @@
       "true"; 
 
     hole.innerHTML =
-      `<img src="assets/duck.png" alt="" style="width: 100%; height: 100%; object-fit: contain; pointer-events: none; display: block;" />`; 
+      `<img src="assets/duck.png" alt="" style="position: absolute; inset: 4px; width: calc(100% - 8px); height: calc(100% - 8px); object-fit: contain; pointer-events: none; display: block;" />`; 
     hole.style.zIndex = "3";
 
     clearTimeout(
