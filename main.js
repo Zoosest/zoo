@@ -15,6 +15,13 @@
   const FALLBACK_ICON = "🐾";
 
   /*
+    Whack-A-Track remembers defeated tracks
+    using this same localStorage key.
+  */
+  const REMOVED_TRACKS_KEY =
+    "rizneyWhackedTracks";
+
+  /*
     Song information is kept in chronological order.
     The first entry [index 0] is your intro track, followed by your animal-icon songs.
   */
@@ -699,6 +706,177 @@
 
 
   /* =========================================================
+     WHACK-A-TRACK ROADWORK RESTORATION
+     ========================================================= */
+
+  function getSavedWhackedTracks() {
+    try {
+      const raw =
+        localStorage.getItem(
+          REMOVED_TRACKS_KEY
+        );
+
+      const parsed =
+        JSON.parse(
+          raw || "[]"
+        );
+
+      return Array.isArray(parsed)
+        ? parsed
+        : [];
+    } catch (error) {
+      return [];
+    }
+  }
+
+
+  function getSongIdForNumber(songNumber) {
+    if (
+      !songNumber ||
+      !Number.isInteger(songNumber)
+    ) {
+      return null;
+    }
+
+    try {
+      if (
+        typeof ids !== "undefined" &&
+        ids[songNumber]
+      ) {
+        return String(
+          ids[songNumber]
+        );
+      }
+    } catch (error) {}
+
+    return null;
+  }
+
+
+  function restoreRoadworkRows() {
+    const saved =
+      new Set(
+        getSavedWhackedTracks()
+      );
+
+    if (!saved.size) {
+      return;
+    }
+
+    document
+      .querySelectorAll(
+        "#song-list .song"
+      )
+      .forEach(row => {
+        const songNumber =
+          Number(
+            row.dataset.songIndex
+          );
+
+        if (
+          !Number.isInteger(
+            songNumber
+          ) ||
+          songNumber < 1
+        ) {
+          return;
+        }
+
+        const songId =
+          getSongIdForNumber(
+            songNumber
+          );
+
+        if (
+          songId &&
+          saved.has(songId)
+        ) {
+          row.classList.add(
+            "rizney-roadwork"
+          );
+
+          row.dataset.rizneyRoadwork =
+            "true";
+        }
+      });
+  }
+
+
+  function setupRoadworkWatching() {
+    const songList =
+      document.getElementById(
+        "song-list"
+      );
+
+    if (!songList) {
+      return;
+    }
+
+    /*
+      Watch for the song list being rebuilt.
+      When main/index code creates fresh rows,
+      immediately restore any tracks already
+      defeated in Whack-A-Track.
+    */
+    const observer =
+      new MutationObserver(
+        mutations => {
+          let changed = false;
+
+          for (
+            const mutation of mutations
+          ) {
+            if (
+              mutation.type ===
+                "childList" &&
+              mutation.addedNodes.length
+            ) {
+              changed = true;
+              break;
+            }
+          }
+
+          if (changed) {
+            requestAnimationFrame(
+              () => {
+                updateSongRowNumbersOnly();
+                restoreRoadworkRows();
+              }
+            );
+          }
+        }
+      );
+
+    observer.observe(
+      songList,
+      {
+        childList: true,
+        subtree: true
+      }
+    );
+
+    restoreRoadworkRows();
+  }
+
+
+  /*
+    This only makes sure the row numbers are
+    available for Whack-A-Track restoration.
+    It does not alter the visible song numbers.
+  */
+  function updateSongRowNumbersOnly() {
+    const rows = songRows();
+
+    rows.forEach(
+      (row, index) => {
+        row.dataset.songIndex =
+          String(index + 1);
+      }
+    );
+  }
+
+
+  /* =========================================================
      HELPERS
      ========================================================= */
 
@@ -1152,6 +1330,12 @@
         );
       }
     );
+
+    /*
+      Re-apply any Whack-A-Track road closures
+      after the row contents are updated.
+    */
+    restoreRoadworkRows();
   }
 
 
@@ -1209,6 +1393,11 @@
         );
       }
     );
+
+    /*
+      Make sure roadwork survives icon updates.
+    */
+    restoreRoadworkRows();
   }
 
 
@@ -1724,6 +1913,12 @@
     putIcons();
 
     /*
+      Watch the song list so Whack-A-Track
+      roadwork survives any row rebuild.
+    */
+    setupRoadworkWatching();
+
+    /*
       Set up the CARDS toggle before the
       MutationObserver begins watching for cards.
     */
@@ -1732,6 +1927,12 @@
     setupCardWatching();
 
     addCardIcons();
+
+    /*
+      Final roadwork pass after everything
+      else has initialized.
+    */
+    restoreRoadworkRows();
   }
 
 
