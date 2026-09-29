@@ -17,7 +17,7 @@
   */
 
   const SONG_INFO = [
-    ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"], // <--- Exact intro title
+    ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
     ["Unfinished Business", "Transformation", "skull.png"],
     ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
@@ -776,7 +776,6 @@
     const wrapper = document.createElement("div");
     wrapper.id = "archive-search-wrapper";
 
-    // Magnifying glass placed in the outer left number column
     const icon = document.createElement("span");
     icon.className = "search-magnifying-glass-column";
     icon.textContent = "🔎";
@@ -813,7 +812,12 @@
         const animal = iconLabel(iconFilename(info[2])).toLowerCase();
 
         if (title.includes(query) || keyword.includes(query) || animal.includes(query)) {
-          matches.push({ index, title: info[0], keyword: info[1], animal: iconLabel(iconFilename(info[2])) });
+          matches.push({
+            index,
+            title: info[0],
+            keyword: info[1],
+            animal: iconLabel(iconFilename(info[2]))
+          });
         }
       });
 
@@ -850,9 +854,14 @@
           input.value = "";
 
           const rows = songRows();
-          const targetRow = rows[match.index - 1]; // Offset by 1 for intro
+          const targetRow = rows[match.index - 1];
+
           if (targetRow) {
-            targetRow.scrollIntoView({ behavior: "smooth", block: "center" });
+            targetRow.scrollIntoView({
+              behavior: "smooth",
+              block: "center"
+            });
+
             playSongFromRow(targetRow);
           }
         });
@@ -895,7 +904,7 @@
 
     numberLink.setAttribute(
       "aria-label",
-      `Play song ${index + 2}` // +2 because index 0 is intro, and row index starts at 0
+      `Play song ${index + 2}`
     );
 
     numberLink.addEventListener(
@@ -918,7 +927,6 @@
     const rows = songRows();
 
     rows.forEach((row, index) => {
-      // Offset by 1 because index 0 in SONG_INFO is the intro track
       const info = SONG_INFO[index + 1];
 
       if (!info) return;
@@ -958,7 +966,6 @@
         return;
       }
 
-      // Offset by 1 because index 0 in SONG_INFO is the intro track
       const info = SONG_INFO[index + 1];
 
       if (!info) return;
@@ -1010,7 +1017,6 @@
       return -1;
     }
 
-    // Offset by 1 to account for the intro track at index 0
     return songNumber;
   }
 
@@ -1350,6 +1356,36 @@
 
 
   /* =========================================================
+     CARDS BUTTON TOGGLE
+     ========================================================= */
+
+  function setupCardsToggle() {
+    const cardsButton =
+      document.getElementById("draw-cards");
+
+    const reading =
+      document.getElementById("reading");
+
+    if (!cardsButton || !reading) return;
+
+    cardsButton.addEventListener("click", () => {
+      setTimeout(() => {
+        const isOpen =
+          reading.dataset.cardsOpen === "true";
+
+        if (isOpen) {
+          reading.style.display = "none";
+          reading.dataset.cardsOpen = "false";
+        } else {
+          reading.style.display = "";
+          reading.dataset.cardsOpen = "true";
+        }
+      }, 0);
+    });
+  }
+
+
+  /* =========================================================
      INITIALIZATION
      ========================================================= */
 
@@ -1364,6 +1400,8 @@
     setupCardWatching();
 
     addCardIcons();
+
+    setupCardsToggle();
   }
 
 
