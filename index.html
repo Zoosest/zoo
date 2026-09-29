@@ -229,6 +229,32 @@
       text-align:center;
     }
 
+    /* Song numbers are clickable, but should look like plain numbers. */
+    .song-number a,
+    .song-number a:visited,
+    .song-number a:hover,
+    .song-number a:active {
+      color:var(--gold);
+      text-decoration:none;
+    }
+
+    /* Replace the 🔎 search character with the custom search.png icon. */
+    .search-magnifying-glass-column {
+      font-size:0;
+    }
+
+    .search-magnifying-glass-column::before {
+      content:"";
+      display:block;
+      width:28px;
+      height:28px;
+      margin:auto;
+      background-image:url("./assets/search.png");
+      background-repeat:no-repeat;
+      background-position:center;
+      background-size:contain;
+    }
+
     .song-title {
       overflow:hidden;
       text-overflow:ellipsis;
@@ -337,6 +363,7 @@
     }
 
     @media(max-width:500px) {
+
       .top-area {
         padding:0;
         min-height:72px;
@@ -400,6 +427,11 @@
 
       .song-title {
         font-size:.82rem;
+      }
+
+      .search-magnifying-glass-column::before {
+        width:24px;
+        height:24px;
       }
 
       footer img {
