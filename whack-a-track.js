@@ -7,6 +7,10 @@
   const MOLE_VISIBLE_MS = 360;
   const MOLE_INTERVAL_MS = 1400;
 
+  /* Snake decoy settings */
+  const SNAKE_CHANCE = 0.25;
+  const SNAKE_TIME_PENALTY = 5;
+
   const REMOVED_TRACKS_KEY =
     "rizneyWhackedTracks";
 
@@ -181,6 +185,17 @@
         animation: duckSquashPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
       }
 
+      .wat-snake {
+        position: absolute;
+        inset: 4px;
+        width: calc(100% - 8px);
+        height: calc(100% - 8px);
+        object-fit: contain;
+        pointer-events: none;
+        display: block;
+        animation: duckSquashPop 0.28s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+      }
+
       @keyframes duckRetreat {
         0% {
           transform: scale(1, 1) translateY(0);
@@ -196,7 +211,8 @@
         }
       }
 
-      .wat-duck-hiding {
+      .wat-duck-hiding,
+      .wat-snake-hiding {
         animation: duckRetreat 0.18s ease-in forwards !important;
       }
 
@@ -220,7 +236,8 @@
         }
       }
 
-      .wat-duck-hit {
+      .wat-duck-hit,
+      .wat-snake-hit {
         position: absolute;
         inset: 4px;
         width: calc(100% - 8px);
@@ -750,6 +767,72 @@
             return;
           }
 
+          /*
+            SNAKE DECOY:
+            Hitting a snake does not damage
+            track health. Instead it removes
+            time from the clock.
+          */
+          if (
+            hole.dataset.target ===
+            "snake"
+          ) {
+            hole.dataset.active =
+              "hit";
+
+            secondsLeft =
+              Math.max(
+                0,
+                secondsLeft -
+                  SNAKE_TIME_PENALTY
+              );
+
+            $("#wat-time",
+              panel
+            ).value =
+              secondsLeft;
+
+            vibrate([25, 30, 25]);
+
+            hole.innerHTML =
+              `<img src="assets/snake-hit.png" alt="" class="wat-snake-hit" />`;
+
+            hole.style.zIndex =
+              "3";
+
+            triggerSplash(hole);
+
+            setTimeout(() => {
+              if (
+                hole.dataset.active ===
+                "hit"
+              ) {
+                hole.innerHTML =
+                  "";
+                hole.style.zIndex =
+                  "1";
+                hole.dataset.target =
+                  "";
+                hole.dataset.active =
+                  "false";
+              }
+            }, 400);
+
+            if (
+              secondsLeft <= 0
+            ) {
+              finish(false);
+            }
+
+            return;
+          }
+
+          /*
+            EXISTING DUCK BEHAVIOR:
+            Everything below remains the
+            original Whack-a-Track behavior.
+          */
+
           hole.dataset.active =
             "hit";
 
@@ -869,6 +952,8 @@
                 "";
               hole.style.zIndex =
                 "1";
+              hole.dataset.target =
+                "";
             }
           }, 400);
 
@@ -983,8 +1068,13 @@
       .forEach(hole => {
         hole.dataset.active =
           "false";
+
+        hole.dataset.target =
+          "";
+
         hole.innerHTML =
           "";
+
         hole.style.zIndex =
           "1";
       });
@@ -1013,8 +1103,27 @@
     hole.dataset.active =
       "true";
 
-    hole.innerHTML =
-      `<img src="assets/duck.png" alt="" class="wat-duck" />`;
+    /*
+      Randomly choose between a normal
+      duck target and a snake decoy.
+    */
+    const isSnake =
+      Math.random() <
+      SNAKE_CHANCE;
+
+    if (isSnake) {
+      hole.dataset.target =
+        "snake";
+
+      hole.innerHTML =
+        `<img src="assets/snake.png" alt="" class="wat-snake" />`;
+    } else {
+      hole.dataset.target =
+        "duck";
+
+      hole.innerHTML =
+        `<img src="assets/duck.png" alt="" class="wat-duck" />`;
+    }
 
     hole.style.zIndex =
       "3";
@@ -1032,14 +1141,18 @@
             hole.dataset.active ===
             "true"
           ) {
-            const duckImg =
+            const targetImg =
               hole.querySelector(
-                ".wat-duck"
+                ".wat-duck, .wat-snake"
               );
 
-            if (duckImg) {
-              duckImg.classList.add(
-                "wat-duck-hiding"
+            if (targetImg) {
+              targetImg.classList.add(
+                targetImg.classList.contains(
+                  "wat-snake"
+                )
+                  ? "wat-snake-hiding"
+                  : "wat-duck-hiding"
               );
 
               triggerSplash(
@@ -1053,8 +1166,13 @@
                 ) {
                   hole.innerHTML =
                     "";
+
                   hole.style.zIndex =
                     "1";
+
+                  hole.dataset.target =
+                    "";
+
                   hole.dataset.active =
                     "false";
                 }
@@ -1062,12 +1180,20 @@
             } else {
               hole.innerHTML =
                 "";
+
               hole.style.zIndex =
                 "1";
+
+              hole.dataset.target =
+                "";
+
               hole.dataset.active =
                 "false";
             }
           } else {
+            hole.dataset.target =
+              "";
+
             hole.dataset.active =
               "false";
           }
