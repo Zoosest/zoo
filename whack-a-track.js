@@ -182,6 +182,28 @@
       }
 
       /*
+       * CARTOON SQUASH & STRETCH RETREAT ANIMATION (DIVING BACK DOWN)
+       */
+      @keyframes duckRetreat {
+        0% {
+          transform: scale(1, 1) translateY(0);
+          opacity: 1;
+        }
+        40% {
+          transform: scale(0.88, 1.12) translateY(-4px);
+          opacity: 1;
+        }
+        100% {
+          transform: scale(0.3, 1.5) translateY(36px);
+          opacity: 0;
+        }
+      }
+
+      .wat-duck-hiding {
+        animation: duckRetreat 0.18s ease-in forwards !important;
+      }
+
+      /*
        * DIZZY WOBBLING FALL ANIMATION FOR HIT DUCK (SUPPORTS RANDOM HORIZONTAL FLIP)
        */
       @keyframes duckFallAndWobble {
@@ -727,7 +749,6 @@
       hole.dataset.active =
         "false"; 
 
-      /* INVISIBLE CLICK TARGETS: Background and borders removed so the lake pattern flows seamlessly */
       Object.assign(
         hole.style,
         {
@@ -947,13 +968,25 @@
             hole.dataset.active ===
             "true"
           ) {
-            hole.innerHTML =
-              "";
-            hole.style.zIndex = "1";
-          } 
-
-          hole.dataset.active =
-            "false";
+            const duckImg = hole.querySelector(".wat-duck");
+            if (duckImg) {
+              /* Trigger smooth squash-and-stretch retreat dive back down */
+              duckImg.classList.add("wat-duck-hiding");
+              setTimeout(() => {
+                if (hole.dataset.active === "true") {
+                  hole.innerHTML = "";
+                  hole.style.zIndex = "1";
+                  hole.dataset.active = "false";
+                }
+              }, 180);
+            } else {
+              hole.innerHTML = "";
+              hole.style.zIndex = "1";
+              hole.dataset.active = "false";
+            }
+          } else {
+            hole.dataset.active = "false";
+          }
         },
         MOLE_VISIBLE_MS
       ); 
