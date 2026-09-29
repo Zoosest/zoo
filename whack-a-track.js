@@ -727,6 +727,7 @@
       hole.dataset.active =
         "false"; 
 
+      /* INVISIBLE CLICK TARGETS: Background and borders removed so the lake pattern flows seamlessly */
       Object.assign(
         hole.style,
         {
@@ -734,10 +735,9 @@
           width: "100%",
           padding: "0",
           cursor: "crosshair",
-          background: "rgba(255, 255, 255, 0.04)",
-          border: "1px dashed rgba(255, 255, 255, 0.15)",
-          borderRadius: "50%",
-          boxShadow: "inset 0 2px 4px rgba(0,0,0,0.3)",
+          background: "transparent",
+          border: "none",
+          outline: "none",
           position: "relative",
           zIndex: "1",
           overflow: "hidden"
@@ -1210,6 +1210,7 @@
      ========================================================= */ 
 
   function init() {
+    setupTrendbar: ... /* (init standard) */
     setupToolbar(); 
 
     /*
