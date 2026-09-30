@@ -468,6 +468,56 @@
         font-size:1.35rem;
       }
     }
+
+    /* LANDSCAPE VIDEO MODE
+       When the phone is turned sideways,
+       let the YouTube player take over the screen. */
+    @media (orientation:landscape) and (max-height:600px) {
+
+      body {
+        overflow:hidden;
+        background:#000;
+      }
+
+      .top-area {
+        display:none;
+      }
+
+      .player-dock {
+        position:fixed;
+        inset:0;
+        z-index:9999;
+        width:100vw;
+        height:100vh;
+        height:100dvh;
+        background:#000;
+        border:0;
+        box-shadow:none;
+      }
+
+      .player-wrap {
+        width:100vw;
+        max-width:none;
+        height:100vh;
+        height:100dvh;
+        aspect-ratio:auto;
+        margin:0;
+        background:#000;
+      }
+
+      #player {
+        width:100%;
+        height:100%;
+      }
+
+      #now-playing,
+      .controls,
+      main,
+      footer {
+        display:none;
+      }
+
+    }
   </style>
 </head>
 
