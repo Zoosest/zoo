@@ -738,10 +738,10 @@
     try {
       if (
         typeof ids !== "undefined" &&
-        ids[songNumber]
+        ids[songNumber - 1]
       ) {
         return String(
-          ids[songNumber]
+          ids[songNumber - 1]
         );
       }
     } catch (error) {}
