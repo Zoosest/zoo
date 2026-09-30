@@ -1167,12 +1167,53 @@
         return;
       }
 
+      /*
+        Normal chronological playback:
+        skip any tracks that have been defeated
+        in Whack-A-Track.
+      */
+      let nextIndex =
+        currentIndex + 1;
+
+      let savedWhackedTracks = [];
+
+      try {
+
+        const raw =
+          localStorage.getItem(
+            'rizneyWhackedTracks'
+          );
+
+        const parsed =
+          JSON.parse(
+            raw || '[]'
+          );
+
+        if (Array.isArray(parsed)) {
+          savedWhackedTracks = parsed;
+        }
+
+      } catch (error) {}
+
+      const whacked =
+        new Set(
+          savedWhackedTracks
+        );
+
+      while (
+        nextIndex < ids.length &&
+        whacked.has(
+          String(ids[nextIndex])
+        )
+      ) {
+        nextIndex++;
+      }
+
       if (
-        currentIndex <
-        ids.length - 1
+        nextIndex < ids.length
       ) {
 
-        play(currentIndex + 1, false);
+        play(nextIndex);
 
       } else {
 
