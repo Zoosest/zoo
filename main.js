@@ -1691,6 +1691,9 @@
         if (cardsToggleOpen) {
           cardsToggleOpen = false;
 
+          cardPlaylist = null;
+          cardPosition = 0;
+
           reading.hidden = true;
 
           cards.style.display =
