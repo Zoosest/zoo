@@ -39,7 +39,8 @@
     }
 
     .donate,
-    .context {
+    .context,
+    .fullscreen-button {
       position:absolute;
       top:7px;
       border:1px solid var(--gold);
@@ -59,6 +60,14 @@
     .context {
       left:88px;
       cursor:pointer;
+    }
+
+    .fullscreen-button {
+      left:174px;
+      cursor:pointer;
+      font-family:Arial,sans-serif;
+      font-size:.85rem;
+      padding:4px 8px;
     }
 
     /* FINISHING TOUCH: slightly smaller logo, same header height */
@@ -379,7 +388,8 @@
       }
 
       .donate,
-      .context {
+      .context,
+      .fullscreen-button {
         top:6px;
         padding:5px 8px;
         font-size:.63rem;
@@ -391,6 +401,12 @@
 
       .context {
         left:75px;
+      }
+
+      .fullscreen-button {
+        left:153px;
+        font-size:.78rem;
+        padding:4px 7px;
       }
 
       /* Slightly smaller mobile logo */
@@ -495,11 +511,19 @@
       aria-label="Open Context"
     >✦ Context</button>
 
+    <button
+      class="fullscreen-button"
+      id="fullscreen-button"
+      type="button"
+      aria-label="Enter fullscreen"
+      title="Fullscreen"
+    >⛶</button>
+
   </section>
 
   <section class="player-dock">
 
-    <div class="player-wrap">
+    <div class="player-wrap" id="player-wrap">
       <div id="player"></div>
     </div>
 
@@ -1525,6 +1549,79 @@
 
           closeContext();
         }
+      }
+    );
+
+    /*
+      CUSTOM FULLSCREEN BUTTON
+
+      Fullscreens only the video player.
+      The button itself is separate from YouTube's
+      built-in fullscreen control.
+    */
+    const fullscreenButton =
+      $('#fullscreen-button');
+
+    const playerWrap =
+      $('#player-wrap');
+
+    async function toggleFullscreen() {
+
+      if (
+        !document.fullscreenElement
+      ) {
+
+        try {
+
+          await playerWrap.requestFullscreen();
+
+        } catch (error) {
+
+          console.log(
+            'Fullscreen request was not allowed.',
+            error
+          );
+
+        }
+
+      } else {
+
+        try {
+
+          await document.exitFullscreen();
+
+        } catch (error) {
+
+          console.log(
+            'Could not exit fullscreen.',
+            error
+          );
+        }
+      }
+    }
+
+    fullscreenButton.addEventListener(
+      'click',
+      toggleFullscreen
+    );
+
+    document.addEventListener(
+      'fullscreenchange',
+      () => {
+
+        const isFullscreen =
+          document.fullscreenElement === playerWrap;
+
+        fullscreenButton.textContent =
+          isFullscreen ? '⛶' : '⛶';
+
+        fullscreenButton.setAttribute(
+          'aria-label',
+          isFullscreen
+            ? 'Exit fullscreen'
+            : 'Enter fullscreen'
+        );
+
       }
     );
 
