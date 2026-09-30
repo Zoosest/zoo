@@ -29,7 +29,7 @@
   const SONG_INFO = [
     ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
     ["Unfinished Business", "Redemption, "skull.png"],
-    ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
+    ["The Age of Hypergamy ♒", "Accountability", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
     ["Hijacked", "Awareness", "hawk.png"],
     ["Humblebrag", "Strength", "bull.png"],
