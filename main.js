@@ -234,7 +234,7 @@
     ["ELVIS OF BAGHDAD", "Staying Power", "llama.png"],
     ["6 6 6 7", "Sacrifice", "goat.png"],
     ["MUTANTS", "Fierceness", "wolverine.png"],
-    ["Manny in the Mirror", "Ancestry", "woolly-mammoth.png"],
+    ["Manny in the Mirror", "Dignity", "woolly-mammoth.png"],
     ["H(YE)NZ", "Scavenging", "hyena.png"],
     ["Skinny Bones", "Heritage", "neanderthal.png"],
     ["I Get By With A Little Help From Falkor", "Reframing", "dragonfly.png"],
