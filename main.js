@@ -461,14 +461,25 @@
         cursor: pointer;
       }
 
-      #song-list .song-title:hover {
-        color: var(--bright-gold, #f5d76e);
-      }
+      /*
+        NORMAL SONGS DO NOT CHANGE COLOR ON HOVER.
+        The gold appearance belongs only to the
+        currently playing song.
+      */
 
       #song-list .song-title:focus-visible {
         outline: 2px solid var(--bright-gold, #f5d76e);
         outline-offset: 3px;
         border-radius: 4px;
+      }
+
+      /*
+        CURRENTLY PLAYING SONG:
+        Title + animal + keyword text become gold.
+      */
+      #song-list .song.playing .song-title,
+      #song-list .song.playing .song-title small {
+        color: var(--bright-gold, #f5d76e) !important;
       }
 
       #song-list .song-title small {
@@ -483,10 +494,6 @@
         font-family: Georgia, "Times New Roman", serif;
         font-size: .72rem;
         font-style: italic;
-      }
-
-      #song-list .song-title:hover small {
-        color: var(--bright-gold, #f5d76e);
       }
 
       #song-list .animal-button {
