@@ -633,12 +633,8 @@
         </p>
 
         <p>
-          no wait.. I meant its it's the other way around.. like the newest songs I composed are first and the earliest songs are the last songs...
+          no wait.. or is it.. no that's right!  enjoy 
         </p>
-<p>
-          nevermind i was right 😸 the first ones I made are last and the last are first.  sorry I'm dumb.  anyways enjoy the songs!
-        </p>
-        
 
       </section>
 
@@ -1027,7 +1023,7 @@
       });
     }
 
-    function play(index) {
+    function play(index, shouldScroll = true) {
 
       if (!ids[index]) {
         return;
@@ -1050,10 +1046,12 @@
 
       updateButtons();
 
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
+      if (shouldScroll) {
+        window.scrollTo({
+          top: 0,
+          behavior: 'smooth'
+        });
+      }
     }
 
     function playPosition(position) {
@@ -1124,7 +1122,7 @@
         ids.length - 1
       ) {
 
-        play(currentIndex + 1);
+        play(currentIndex + 1, false);
 
       } else {
 
