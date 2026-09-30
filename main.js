@@ -28,8 +28,8 @@
 
   const SONG_INFO = [
     ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
-    ["Unfinished Business", "Redemption, "skull.png"],
-    ["The Age of Hypergamy ♒", "Accountability", "earthworm.png"],
+    ["Unfinished Business", "Transformation", "skull.png"],
+    ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
     ["Hijacked", "Awareness", "hawk.png"],
     ["Humblebrag", "Strength", "bull.png"],
@@ -234,7 +234,7 @@
     ["ELVIS OF BAGHDAD", "Staying Power", "llama.png"],
     ["6 6 6 7", "Sacrifice", "goat.png"],
     ["MUTANTS", "Fierceness", "wolverine.png"],
-    ["Manny in the Mirror", "Dignity", "woolly-mammoth.png"],
+    ["Manny in the Mirror", "Ancestry", "woolly-mammoth.png"],
     ["H(YE)NZ", "Scavenging", "hyena.png"],
     ["Skinny Bones", "Heritage", "neanderthal.png"],
     ["I Get By With A Little Help From Falkor", "Reframing", "dragonfly.png"],
