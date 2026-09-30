@@ -1023,7 +1023,7 @@
       });
     }
 
-    function play(index, shouldScroll = true) {
+    function play(index) {
 
       if (!ids[index]) {
         return;
@@ -1045,13 +1045,6 @@
       }
 
       updateButtons();
-
-      if (shouldScroll) {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }
     }
 
     function playPosition(position) {
@@ -1122,7 +1115,7 @@
         ids.length - 1
       ) {
 
-        play(currentIndex + 1, false);
+        play(currentIndex + 1);
 
       } else {
 
