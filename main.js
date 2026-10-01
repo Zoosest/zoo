@@ -28,7 +28,7 @@
 
   const SONG_INFO = [
     ["The Monkey Island Mega Mix 'N' Mojo Intro", "Intro", "skull.png"],
-    ["Unfinished Business", "Transformation", "skull.png"],
+    ["Unfinished Business", "Redemption", "skull.png"],
     ["The Age of Hypergamy ♒", "Renewal", "earthworm.png"],
     ["Babraham Lincoln", "Vision", "falcon.png"],
     ["Hijacked", "Awareness", "hawk.png"],
@@ -217,7 +217,7 @@
     ["HUP", "Constancy", "mole-rat.png"],
     ["Groundhog's Day", "Recurrence", "groundhog.png"],
     ["Mercy", "Tranquility", "pigeon.png"],
-    ["Apologize", "Reconciliation", "quail.png"],
+    ["Apologize", "Accountability", "quail.png"],
     ["CLONE WARS", "Multiplicity", "hydra.png"],
     ["BOWSER JR", "Shielding", "snapping-turtle.png"],
     ["Bluebird of Happiness", "Happiness", "bluejay.png"],
