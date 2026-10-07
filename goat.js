@@ -1,31 +1,31 @@
-
 /*
 =========================================================
 GOATS
 =========================================================
 
-Prototype version 0.1
+Prototype version 0.2
 
-The idea:
-- Goat starts on the left.
-- Goat automatically moves toward the cliff.
-- Player presses HORN.
+GOATS only appears when the song:
+
+    6 6 6 7
+
+is playing.
+
+For now:
+- Goat moves toward the edge.
+- Press HORN.
 - Goat faints.
-- Fainted goat keeps moving because of momentum.
-- Goat bounces if it hits the ground.
-- The closer to the cliff edge, the better the score.
+- Goat continues with momentum.
+- Goat bounces.
+- Score is based on how close it gets to the edge.
 
 This is intentionally simple.
-We can make it prettier later.
 =========================================================
 */
 
 (function () {
 
-  // Prevent the game from being created twice.
-  if (document.getElementById('goat-game')) {
-    return;
-  }
+  "use strict";
 
   /*
   =========================================================
@@ -33,9 +33,11 @@ We can make it prettier later.
   =========================================================
   */
 
-  const game = document.createElement('section');
+  const game = document.createElement("section");
 
-  game.id = 'goat-game';
+  game.id = "goat-game-container";
+
+  game.hidden = true;
 
   game.innerHTML = `
     <div class="goat-game-title">
@@ -95,19 +97,19 @@ We can make it prettier later.
 
   /*
   =========================================================
-  CENTER THE GAME AS A POPUP
+  CENTERED POPUP
   =========================================================
   */
 
-  game.style.position = 'fixed';
-  game.style.left = '50%';
-  game.style.top = '50%';
-  game.style.transform = 'translate(-50%, -50%)';
-  game.style.zIndex = '2000';
-  game.style.width = 'min(94vw, 700px)';
-  game.style.maxHeight = '90vh';
-  game.style.overflowY = 'auto';
-  game.style.margin = '0';
+  game.style.position = "fixed";
+  game.style.left = "50%";
+  game.style.top = "50%";
+  game.style.transform = "translate(-50%, -50%)";
+  game.style.zIndex = "2000";
+  game.style.width = "min(94vw, 700px)";
+  game.style.maxHeight = "90vh";
+  game.style.overflowY = "auto";
+  game.style.margin = "0";
 
 
   /*
@@ -116,11 +118,11 @@ We can make it prettier later.
   =========================================================
   */
 
-  const style = document.createElement('style');
+  const style = document.createElement("style");
 
   style.textContent = `
 
-    #goat-game {
+    #goat-game-container {
       background: #120b18;
       border: 1px solid #d4af37;
       border-radius: 12px;
@@ -129,6 +131,10 @@ We can make it prettier later.
       color: #c084fc;
       font-family: Georgia, "Times New Roman", serif;
       box-shadow: 0 15px 50px rgba(0,0,0,.9);
+    }
+
+    #goat-game-container[hidden] {
+      display: none !important;
     }
 
     .goat-game-title {
@@ -270,30 +276,44 @@ We can make it prettier later.
   =========================================================
   */
 
-  const arena = document.getElementById('goat-arena');
-  const goat = document.getElementById('goat');
-  const hornButton = document.getElementById('goat-horn');
-  const resetButton = document.getElementById('goat-reset');
-  const scoreDisplay = document.getElementById('goat-score');
-  const message = document.getElementById('goat-message');
+  const arena =
+    document.getElementById("goat-arena");
+
+  const goat =
+    document.getElementById("goat");
+
+  const hornButton =
+    document.getElementById("goat-horn");
+
+  const resetButton =
+    document.getElementById("goat-reset");
+
+  const scoreDisplay =
+    document.getElementById("goat-score");
+
+  const message =
+    document.getElementById("goat-message");
 
   let goatX = 0;
-  let goatVelocity = 0;
+
+  let goatVelocity = 45;
 
   let goatFainted = false;
+
   let gameOver = false;
 
   let lastTime = null;
 
-  const START_SPEED = 45;
+  let bounceCount = 0;
 
-  const GRAVITY = 900;
+  let animationFrame = null;
+
+
+  const START_SPEED = 45;
 
   const BOUNCE = 0.55;
 
   const MAX_BOUNCES = 3;
-
-  let bounceCount = 0;
 
 
   /*
@@ -304,9 +324,14 @@ We can make it prettier later.
 
   function resetGame() {
 
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+    }
+
     goatX = 0;
 
-    goatVelocity = START_SPEED;
+    goatVelocity =
+      START_SPEED;
 
     goatFainted = false;
 
@@ -316,25 +341,28 @@ We can make it prettier later.
 
     lastTime = null;
 
-    goat.classList.remove('fainted');
+    goat.classList.remove("fainted");
 
-    goat.style.left = '4%';
+    goat.style.left = "4%";
 
-    goat.style.bottom = '31px';
+    goat.style.bottom = "31px";
 
-    goat.style.transform = 'rotate(0deg)';
+    goat.style.transform =
+      "rotate(0deg)";
 
     hornButton.disabled = false;
 
     resetButton.hidden = true;
 
-    scoreDisplay.textContent = '0';
+    scoreDisplay.textContent = "0";
 
-    message.textContent = 'HORN THE GOAT!';
+    message.textContent =
+      "HORN THE GOAT!";
 
-    message.classList.remove('big');
+    message.classList.remove("big");
 
-    requestAnimationFrame(gameLoop);
+    animationFrame =
+      requestAnimationFrame(gameLoop);
   }
 
 
@@ -346,17 +374,21 @@ We can make it prettier later.
 
   function horn() {
 
-    if (goatFainted || gameOver) {
+    if (
+      goatFainted ||
+      gameOver
+    ) {
       return;
     }
 
     goatFainted = true;
 
-    goat.classList.add('fainted');
+    goat.classList.add(
+      "fainted"
+    );
 
     /*
-      Give the goat some extra momentum when the horn
-      is pressed.
+      Give the goat extra momentum.
     */
 
     goatVelocity += 90;
@@ -364,8 +396,7 @@ We can make it prettier later.
     hornButton.disabled = true;
 
     message.textContent =
-      '🐐 BONK! THE GOAT IS OUT COLD!';
-
+      "🐐 BONK! THE GOAT IS OUT COLD!";
   }
 
 
@@ -377,7 +408,8 @@ We can make it prettier later.
 
   function calculateScore() {
 
-    const arenaWidth = arena.clientWidth;
+    const arenaWidth =
+      arena.clientWidth;
 
     const cliffStart =
       arenaWidth * 0.88;
@@ -385,20 +417,22 @@ We can make it prettier later.
     const distanceFromEdge =
       cliffStart - goatX;
 
-    /*
-      The closer to the edge, the higher the score.
-    */
-
     let score =
       Math.round(
         1000 -
-        Math.max(0, distanceFromEdge) * 5
+        Math.max(
+          0,
+          distanceFromEdge
+        ) * 5
       );
 
     score =
       Math.max(
         0,
-        Math.min(1000, score)
+        Math.min(
+          1000,
+          score
+        )
       );
 
     return score;
@@ -420,22 +454,28 @@ We can make it prettier later.
     const score =
       calculateScore();
 
-    scoreDisplay.textContent = score;
+    scoreDisplay.textContent =
+      score;
 
-    message.classList.add('big');
+    message.classList.add(
+      "big"
+    );
 
-    if (goatX >= arena.clientWidth * 0.88) {
+    if (
+      goatX >=
+      arena.clientWidth * 0.88
+    ) {
 
       message.textContent =
-        '💀 THE GOAT WENT OVER THE EDGE!';
+        "💀 THE GOAT WENT OVER THE EDGE!";
 
-      scoreDisplay.textContent = '0';
+      scoreDisplay.textContent =
+        "0";
 
     } else {
 
       message.textContent =
         `🐐 FINAL SCORE: ${score}!`;
-
     }
 
     resetButton.hidden = false;
@@ -465,13 +505,11 @@ We can make it prettier later.
 
     lastTime = timestamp;
 
-    /*
-      Prevent a giant jump if the browser pauses
-      the animation for a moment.
-    */
-
     delta =
-      Math.min(delta, 0.05);
+      Math.min(
+        delta,
+        0.05
+      );
 
 
     /*
@@ -496,7 +534,6 @@ We can make it prettier later.
 
         return;
       }
-
     }
 
 
@@ -512,15 +549,19 @@ We can make it prettier later.
         goatVelocity * delta;
 
       /*
-        Gradually slow the goat down.
+        Gradually slow the goat.
       */
 
       goatVelocity *=
-        Math.pow(0.985, delta * 60);
+        Math.pow(
+          0.985,
+          delta * 60
+        );
+
 
       /*
-        A little bounce effect.
-        This is intentionally crude for now.
+        Bounce when the goat reaches
+        the dangerous area.
       */
 
       if (
@@ -539,7 +580,7 @@ We can make it prettier later.
           bounceCount++;
 
           message.textContent =
-            'BOING!';
+            "BOING!";
 
         } else {
 
@@ -549,9 +590,10 @@ We can make it prettier later.
         }
       }
 
+
       /*
-        If the goat is moving backward after a bounce,
-        don't let it leave the left side.
+        Don't let the goat escape
+        through the left side.
       */
 
       if (goatX < 0) {
@@ -559,27 +601,22 @@ We can make it prettier later.
         goatX = 0;
 
         goatVelocity =
-          Math.abs(goatVelocity) *
-          BOUNCE;
+          Math.abs(
+            goatVelocity
+          ) * BOUNCE;
       }
-
     }
 
 
     /*
-    ---------------------------------------------------------
+    =========================================================
     DRAW GOAT
-    ---------------------------------------------------------
+    =========================================================
     */
 
     goat.style.left =
       `${goatX}px`;
 
-
-    /*
-      Slightly raise the goat during its bouncing motion.
-      Nothing fancy yet.
-    */
 
     if (goatFainted) {
 
@@ -592,43 +629,134 @@ We can make it prettier later.
 
       goat.style.bottom =
         `${31 + bounceHeight}px`;
-
     }
 
 
-    /*
-    ---------------------------------------------------------
-    KEEP PLAYING
-    ---------------------------------------------------------
-    */
-
-    requestAnimationFrame(gameLoop);
+    animationFrame =
+      requestAnimationFrame(
+        gameLoop
+      );
   }
 
 
   /*
   =========================================================
-  BUTTON EVENTS
+  BUTTONS
   =========================================================
   */
 
   hornButton.addEventListener(
-    'click',
+    "click",
     horn
   );
 
   resetButton.addEventListener(
-    'click',
+    "click",
     resetGame
   );
 
 
   /*
   =========================================================
-  START
+  GOAT SONG DETECTOR
+  =========================================================
+
+  main.js already checks the Now Playing display.
+
+  We use that same display here.
+
+  Goat game:
+      HIDDEN → 6 6 6 7 → VISIBLE
+
+  Leaving the song:
+      VISIBLE → HIDDEN
   =========================================================
   */
 
-  resetGame();
+  let goatWasPlaying = false;
+
+  function checkGoatSong() {
+
+    const nowPlaying =
+      document.getElementById(
+        "now-playing"
+      );
+
+    if (!nowPlaying) {
+      return;
+    }
+
+    const text =
+      nowPlaying.textContent || "";
+
+    const goatSongPlaying =
+      text.includes("6 6 6 7");
+
+
+    /*
+      Goat song just started.
+    */
+
+    if (
+      goatSongPlaying &&
+      !goatWasPlaying
+    ) {
+
+      goatWasPlaying = true;
+
+      game.hidden = false;
+
+      resetGame();
+
+      return;
+    }
+
+
+    /*
+      Goat song is no longer playing.
+    */
+
+    if (
+      !goatSongPlaying &&
+      goatWasPlaying
+    ) {
+
+      goatWasPlaying = false;
+
+      game.hidden = true;
+
+      if (animationFrame) {
+
+        cancelAnimationFrame(
+          animationFrame
+        );
+
+        animationFrame = null;
+      }
+
+      return;
+    }
+  }
+
+
+  /*
+  =========================================================
+  WATCH NOW PLAYING
+  =========================================================
+  */
+
+  window.setInterval(
+    checkGoatSong,
+    250
+  );
+
+
+  /*
+  =========================================================
+  INITIAL STATE
+  =========================================================
+  */
+
+  game.hidden = true;
 
 })();
