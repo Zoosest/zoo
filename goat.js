@@ -1,3 +1,4 @@
+
 /*
 =========================================================
 GOATS
@@ -94,6 +95,23 @@ We can make it prettier later.
 
   /*
   =========================================================
+  CENTER THE GAME AS A POPUP
+  =========================================================
+  */
+
+  game.style.position = 'fixed';
+  game.style.left = '50%';
+  game.style.top = '50%';
+  game.style.transform = 'translate(-50%, -50%)';
+  game.style.zIndex = '2000';
+  game.style.width = 'min(94vw, 700px)';
+  game.style.maxHeight = '90vh';
+  game.style.overflowY = 'auto';
+  game.style.margin = '0';
+
+
+  /*
+  =========================================================
   GAME STYLES
   =========================================================
   */
@@ -103,15 +121,14 @@ We can make it prettier later.
   style.textContent = `
 
     #goat-game {
-      width: min(100% - 24px, 700px);
-      margin: 30px auto;
-      padding: 18px 12px 22px;
       background: #120b18;
       border: 1px solid #d4af37;
       border-radius: 12px;
+      padding: 18px 12px 22px;
       text-align: center;
       color: #c084fc;
       font-family: Georgia, "Times New Roman", serif;
+      box-shadow: 0 15px 50px rgba(0,0,0,.9);
     }
 
     .goat-game-title {
