@@ -3,23 +3,19 @@
 GOATS
 =========================================================
 
-Prototype version 0.2
+Prototype version 0.3
 
-GOATS only appears when the song:
+The board is now reversed:
 
-    6 6 6 7
-
-is playing.
-
-For now:
-- Goat moves toward the edge.
+- Goat starts on the RIGHT.
+- Goat automatically moves LEFT.
+- The cliff/edge is on the LEFT.
 - Press HORN.
 - Goat faints.
 - Goat continues with momentum.
 - Goat bounces.
-- Score is based on how close it gets to the edge.
+- Score is based on how close it gets to the LEFT edge.
 
-This is intentionally simple.
 =========================================================
 */
 
@@ -188,30 +184,42 @@ This is intentionally simple.
       background: #d4af37;
     }
 
+    /*
+    ---------------------------------------------------------
+    LEFT-SIDE CLIFF
+    ---------------------------------------------------------
+    */
+
     .goat-cliff {
       position: absolute;
-      right: 0;
+      left: 0;
       bottom: 0;
       width: 12%;
       height: 150px;
-      border-left: 3px solid #f5d76e;
+      border-right: 3px solid #f5d76e;
       background: #090509;
       color: #f5d76e;
       font-size: .55rem;
       letter-spacing: .08em;
-      text-align: left;
+      text-align: right;
     }
 
     .goat-cliff span {
       position: absolute;
       top: 8px;
-      left: 5px;
+      right: 5px;
       writing-mode: vertical-rl;
     }
 
+    /*
+    ---------------------------------------------------------
+    GOAT STARTS ON RIGHT
+    ---------------------------------------------------------
+    */
+
     .goat {
       position: absolute;
-      left: 4%;
+      right: 4%;
       bottom: 31px;
       width: 50px;
       height: 50px;
@@ -294,6 +302,13 @@ This is intentionally simple.
   const message =
     document.getElementById("goat-message");
 
+
+  /*
+    goatX represents distance from the LEFT side.
+
+    The goat starts near the RIGHT side.
+  */
+
   let goatX = 0;
 
   let goatVelocity = 45;
@@ -328,7 +343,16 @@ This is intentionally simple.
       cancelAnimationFrame(animationFrame);
     }
 
-    goatX = 0;
+    const arenaWidth =
+      arena.clientWidth;
+
+    /*
+      Start near the RIGHT side.
+    */
+
+    goatX =
+      arenaWidth - 50 -
+      arenaWidth * 0.04;
 
     goatVelocity =
       START_SPEED;
@@ -343,7 +367,9 @@ This is intentionally simple.
 
     goat.classList.remove("fainted");
 
-    goat.style.left = "4%";
+    goat.style.left = "auto";
+
+    goat.style.right = "4%";
 
     goat.style.bottom = "31px";
 
@@ -388,7 +414,7 @@ This is intentionally simple.
     );
 
     /*
-      Give the goat extra momentum.
+      Extra momentum toward the LEFT.
     */
 
     goatVelocity += 90;
@@ -408,14 +434,16 @@ This is intentionally simple.
 
   function calculateScore() {
 
-    const arenaWidth =
-      arena.clientWidth;
+    /*
+      The LEFT cliff begins around 12%
+      of the arena width.
+    */
 
-    const cliffStart =
-      arenaWidth * 0.88;
+    const cliffEnd =
+      arena.clientWidth * 0.12;
 
     const distanceFromEdge =
-      cliffStart - goatX;
+      goatX - cliffEnd;
 
     let score =
       Math.round(
@@ -461,9 +489,13 @@ This is intentionally simple.
       "big"
     );
 
+    /*
+      Goat went over the LEFT edge.
+    */
+
     if (
-      goatX >=
-      arena.clientWidth * 0.88
+      goatX <=
+      arena.clientWidth * 0.12
     ) {
 
       message.textContent =
@@ -515,20 +547,28 @@ This is intentionally simple.
     /*
     ---------------------------------------------------------
     BEFORE THE HORN
+
+    Goat moves LEFT.
     ---------------------------------------------------------
     */
 
     if (!goatFainted) {
 
-      goatX +=
+      goatX -=
         goatVelocity * delta;
 
-      const maxX =
-        arena.clientWidth * 0.88 - 50;
+      /*
+        Left edge of the cliff.
+      */
 
-      if (goatX >= maxX) {
+      const cliffEdge =
+        arena.clientWidth * 0.12;
 
-        goatX = maxX;
+      if (
+        goatX <= cliffEdge
+      ) {
+
+        goatX = cliffEdge;
 
         finishGame();
 
@@ -540,12 +580,14 @@ This is intentionally simple.
     /*
     ---------------------------------------------------------
     AFTER THE HORN
+
+    Goat keeps moving LEFT because of momentum.
     ---------------------------------------------------------
     */
 
     else {
 
-      goatX +=
+      goatX -=
         goatVelocity * delta;
 
       /*
@@ -561,12 +603,12 @@ This is intentionally simple.
 
       /*
         Bounce when the goat reaches
-        the dangerous area.
+        the dangerous LEFT area.
       */
 
       if (
-        goatX >=
-        arena.clientWidth * 0.82
+        goatX <=
+        arena.clientWidth * 0.18
       ) {
 
         if (
@@ -593,15 +635,22 @@ This is intentionally simple.
 
       /*
         Don't let the goat escape
-        through the left side.
+        through the RIGHT side.
       */
 
-      if (goatX < 0) {
+      const rightLimit =
+        arena.clientWidth - 50;
 
-        goatX = 0;
+      if (
+        goatX >
+        rightLimit
+      ) {
+
+        goatX =
+          rightLimit;
 
         goatVelocity =
-          Math.abs(
+          -Math.abs(
             goatVelocity
           ) * BOUNCE;
       }
@@ -611,12 +660,27 @@ This is intentionally simple.
     /*
     =========================================================
     DRAW GOAT
+
+    Convert our LEFT-based position into
+    the CSS right position.
     =========================================================
     */
+
+    const rightPosition =
+      arena.clientWidth -
+      goatX -
+      50;
 
     goat.style.left =
       `${goatX}px`;
 
+    goat.style.right =
+      "auto";
+
+
+    /*
+      Slight bounce height.
+    */
 
     if (goatFainted) {
 
@@ -631,6 +695,12 @@ This is intentionally simple.
         `${31 + bounceHeight}px`;
     }
 
+
+    /*
+    =========================================================
+    KEEP PLAYING
+    =========================================================
+    */
 
     animationFrame =
       requestAnimationFrame(
@@ -659,17 +729,6 @@ This is intentionally simple.
   /*
   =========================================================
   GOAT SONG DETECTOR
-  =========================================================
-
-  main.js already checks the Now Playing display.
-
-  We use that same display here.
-
-  Goat game:
-      HIDDEN → 6 6 6 7 → VISIBLE
-
-  Leaving the song:
-      VISIBLE → HIDDEN
   =========================================================
   */
 
