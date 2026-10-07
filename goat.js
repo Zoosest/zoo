@@ -3,7 +3,7 @@
 GOATS
 =========================================================
 
-Prototype version 0.4
+Prototype version 0.5
 
 - Goat starts on the RIGHT.
 - Goat automatically moves LEFT.
@@ -13,6 +13,7 @@ Prototype version 0.4
 - Goat continues moving with momentum.
 - Goat bounces.
 - Score is based on how close it gets to the LEFT edge.
+- TRY AGAIN appears after EVERY completed round.
 
 =========================================================
 */
@@ -20,6 +21,7 @@ Prototype version 0.4
 (function () {
 
   "use strict";
+
 
   /*
   =========================================================
@@ -155,12 +157,20 @@ Prototype version 0.4
       font-weight: bold;
     }
 
+
+    /*
+    =======================================================
+    GAME BOARD
+    =======================================================
+    */
+
     .goat-arena {
       position: relative;
       width: 100%;
       height: 190px;
       margin: 16px auto;
       overflow: hidden;
+
       background:
         linear-gradient(
           to bottom,
@@ -169,9 +179,17 @@ Prototype version 0.4
           #050305 72%,
           #050305 100%
         );
+
       border: 1px solid #3b1d50;
       border-radius: 8px;
     }
+
+
+    /*
+    =======================================================
+    GROUND
+    =======================================================
+    */
 
     .goat-ground {
       position: absolute;
@@ -182,23 +200,31 @@ Prototype version 0.4
       background: #d4af37;
     }
 
+
     /*
-    ---------------------------------------------------------
+    =======================================================
     LEFT-SIDE CLIFF
-    ---------------------------------------------------------
+    =======================================================
     */
 
     .goat-cliff {
       position: absolute;
       left: 0;
       bottom: 0;
+
       width: 12%;
       height: 150px;
+
       border-right: 3px solid #f5d76e;
+
       background: #090509;
+
       color: #f5d76e;
+
       font-size: .55rem;
+
       letter-spacing: .08em;
+
       text-align: right;
     }
 
@@ -206,53 +232,82 @@ Prototype version 0.4
       position: absolute;
       top: 8px;
       right: 5px;
+
       writing-mode: vertical-rl;
     }
 
+
     /*
-    ---------------------------------------------------------
-    GOAT STARTS ON RIGHT
-    ---------------------------------------------------------
+    =======================================================
+    GOAT
+    =======================================================
     */
 
     .goat {
       position: absolute;
+
       right: 4%;
       bottom: 31px;
+
       width: 50px;
       height: 50px;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       font-size: 2.5rem;
+
       line-height: 1;
+
       transform-origin: center center;
+
       user-select: none;
+
       pointer-events: none;
+
       z-index: 5;
     }
 
+
     /*
-    ---------------------------------------------------------
+    =======================================================
     FAINTED GOAT
-    ---------------------------------------------------------
-    
-    180 degrees = completely upside down.
+    =======================================================
+
+    180 degrees = upside down.
     */
 
     .goat.fainted {
-      transform: rotate(180deg);
+      transform: rotate(180deg) !important;
     }
+
+
+    /*
+    =======================================================
+    BUTTONS
+    =======================================================
+    */
 
     .goat-horn,
     .goat-reset {
       border: 1px solid #d4af37;
+
       border-radius: 999px;
+
       padding: 10px 18px;
+
       color: #fff;
+
       background: #55208a;
-      font-family: Georgia, "Times New Roman", serif;
+
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
       font-size: .9rem;
+
       cursor: pointer;
     }
 
@@ -266,16 +321,28 @@ Prototype version 0.4
       cursor: not-allowed;
     }
 
+
+    /*
+    =======================================================
+    MESSAGE
+    =======================================================
+    */
+
     .goat-message {
       min-height: 22px;
+
       margin-top: 10px;
+
       color: #b9a8c5;
+
       font-size: .75rem;
     }
 
     .goat-message.big {
       color: #f5d76e;
+
       font-size: .95rem;
+
       font-weight: bold;
     }
 
@@ -286,7 +353,7 @@ Prototype version 0.4
 
   /*
   =========================================================
-  GAME VARIABLES
+  GAME ELEMENTS
   =========================================================
   */
 
@@ -310,8 +377,9 @@ Prototype version 0.4
 
 
   /*
-  goatX = distance from LEFT side.
-  Goat starts on RIGHT and moves LEFT.
+  =========================================================
+  GAME VARIABLES
+  =========================================================
   */
 
   let goatX = 0;
@@ -345,11 +413,17 @@ Prototype version 0.4
   function resetGame() {
 
     if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
+
+      cancelAnimationFrame(
+        animationFrame
+      );
+
     }
+
 
     const arenaWidth =
       arena.clientWidth;
+
 
     /*
       Start near the RIGHT side.
@@ -360,8 +434,10 @@ Prototype version 0.4
       50 -
       arenaWidth * 0.04;
 
+
     goatVelocity =
       START_SPEED;
+
 
     goatFainted = false;
 
@@ -371,7 +447,14 @@ Prototype version 0.4
 
     lastTime = null;
 
-    goat.classList.remove("fainted");
+
+    /*
+      Restore normal goat.
+    */
+
+    goat.classList.remove(
+      "fainted"
+    );
 
     goat.style.left = "auto";
 
@@ -382,19 +465,39 @@ Prototype version 0.4
     goat.style.transform =
       "rotate(0deg)";
 
+
+    /*
+      Reset buttons.
+    */
+
     hornButton.disabled = false;
 
     resetButton.hidden = true;
 
-    scoreDisplay.textContent = "0";
+
+    /*
+      Reset score/message.
+    */
+
+    scoreDisplay.textContent =
+      "0";
 
     message.textContent =
       "HORN THE GOAT!";
 
-    message.classList.remove("big");
+    message.classList.remove(
+      "big"
+    );
+
+
+    /*
+      Start a new round.
+    */
 
     animationFrame =
-      requestAnimationFrame(gameLoop);
+      requestAnimationFrame(
+        gameLoop
+      );
   }
 
 
@@ -410,26 +513,32 @@ Prototype version 0.4
       goatFainted ||
       gameOver
     ) {
+
       return;
     }
 
+
     goatFainted = true;
 
+
     /*
-      This class rotates the goat
-      completely upside down.
+      Flip goat completely upside down.
     */
 
-    goat.classList.add("fainted");
+    goat.classList.add(
+      "fainted"
+    );
+
 
     /*
-      Give the goat extra momentum
-      toward the LEFT.
+      Give goat extra momentum.
     */
 
     goatVelocity += 90;
 
+
     hornButton.disabled = true;
+
 
     message.textContent =
       "🐐 BONK! THE GOAT IS OUT COLD!";
@@ -447,8 +556,10 @@ Prototype version 0.4
     const cliffEnd =
       arena.clientWidth * 0.12;
 
+
     const distanceFromEdge =
       goatX - cliffEnd;
+
 
     let score =
       Math.round(
@@ -459,6 +570,7 @@ Prototype version 0.4
         ) * 5
       );
 
+
     score =
       Math.max(
         0,
@@ -467,6 +579,7 @@ Prototype version 0.4
           score
         )
       );
+
 
     return score;
   }
@@ -484,16 +597,24 @@ Prototype version 0.4
 
     goatVelocity = 0;
 
+
     const score =
       calculateScore();
+
 
     scoreDisplay.textContent =
       score;
 
-    message.classList.add("big");
+
+    message.classList.add(
+      "big"
+    );
+
 
     /*
-      Goat went over the LEFT edge.
+    -------------------------------------------------------
+    GOAT WENT OVER THE EDGE
+    -------------------------------------------------------
     */
 
     if (
@@ -507,11 +628,27 @@ Prototype version 0.4
       scoreDisplay.textContent =
         "0";
 
-    } else {
+    }
+
+
+    /*
+    -------------------------------------------------------
+    GOAT STOPPED SAFELY
+    -------------------------------------------------------
+    */
+
+    else {
 
       message.textContent =
         `🐐 FINAL SCORE: ${score}!`;
     }
+
+
+    /*
+    =======================================================
+    TRY AGAIN ALWAYS APPEARS
+    =======================================================
+    */
 
     resetButton.hidden = false;
 
@@ -528,17 +665,27 @@ Prototype version 0.4
   function gameLoop(timestamp) {
 
     if (gameOver) {
+
       return;
     }
 
+
     if (lastTime === null) {
+
       lastTime = timestamp;
     }
+
 
     let delta =
       (timestamp - lastTime) / 1000;
 
+
     lastTime = timestamp;
+
+
+    /*
+      Prevent giant jumps.
+    */
 
     delta =
       Math.min(
@@ -548,11 +695,11 @@ Prototype version 0.4
 
 
     /*
-    ---------------------------------------------------------
+    =======================================================
     BEFORE THE HORN
 
     Goat moves LEFT.
-    ---------------------------------------------------------
+    =======================================================
     */
 
     if (!goatFainted) {
@@ -560,14 +707,17 @@ Prototype version 0.4
       goatX -=
         goatVelocity * delta;
 
+
       const cliffEdge =
         arena.clientWidth * 0.12;
+
 
       if (
         goatX <= cliffEdge
       ) {
 
-        goatX = cliffEdge;
+        goatX =
+          cliffEdge;
 
         finishGame();
 
@@ -577,18 +727,18 @@ Prototype version 0.4
 
 
     /*
-    ---------------------------------------------------------
+    =======================================================
     AFTER THE HORN
 
-    Goat keeps moving LEFT because
-    of its momentum.
-    ---------------------------------------------------------
+    Goat keeps moving LEFT.
+    =======================================================
     */
 
     else {
 
       goatX -=
         goatVelocity * delta;
+
 
       /*
         Gradually slow the goat.
@@ -602,8 +752,7 @@ Prototype version 0.4
 
 
       /*
-        Bounce when the goat reaches
-        the dangerous LEFT area.
+        Bounce in dangerous area.
       */
 
       if (
@@ -624,7 +773,10 @@ Prototype version 0.4
           message.textContent =
             "BOING!";
 
-        } else {
+        }
+
+
+        else {
 
           finishGame();
 
@@ -634,12 +786,13 @@ Prototype version 0.4
 
 
       /*
-        Don't let the goat escape
-        through the RIGHT side.
+        Prevent goat from leaving
+        the RIGHT side.
       */
 
       const rightLimit =
         arena.clientWidth - 50;
+
 
       if (
         goatX >
@@ -658,9 +811,9 @@ Prototype version 0.4
 
 
     /*
-    =========================================================
+    =======================================================
     DRAW GOAT
-    =========================================================
+    =======================================================
     */
 
     goat.style.left =
@@ -671,7 +824,7 @@ Prototype version 0.4
 
 
     /*
-      Slight bounce height after fainting.
+      Little bounce effect after fainting.
     */
 
     if (goatFainted) {
@@ -683,15 +836,16 @@ Prototype version 0.4
           )
         ) * 12;
 
+
       goat.style.bottom =
         `${31 + bounceHeight}px`;
     }
 
 
     /*
-    =========================================================
+    =======================================================
     KEEP PLAYING
-    =========================================================
+    =======================================================
     */
 
     animationFrame =
@@ -712,6 +866,7 @@ Prototype version 0.4
     horn
   );
 
+
   resetButton.addEventListener(
     "click",
     resetGame
@@ -726,6 +881,7 @@ Prototype version 0.4
 
   let goatWasPlaying = false;
 
+
   function checkGoatSong() {
 
     const nowPlaying =
@@ -733,12 +889,16 @@ Prototype version 0.4
         "now-playing"
       );
 
+
     if (!nowPlaying) {
+
       return;
     }
 
+
     const text =
       nowPlaying.textContent || "";
+
 
     const goatSongPlaying =
       text.includes("6 6 6 7");
@@ -764,7 +924,7 @@ Prototype version 0.4
 
 
     /*
-      Goat song is no longer playing.
+      Goat song ended.
     */
 
     if (
@@ -776,6 +936,7 @@ Prototype version 0.4
 
       game.hidden = true;
 
+
       if (animationFrame) {
 
         cancelAnimationFrame(
@@ -784,6 +945,7 @@ Prototype version 0.4
 
         animationFrame = null;
       }
+
 
       return;
     }
