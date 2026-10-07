@@ -215,7 +215,7 @@
     ["Tolerance", "Shedding", "snake.png"],
     ["Home On The Strange (Breathwork)", "Centering", "buffalo.png"],
     ["CATS DONT DANCE", "Self-Reliance", "mountain-lion.png"],
-    ["Poetic Justice (oo-de-lally)", "Cleverness", "fox.png"],
+    ["Poetic Justice (oo-dee-lally)", "Cleverness", "fox.png"],
     ["Lost Angeles (Alessia In Wonderland)", "Extinction", "tazmanian-tiger.png"],
     ["Romanticized Paranoia 🧛🏻‍♂️ (Home Improvement)", "Watchfulness", "lemur.png"],
     ["LOVEBIRDS (Feelings Arent Liabilities)", "Peace", "dove.png"],
@@ -1312,6 +1312,54 @@
   }
 
   /* =========================================================
+     🐐 GOATS GAME DETECTOR — BRICK #1
+     ========================================================= */
+
+  function checkForGoatGame() {
+    const nowPlaying = document.getElementById("now-playing");
+
+    if (!nowPlaying) {
+      return;
+    }
+
+    const text = nowPlaying.textContent || "";
+
+    /*
+      The goat song is currently:
+        6 6 6 7 — Sacrifice
+    */
+
+    if (text.includes("6 6 6 7")) {
+      if (window.goatGameShown) {
+        return;
+      }
+
+      window.goatGameShown = true;
+
+      /*
+        The actual GOATS popup will be created in
+        a later brick.
+
+        For now we simply look for its container.
+      */
+      const goatGame =
+        document.getElementById("goat-game-container");
+
+      if (goatGame) {
+        goatGame.style.display = "block";
+      }
+
+    } else {
+      /*
+        Leaving the goat song resets the detector,
+        allowing GOATS to appear again if the player
+        returns to the song later.
+      */
+      window.goatGameShown = false;
+    }
+  }
+
+  /* =========================================================
      WHACK-A-TRACK ROADWORK RESTORATION
      ========================================================= */
 
@@ -2277,6 +2325,17 @@
 
     window.setInterval(
       checkForWhacSongTip,
+      500
+    );
+
+    /*
+      🐐 GOATS GAME DETECTOR
+
+      Checks the currently playing song every 500ms.
+      The actual popup will be added in a later brick.
+    */
+    window.setInterval(
+      checkForGoatGame,
       500
     );
 
