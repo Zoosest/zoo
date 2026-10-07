@@ -61,7 +61,6 @@
       cursor:pointer;
     }
 
-    /* FINISHING TOUCH: slightly smaller logo, same header height */
     .logo-img {
       position:absolute;
       top:1px;
@@ -173,6 +172,35 @@
       padding-bottom:8px;
     }
 
+    /* =========================================================
+       TRACK LISTING HEADER
+       ========================================================= */
+
+    .track-listing-header {
+      display:flex;
+      align-items:baseline;
+      justify-content:space-between;
+      gap:12px;
+      border-bottom:1px solid var(--gold);
+      padding-bottom:8px;
+      margin-bottom:20px;
+    }
+
+    .track-listing-header h2 {
+      margin:0;
+      border-bottom:0;
+      padding-bottom:0;
+    }
+
+    .share-hint {
+      flex:0 0 auto;
+      color:var(--muted);
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:.68rem;
+      font-style:italic;
+      white-space:nowrap;
+    }
+
     #cards {
       display:grid;
       grid-template-columns:repeat(3,minmax(0,1fr));
@@ -225,7 +253,6 @@
       border-radius:8px;
     }
 
-    /* CURRENTLY PLAYING TRACK */
     .song.playing {
       border-color:var(--gold);
       background:#21102e;
@@ -271,9 +298,6 @@
       font-size:.78rem;
     }
 
-    /* FINISHING TOUCH:
-       Tight footer spacing while keeping curse.png
-       the same size. */
     footer {
       position:relative;
       margin-top:4px;
@@ -341,7 +365,6 @@
       color:var(--bright-gold);
       font-size:1.7rem;
       text-align:center;
-      border-bottom:1px solid var(--gold);
       padding-bottom:12px;
       margin:0 0 22px;
     }
@@ -354,6 +377,10 @@
     .context-page p {
       color:var(--muted);
       line-height:1.65;
+    }
+
+    .context-list p {
+      margin:0;
     }
 
     .context-footer {
@@ -393,7 +420,6 @@
         left:75px;
       }
 
-      /* Slightly smaller mobile logo */
       .logo-img {
         top:1px;
         right:0;
@@ -444,6 +470,10 @@
         margin-left:5px;
       }
 
+      .share-hint {
+        font-size:.61rem;
+      }
+
       footer {
         margin-top:3px;
         padding:2px 0 3px;
@@ -483,7 +513,7 @@
 
     <a
       class="donate"
-      href="https://venmo.com/u/YOUR_VENMO_USERNAME"
+      href="https://gofund.me/f7585fd75"
       target="_blank"
       rel="noopener"
     >♥ Donate</a>
@@ -526,7 +556,7 @@
     <button
       id="whack-track"
       type="button"
-    >Whack-A-Track</button>
+    >Whac-a-Track</button>
 
     <button
       id="random-song"
@@ -545,7 +575,7 @@
   <main>
 
     <p class="intro">
-      Choose a song or let the cards choose for you
+      Choose a song or let the cards choose a song for you
     </p>
 
     <section id="reading" hidden>
@@ -558,7 +588,10 @@
 
     <section>
 
-      <h2>Track listing</h2>
+      <div class="track-listing-header">
+        <h2>Track listing</h2>
+        <span class="share-hint">Tap animal to share</span>
+      </div>
 
       <div id="song-list"></div>
 
@@ -587,7 +620,7 @@
         class="context-close"
         id="context-close"
         type="button"
-      >← Back to the music</button>
+      >← Back</button>
 
       <h1>CONTEXT</h1>
 
@@ -615,29 +648,16 @@
           Daily therapy songs
         </p>
 
-        <p>
-          Some are funny
-        </p>
+        <div class="context-list">
 
-        <p>
-          Some are sad
-        </p>
+          <p>Some are funny</p>
+          <p>Some are sad</p>
+          <p>Some are hopeful</p>
+          <p>Some are angry</p>
+          <p>Some are weird</p>
+          <p>Some are probably just bad</p>
 
-        <p>
-          Some are hopeful
-        </p>
-
-        <p>
-          Some are angry
-        </p>
-
-        <p>
-          Some are weird
-        </p>
-
-        <p>
-          Some are probably just bad 
-        </p>
+        </div>
 
         <p>
           But I made them anyway
@@ -664,7 +684,7 @@
         </p>
 
         <p>
-          All songs recorded between November 2025 - September 2026
+          All of the songs in this archive were produced between October 2025 and July 2026.
         </p>
 
       </section>
@@ -942,11 +962,44 @@
       'https://youtu.be/CAwy7WirHTA',
       'https://youtu.be/uVDGYtRELas',
       'https://youtu.be/zb0vUX07fn0',
-      'https://youtu.be/vKmHvqGr2pI',
+      'https://youtu.be/zb0vUX07fn0',
       'https://youtu.be/K2Dujl_bFZg'
     ];
 
     const introVideoId = 'mkKOtZPLkzY';
+
+    /*
+      =========================================================
+      SHARED SONG LINK
+      =========================================================
+
+      Normal visit:
+        No ?song= parameter
+        → load the normal intro.
+
+      Shared visit:
+        ?song=1 through ?song=222
+        → load that archive song directly when the
+          YouTube player is created.
+
+      The archive numbering is 1-based:
+        ?song=1   → ids[0]
+        ?song=222 → ids[221]
+
+      The intro is NOT part of this numbering.
+    */
+
+    const sharedSongParams =
+      new URLSearchParams(window.location.search);
+
+    const sharedSongNumber =
+      Number(sharedSongParams.get('song'));
+
+    const hasValidSharedSong =
+      sharedSongParams.has('song') &&
+      Number.isInteger(sharedSongNumber) &&
+      sharedSongNumber >= 1 &&
+      sharedSongNumber <= 222;
 
     const ids = songs
       .map(url =>
@@ -956,7 +1009,24 @@
       )
       .filter(Boolean);
 
-    /* Make the song IDs available to whack-a-track.js */
+    /*
+      Choose the video's initial source BEFORE the
+      YouTube player is created.
+
+      This is the important fix:
+      the intro is no longer loaded first on a
+      shared-song URL.
+    */
+    const initialVideoId =
+      hasValidSharedSong
+        ? ids[sharedSongNumber - 1]
+        : introVideoId;
+
+    const initialSongIndex =
+      hasValidSharedSong
+        ? sharedSongNumber - 1
+        : -1;
+
     window.rizneySongIds = ids;
 
     const $ = s => document.querySelector(s);
@@ -977,10 +1047,6 @@
     let cardPlaylist = null;
     let cardPosition = 0;
 
-    /*
-      Return the real song title from the chronological
-      song row instead of "Song 2", "Song 3", etc.
-    */
     const titleFor = i => {
       if (i === -1) {
         return "MEGA MIX'N'MOJO Intro";
@@ -1171,11 +1237,6 @@
         return;
       }
 
-      /*
-        Normal chronological playback:
-        skip any tracks that have been defeated
-        in Whack-A-Track.
-      */
       let nextIndex =
         currentIndex + 1;
 
@@ -1261,7 +1322,12 @@
         'player',
         {
 
-          videoId: introVideoId,
+          /*
+            IMPORTANT:
+            On a shared URL this is the shared song,
+            not the intro.
+          */
+          videoId: initialVideoId,
 
           playerVars: {
             autoplay: 0,
@@ -1277,8 +1343,31 @@
               window.rizneyPlayer =
                 player;
 
-              nowPlaying.textContent =
-                "Now playing: MEGA MIX'N'MOJO Intro";
+              /*
+                Set the archive position immediately
+                when this is a shared-song visit.
+
+                Normal visits remain at the intro.
+              */
+              if (hasValidSharedSong) {
+
+                currentIndex =
+                  initialSongIndex;
+
+                nowPlaying.textContent =
+                  `Now playing: ${titleFor(currentIndex)}`;
+
+                updatePlayingIndicator();
+
+              } else {
+
+                currentIndex = -1;
+
+                nowPlaying.textContent =
+                  "Now playing: MEGA MIX'N'MOJO Intro";
+
+                updatePlayingIndicator();
+              }
 
               updateButtons();
             },
@@ -1339,6 +1428,7 @@
           <small>
             YouTube video • chronological position ${index + 1}
           </small>
+
         </span>
 
         <button
@@ -1393,39 +1483,15 @@
 
       introTransitionPending = false;
 
-      /*
-        Proper Fisher-Yates shuffle.
-        Every song has an equal chance of appearing
-        in the six-card reading.
-      */
-      const shuffled =
-        [...ids.keys()];
-
-      for (
-        let i = shuffled.length - 1;
-        i > 0;
-        i--
-      ) {
-
-        const j =
-          Math.floor(
-            Math.random() * (i + 1)
-          );
-
-        [
-          shuffled[i],
-          shuffled[j]
-        ] = [
-          shuffled[j],
-          shuffled[i]
-        ];
-      }
-
       cardPlaylist =
-        shuffled.slice(
-          0,
-          Math.min(6, ids.length)
-        );
+        [...ids.keys()]
+          .sort(
+            () => Math.random() - 0.5
+          )
+          .slice(
+            0,
+            Math.min(6, ids.length)
+          );
 
       cardPosition = 0;
 
@@ -1553,6 +1619,7 @@
 
           closeContext();
         }
+
       }
     );
 
@@ -1562,8 +1629,9 @@
   </script>
 
   <script src="./main.js"></script>
-
+  <script src="./singles.js"></script>
   <script src="./whack-a-track.js"></script>
+  <script src="./jumanji.js"></script>
 
 </body>
 </html>
