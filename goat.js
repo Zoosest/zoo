@@ -3,16 +3,14 @@
 GOATS
 =========================================================
 
-Prototype version 0.3
-
-The board is now reversed:
+Prototype version 0.4
 
 - Goat starts on the RIGHT.
 - Goat automatically moves LEFT.
 - The cliff/edge is on the LEFT.
 - Press HORN.
-- Goat faints.
-- Goat continues with momentum.
+- Goat faints and flips upside down.
+- Goat continues moving with momentum.
 - Goat bounces.
 - Score is based on how close it gets to the LEFT edge.
 
@@ -234,8 +232,16 @@ The board is now reversed:
       z-index: 5;
     }
 
+    /*
+    ---------------------------------------------------------
+    FAINTED GOAT
+    ---------------------------------------------------------
+    
+    180 degrees = completely upside down.
+    */
+
     .goat.fainted {
-      transform: rotate(90deg);
+      transform: rotate(180deg);
     }
 
     .goat-horn,
@@ -304,9 +310,8 @@ The board is now reversed:
 
 
   /*
-    goatX represents distance from the LEFT side.
-
-    The goat starts near the RIGHT side.
+  goatX = distance from LEFT side.
+  Goat starts on RIGHT and moves LEFT.
   */
 
   let goatX = 0;
@@ -351,7 +356,8 @@ The board is now reversed:
     */
 
     goatX =
-      arenaWidth - 50 -
+      arenaWidth -
+      50 -
       arenaWidth * 0.04;
 
     goatVelocity =
@@ -409,12 +415,16 @@ The board is now reversed:
 
     goatFainted = true;
 
-    goat.classList.add(
-      "fainted"
-    );
+    /*
+      This class rotates the goat
+      completely upside down.
+    */
+
+    goat.classList.add("fainted");
 
     /*
-      Extra momentum toward the LEFT.
+      Give the goat extra momentum
+      toward the LEFT.
     */
 
     goatVelocity += 90;
@@ -433,11 +443,6 @@ The board is now reversed:
   */
 
   function calculateScore() {
-
-    /*
-      The LEFT cliff begins around 12%
-      of the arena width.
-    */
 
     const cliffEnd =
       arena.clientWidth * 0.12;
@@ -485,9 +490,7 @@ The board is now reversed:
     scoreDisplay.textContent =
       score;
 
-    message.classList.add(
-      "big"
-    );
+    message.classList.add("big");
 
     /*
       Goat went over the LEFT edge.
@@ -557,10 +560,6 @@ The board is now reversed:
       goatX -=
         goatVelocity * delta;
 
-      /*
-        Left edge of the cliff.
-      */
-
       const cliffEdge =
         arena.clientWidth * 0.12;
 
@@ -581,7 +580,8 @@ The board is now reversed:
     ---------------------------------------------------------
     AFTER THE HORN
 
-    Goat keeps moving LEFT because of momentum.
+    Goat keeps moving LEFT because
+    of its momentum.
     ---------------------------------------------------------
     */
 
@@ -660,16 +660,8 @@ The board is now reversed:
     /*
     =========================================================
     DRAW GOAT
-
-    Convert our LEFT-based position into
-    the CSS right position.
     =========================================================
     */
-
-    const rightPosition =
-      arena.clientWidth -
-      goatX -
-      50;
 
     goat.style.left =
       `${goatX}px`;
@@ -679,7 +671,7 @@ The board is now reversed:
 
 
     /*
-      Slight bounce height.
+      Slight bounce height after fainting.
     */
 
     if (goatFainted) {
