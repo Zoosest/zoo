@@ -3,19 +3,25 @@
 GOATS
 =========================================================
 
-Prototype version 0.6
+Prototype version 0.7
+
+THE GAME:
 
 - Goat starts on the RIGHT.
-- Goat automatically moves LEFT.
-- The cliff/edge is on the LEFT.
-- Press HORN.
-- Goat faints.
-- Goat continues moving with momentum.
-- Goat can bounce near the edge.
-- Goat gradually loses momentum.
-- Goat eventually STOPS.
-- Score is based on how close it gets to the LEFT edge.
-- TRY AGAIN appears after every completed round.
+- Goat automatically walks LEFT.
+- The LEFT side is a real cliff.
+- The player controls only the HORN.
+- The longer you wait, the closer the goat gets
+  to the edge.
+- Closer to the edge = more points.
+- HORN stops the goat from walking and sends him
+  sliding with momentum.
+- If the goat crosses the edge:
+    HE FALLS.
+    SCORE = 0.
+- No wall at the edge.
+- No bouncing off the cliff.
+- TRY AGAIN appears after every round.
 
 =========================================================
 */
@@ -55,7 +61,7 @@ Prototype version 0.6
       <div class="goat-ground"></div>
 
       <div class="goat-cliff">
-        <span>EDGE</span>
+        <span>CLIFF</span>
       </div>
 
       <div
@@ -112,7 +118,7 @@ Prototype version 0.6
 
   /*
   =========================================================
-  GAME STYLES
+  STYLES
   =========================================================
   */
 
@@ -135,6 +141,13 @@ Prototype version 0.6
       display: none !important;
     }
 
+
+    /*
+    =======================================================
+    TITLE
+    =======================================================
+    */
+
     .goat-game-title {
       color: #f5d76e;
       font-size: 1.5rem;
@@ -147,6 +160,13 @@ Prototype version 0.6
       color: #b9a8c5;
       font-size: .78rem;
     }
+
+
+    /*
+    =======================================================
+    SCORE
+    =======================================================
+    */
 
     .goat-score {
       margin-top: 10px;
@@ -162,16 +182,26 @@ Prototype version 0.6
 
     /*
     =======================================================
-    GAME BOARD
+    ARENA
     =======================================================
     */
 
     .goat-arena {
       position: relative;
+
       width: 100%;
       height: 190px;
+
       margin: 16px auto;
-      overflow: hidden;
+
+      /*
+        IMPORTANT:
+
+        The arena is allowed to show the goat
+        falling below the ground.
+      */
+
+      overflow: visible;
 
       background:
         linear-gradient(
@@ -183,6 +213,7 @@ Prototype version 0.6
         );
 
       border: 1px solid #3b1d50;
+
       border-radius: 8px;
     }
 
@@ -195,31 +226,46 @@ Prototype version 0.6
 
     .goat-ground {
       position: absolute;
-      left: 0;
+
+      left: 12%;
       right: 0;
+
       bottom: 28px;
+
       height: 4px;
+
       background: #d4af37;
     }
 
 
     /*
     =======================================================
-    LEFT-SIDE CLIFF
+    THE CLIFF
+
+    There is NO WALL.
+
+    The ground simply ends.
+
     =======================================================
     */
 
     .goat-cliff {
       position: absolute;
+
       left: 0;
       bottom: 0;
 
       width: 12%;
       height: 150px;
 
-      border-right: 3px solid #f5d76e;
-
-      background: #090509;
+      background:
+        linear-gradient(
+          to bottom,
+          #090509 0%,
+          #090509 70%,
+          #050305 70%,
+          #050305 100%
+        );
 
       color: #f5d76e;
 
@@ -230,12 +276,40 @@ Prototype version 0.6
       text-align: right;
     }
 
+
+    /*
+    =======================================================
+    CLIFF EDGE LINE
+
+    This is the actual danger line.
+
+    =======================================================
+    */
+
+    .goat-cliff::after {
+      content: "";
+
+      position: absolute;
+
+      top: 0;
+      right: 0;
+
+      width: 3px;
+      height: 100%;
+
+      background: #f5d76e;
+    }
+
+
     .goat-cliff span {
       position: absolute;
+
       top: 8px;
-      right: 5px;
+      right: 6px;
 
       writing-mode: vertical-rl;
+
+      color: #f5d76e;
     }
 
 
@@ -249,12 +323,14 @@ Prototype version 0.6
       position: absolute;
 
       right: 4%;
+
       bottom: 31px;
 
       width: 50px;
       height: 50px;
 
       display: flex;
+
       align-items: center;
       justify-content: center;
 
@@ -285,12 +361,30 @@ Prototype version 0.6
 
     /*
     =======================================================
+    FALLING GOAT
+    =======================================================
+    */
+
+    .goat.falling {
+      transition:
+        bottom 0.8s ease-in,
+        transform 0.8s ease-in;
+
+      transform:
+        rotate(180deg)
+        rotate(90deg);
+    }
+
+
+    /*
+    =======================================================
     BUTTONS
     =======================================================
     */
 
     .goat-horn,
     .goat-reset {
+
       border: 1px solid #d4af37;
 
       border-radius: 999px;
@@ -311,13 +405,16 @@ Prototype version 0.6
       cursor: pointer;
     }
 
+
     .goat-horn:hover,
     .goat-reset:hover {
       background: #7e35bc;
     }
 
+
     .goat-horn:disabled {
       opacity: .45;
+
       cursor: not-allowed;
     }
 
@@ -329,6 +426,7 @@ Prototype version 0.6
     */
 
     .goat-message {
+
       min-height: 22px;
 
       margin-top: 10px;
@@ -338,7 +436,9 @@ Prototype version 0.6
       font-size: .75rem;
     }
 
+
     .goat-message.big {
+
       color: #f5d76e;
 
       font-size: .95rem;
@@ -353,27 +453,39 @@ Prototype version 0.6
 
   /*
   =========================================================
-  GAME ELEMENTS
+  ELEMENTS
   =========================================================
   */
 
   const arena =
-    document.getElementById("goat-arena");
+    document.getElementById(
+      "goat-arena"
+    );
 
   const goat =
-    document.getElementById("goat");
+    document.getElementById(
+      "goat"
+    );
 
   const hornButton =
-    document.getElementById("goat-horn");
+    document.getElementById(
+      "goat-horn"
+    );
 
   const resetButton =
-    document.getElementById("goat-reset");
+    document.getElementById(
+      "goat-reset"
+    );
 
   const scoreDisplay =
-    document.getElementById("goat-score");
+    document.getElementById(
+      "goat-score"
+    );
 
   const message =
-    document.getElementById("goat-message");
+    document.getElementById(
+      "goat-message"
+    );
 
 
   /*
@@ -388,6 +500,8 @@ Prototype version 0.6
 
   let goatFainted = false;
 
+  let goatFalling = false;
+
   let gameOver = false;
 
   let lastTime = null;
@@ -397,51 +511,22 @@ Prototype version 0.6
 
   /*
   =========================================================
-  MOVEMENT SETTINGS
+  GAME SETTINGS
   =========================================================
   */
 
   const START_SPEED = 45;
 
-  /*
-    Extra speed after the horn.
-  */
-
   const HORN_BOOST = 90;
-
-  /*
-    How quickly the goat loses momentum.
-  */
 
   const FRICTION = 0.985;
 
-  /*
-    When speed gets this low,
-    the goat stops completely.
-  */
-
   const STOP_SPEED = 8;
-
-  /*
-    Bounce strength.
-
-    Smaller number = softer bounce.
-  */
-
-  const BOUNCE = 0.45;
-
-  /*
-    Maximum number of bounces.
-  */
-
-  const MAX_BOUNCES = 3;
-
-  let bounceCount = 0;
 
 
   /*
   =========================================================
-  RESET GAME
+  RESET
   =========================================================
   */
 
@@ -460,7 +545,7 @@ Prototype version 0.6
 
 
     /*
-      Start near the RIGHT side.
+      Start on RIGHT.
     */
 
     goatX =
@@ -475,33 +560,41 @@ Prototype version 0.6
 
     goatFainted = false;
 
-    gameOver = false;
+    goatFalling = false;
 
-    bounceCount = 0;
+    gameOver = false;
 
     lastTime = null;
 
 
     /*
-      Restore normal goat.
+      Restore goat.
     */
 
     goat.classList.remove(
       "fainted"
     );
 
-    goat.style.left = "auto";
+    goat.classList.remove(
+      "falling"
+    );
 
-    goat.style.right = "4%";
 
-    goat.style.bottom = "31px";
+    goat.style.left =
+      "auto";
+
+    goat.style.right =
+      "4%";
+
+    goat.style.bottom =
+      "31px";
 
     goat.style.transform =
       "rotate(0deg)";
 
 
     /*
-      Reset buttons.
+      Reset controls.
     */
 
     hornButton.disabled = false;
@@ -510,7 +603,7 @@ Prototype version 0.6
 
 
     /*
-      Reset score/message.
+      Reset message.
     */
 
     scoreDisplay.textContent =
@@ -525,7 +618,7 @@ Prototype version 0.6
 
 
     /*
-      Start a new round.
+      Start.
     */
 
     animationFrame =
@@ -545,6 +638,7 @@ Prototype version 0.6
 
     if (
       goatFainted ||
+      goatFalling ||
       gameOver
     ) {
 
@@ -556,7 +650,7 @@ Prototype version 0.6
 
 
     /*
-      Flip goat upside down.
+      Goat faints.
     */
 
     goat.classList.add(
@@ -565,7 +659,7 @@ Prototype version 0.6
 
 
     /*
-      Add momentum.
+      Give him momentum.
     */
 
     goatVelocity +=
@@ -588,13 +682,25 @@ Prototype version 0.6
 
   function calculateScore() {
 
-    const cliffEnd =
+    /*
+      The cliff begins at 12%.
+
+      Goat's X position is measured
+      from the LEFT side.
+    */
+
+    const cliffEdge =
       arena.clientWidth * 0.12;
 
 
     const distanceFromEdge =
-      goatX - cliffEnd;
+      goatX - cliffEdge;
 
+
+    /*
+      Every pixel closer to the edge
+      is worth more points.
+    */
 
     let score =
       Math.round(
@@ -617,6 +723,101 @@ Prototype version 0.6
 
 
     return score;
+  }
+
+
+  /*
+  =========================================================
+  FALL OFF CLIFF
+  =========================================================
+  */
+
+  function fallOffCliff() {
+
+    if (goatFalling || gameOver) {
+
+      return;
+    }
+
+
+    goatFalling = true;
+
+    gameOver = true;
+
+
+    goatVelocity = 0;
+
+
+    /*
+      ZERO POINTS.
+    */
+
+    scoreDisplay.textContent =
+      "0";
+
+
+    message.classList.add(
+      "big"
+    );
+
+
+    message.textContent =
+      "💀 TOO LATE! THE GOAT FELL!";
+
+
+    hornButton.disabled = true;
+
+    resetButton.hidden = true;
+
+
+    /*
+      Move goat slightly into
+      the empty space.
+
+      Then drop him.
+    */
+
+    goat.classList.remove(
+      "fainted"
+    );
+
+    goat.classList.add(
+      "falling"
+    );
+
+
+    goat.style.left =
+      `${goatX}px`;
+
+
+    goat.style.right =
+      "auto";
+
+
+    requestAnimationFrame(
+      function () {
+
+        goat.style.bottom =
+          "-90px";
+
+      }
+    );
+
+
+    /*
+      Show TRY AGAIN after
+      the fall animation.
+    */
+
+    window.setTimeout(
+      function () {
+
+        resetButton.hidden =
+          false;
+
+      },
+      900
+    );
   }
 
 
@@ -646,42 +847,13 @@ Prototype version 0.6
     );
 
 
-    /*
-      Goat went over the LEFT edge.
-    */
+    message.textContent =
+      `🐐 FINAL SCORE: ${score}!`;
 
-    if (
-      goatX <=
-      arena.clientWidth * 0.12
-    ) {
-
-      message.textContent =
-        "💀 THE GOAT WENT OVER THE EDGE!";
-
-      scoreDisplay.textContent =
-        "0";
-
-    }
-
-
-    /*
-      Goat stopped safely.
-    */
-
-    else {
-
-      message.textContent =
-        `🐐 FINAL SCORE: ${score}!`;
-    }
-
-
-    /*
-      TRY AGAIN always appears.
-    */
-
-    resetButton.hidden = false;
 
     hornButton.disabled = true;
+
+    resetButton.hidden = false;
   }
 
 
@@ -713,7 +885,7 @@ Prototype version 0.6
 
 
     /*
-      Prevent giant jumps.
+      Prevent huge jumps.
     */
 
     delta =
@@ -725,9 +897,9 @@ Prototype version 0.6
 
     /*
     =======================================================
-    BEFORE THE HORN
+    BEFORE HORN
 
-    Goat walks LEFT.
+    Goat walks toward the cliff.
     =======================================================
     */
 
@@ -742,9 +914,9 @@ Prototype version 0.6
 
 
       /*
-        If goat reaches the cliff
-        before being horned,
-        game ends.
+        CROSSING THE EDGE
+        = FALL
+        = ZERO
       */
 
       if (
@@ -754,7 +926,16 @@ Prototype version 0.6
         goatX =
           cliffEdge;
 
-        finishGame();
+
+        goat.style.left =
+          `${goatX}px`;
+
+
+        goat.style.right =
+          "auto";
+
+
+        fallOffCliff();
 
         return;
       }
@@ -763,9 +944,14 @@ Prototype version 0.6
 
     /*
     =======================================================
-    AFTER THE HORN
+    AFTER HORN
 
-    Goat slides using momentum.
+    Goat slides toward the edge.
+
+    IMPORTANT:
+
+    There is NO BOUNCE.
+
     =======================================================
     */
 
@@ -776,11 +962,8 @@ Prototype version 0.6
 
 
       /*
-      -------------------------------------------------------
-      FRICTION
-
-      Goat gradually slows down.
-      -------------------------------------------------------
+        Friction gradually slows
+        the goat down.
       */
 
       goatVelocity *=
@@ -792,10 +975,44 @@ Prototype version 0.6
 
       /*
       -------------------------------------------------------
-      STOP CONDITION
+      IF GOAT CROSSES EDGE
 
-      Once the goat gets slow enough,
-      let him come to rest.
+      Even after the horn, momentum can carry
+      him over the cliff.
+
+      This is the risk.
+      -------------------------------------------------------
+      */
+
+      const cliffEdge =
+        arena.clientWidth * 0.12;
+
+
+      if (
+        goatX <= cliffEdge
+      ) {
+
+        goatX =
+          cliffEdge;
+
+
+        goat.style.left =
+          `${goatX}px`;
+
+
+        goat.style.right =
+          "auto";
+
+
+        fallOffCliff();
+
+        return;
+      }
+
+
+      /*
+      -------------------------------------------------------
+      GOAT STOPS
       -------------------------------------------------------
       */
 
@@ -809,84 +1026,6 @@ Prototype version 0.6
         finishGame();
 
         return;
-      }
-
-
-      /*
-      -------------------------------------------------------
-      LEFT EDGE / BOUNCE
-      -------------------------------------------------------
-      */
-
-      if (
-        goatX <=
-        arena.clientWidth * 0.18
-      ) {
-
-        if (
-          bounceCount <
-          MAX_BOUNCES
-        ) {
-
-          /*
-            Put goat just outside
-            the dangerous zone.
-          */
-
-          goatX =
-            arena.clientWidth * 0.18;
-
-
-          /*
-            Reverse direction
-            and reduce speed.
-          */
-
-          goatVelocity =
-            Math.abs(
-              goatVelocity
-            ) * BOUNCE;
-
-
-          bounceCount++;
-
-          message.textContent =
-            "BOING!";
-        }
-
-
-        else {
-
-          finishGame();
-
-          return;
-        }
-      }
-
-
-      /*
-      -------------------------------------------------------
-      RIGHT SIDE SAFETY
-      -------------------------------------------------------
-      */
-
-      const rightLimit =
-        arena.clientWidth - 50;
-
-
-      if (
-        goatX >
-        rightLimit
-      ) {
-
-        goatX =
-          rightLimit;
-
-
-        goatVelocity =
-          -Math.abs(
-            goatVelocity
-          ) * BOUNCE;
       }
     }
 
@@ -905,7 +1044,7 @@ Prototype version 0.6
 
 
     /*
-      Little bouncing motion after fainting.
+      Slight bouncing while sliding.
     */
 
     if (goatFainted) {
@@ -925,7 +1064,7 @@ Prototype version 0.6
 
     /*
     =======================================================
-    CONTINUE
+    NEXT FRAME
     =======================================================
     */
 
@@ -938,7 +1077,7 @@ Prototype version 0.6
 
   /*
   =========================================================
-  BUTTONS
+  BUTTON EVENTS
   =========================================================
   */
 
