@@ -3,17 +3,19 @@
 GOATS
 =========================================================
 
-Prototype version 0.5
+Prototype version 0.6
 
 - Goat starts on the RIGHT.
 - Goat automatically moves LEFT.
 - The cliff/edge is on the LEFT.
 - Press HORN.
-- Goat faints and flips upside down.
+- Goat faints.
 - Goat continues moving with momentum.
-- Goat bounces.
+- Goat can bounce near the edge.
+- Goat gradually loses momentum.
+- Goat eventually STOPS.
 - Score is based on how close it gets to the LEFT edge.
-- TRY AGAIN appears after EVERY completed round.
+- TRY AGAIN appears after every completed round.
 
 =========================================================
 */
@@ -274,8 +276,6 @@ Prototype version 0.5
     =======================================================
     FAINTED GOAT
     =======================================================
-
-    180 degrees = upside down.
     */
 
     .goat.fainted {
@@ -392,16 +392,51 @@ Prototype version 0.5
 
   let lastTime = null;
 
-  let bounceCount = 0;
-
   let animationFrame = null;
 
 
+  /*
+  =========================================================
+  MOVEMENT SETTINGS
+  =========================================================
+  */
+
   const START_SPEED = 45;
 
-  const BOUNCE = 0.55;
+  /*
+    Extra speed after the horn.
+  */
+
+  const HORN_BOOST = 90;
+
+  /*
+    How quickly the goat loses momentum.
+  */
+
+  const FRICTION = 0.985;
+
+  /*
+    When speed gets this low,
+    the goat stops completely.
+  */
+
+  const STOP_SPEED = 8;
+
+  /*
+    Bounce strength.
+
+    Smaller number = softer bounce.
+  */
+
+  const BOUNCE = 0.45;
+
+  /*
+    Maximum number of bounces.
+  */
 
   const MAX_BOUNCES = 3;
+
+  let bounceCount = 0;
 
 
   /*
@@ -417,7 +452,6 @@ Prototype version 0.5
       cancelAnimationFrame(
         animationFrame
       );
-
     }
 
 
@@ -522,7 +556,7 @@ Prototype version 0.5
 
 
     /*
-      Flip goat completely upside down.
+      Flip goat upside down.
     */
 
     goat.classList.add(
@@ -531,10 +565,11 @@ Prototype version 0.5
 
 
     /*
-      Give goat extra momentum.
+      Add momentum.
     */
 
-    goatVelocity += 90;
+    goatVelocity +=
+      HORN_BOOST;
 
 
     hornButton.disabled = true;
@@ -612,9 +647,7 @@ Prototype version 0.5
 
 
     /*
-    -------------------------------------------------------
-    GOAT WENT OVER THE EDGE
-    -------------------------------------------------------
+      Goat went over the LEFT edge.
     */
 
     if (
@@ -632,9 +665,7 @@ Prototype version 0.5
 
 
     /*
-    -------------------------------------------------------
-    GOAT STOPPED SAFELY
-    -------------------------------------------------------
+      Goat stopped safely.
     */
 
     else {
@@ -645,9 +676,7 @@ Prototype version 0.5
 
 
     /*
-    =======================================================
-    TRY AGAIN ALWAYS APPEARS
-    =======================================================
+      TRY AGAIN always appears.
     */
 
     resetButton.hidden = false;
@@ -698,7 +727,7 @@ Prototype version 0.5
     =======================================================
     BEFORE THE HORN
 
-    Goat moves LEFT.
+    Goat walks LEFT.
     =======================================================
     */
 
@@ -711,6 +740,12 @@ Prototype version 0.5
       const cliffEdge =
         arena.clientWidth * 0.12;
 
+
+      /*
+        If goat reaches the cliff
+        before being horned,
+        game ends.
+      */
 
       if (
         goatX <= cliffEdge
@@ -730,7 +765,7 @@ Prototype version 0.5
     =======================================================
     AFTER THE HORN
 
-    Goat keeps moving LEFT.
+    Goat slides using momentum.
     =======================================================
     */
 
@@ -741,18 +776,46 @@ Prototype version 0.5
 
 
       /*
-        Gradually slow the goat.
+      -------------------------------------------------------
+      FRICTION
+
+      Goat gradually slows down.
+      -------------------------------------------------------
       */
 
       goatVelocity *=
         Math.pow(
-          0.985,
+          FRICTION,
           delta * 60
         );
 
 
       /*
-        Bounce in dangerous area.
+      -------------------------------------------------------
+      STOP CONDITION
+
+      Once the goat gets slow enough,
+      let him come to rest.
+      -------------------------------------------------------
+      */
+
+      if (
+        Math.abs(goatVelocity) <
+        STOP_SPEED
+      ) {
+
+        goatVelocity = 0;
+
+        finishGame();
+
+        return;
+      }
+
+
+      /*
+      -------------------------------------------------------
+      LEFT EDGE / BOUNCE
+      -------------------------------------------------------
       */
 
       if (
@@ -765,14 +828,30 @@ Prototype version 0.5
           MAX_BOUNCES
         ) {
 
-          goatVelocity *=
-            -BOUNCE;
+          /*
+            Put goat just outside
+            the dangerous zone.
+          */
+
+          goatX =
+            arena.clientWidth * 0.18;
+
+
+          /*
+            Reverse direction
+            and reduce speed.
+          */
+
+          goatVelocity =
+            Math.abs(
+              goatVelocity
+            ) * BOUNCE;
+
 
           bounceCount++;
 
           message.textContent =
             "BOING!";
-
         }
 
 
@@ -786,8 +865,9 @@ Prototype version 0.5
 
 
       /*
-        Prevent goat from leaving
-        the RIGHT side.
+      -------------------------------------------------------
+      RIGHT SIDE SAFETY
+      -------------------------------------------------------
       */
 
       const rightLimit =
@@ -801,6 +881,7 @@ Prototype version 0.5
 
         goatX =
           rightLimit;
+
 
         goatVelocity =
           -Math.abs(
@@ -824,7 +905,7 @@ Prototype version 0.5
 
 
     /*
-      Little bounce effect after fainting.
+      Little bouncing motion after fainting.
     */
 
     if (goatFainted) {
@@ -844,7 +925,7 @@ Prototype version 0.5
 
     /*
     =======================================================
-    KEEP PLAYING
+    CONTINUE
     =======================================================
     */
 
